@@ -1,0 +1,64 @@
+package com.cisowski.schoolmanagement.security;
+
+import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfiguration {
+
+    @Bean
+    public UserDetailsService userDetailsService(){
+        return new SchoolUserDetailsServiceImpl();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(){
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService());
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+
+        return authenticationProvider;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
+        return security.csrf(AbstractHttpConfigurer::disable)
+                /*
+
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/test/publicHello")
+                                .permitAll())
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/test/adminHello")
+                                .hasRole("ADMIN"))
+              */
+                .authorizeHttpRequests(request ->
+                        request.anyRequest().authenticated())
+                .formLogin(formLogin ->
+                        formLogin.loginPage("/login").permitAll())
+                .httpBasic(Customizer.withDefaults())
+                .logout(LogoutConfigurer::permitAll)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+}
