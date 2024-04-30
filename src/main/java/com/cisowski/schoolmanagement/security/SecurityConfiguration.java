@@ -3,6 +3,9 @@ package com.cisowski.schoolmanagement.security;
 import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Role;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -51,14 +54,31 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/test/adminHello")
                                 .hasRole("ADMIN"))
-              */
+
                 .authorizeHttpRequests(request ->
                         request.anyRequest().authenticated())
+               */
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/admin/**").hasAuthority("ADMIN"))
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/user/**").hasAuthority("USER"))
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/public/**").permitAll())
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/*").hasAnyAuthority("ADMIN"))
                 .formLogin(formLogin ->
                         formLogin.loginPage("/login").permitAll())
                 .httpBasic(Customizer.withDefaults())
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
+
+                //  https://stackoverflow.com/questions/78344252/spring-security-implement-multiple-sql-tables-authentication
+    }
+    @Bean
+    public RoleHierarchy roleHierarchy(){
+        RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
+        hierarchy.setHierarchy("ADMIN > USER");  // '>' mean 'include'; admin is also user - can reach any user endpoint
+        return hierarchy;
     }
 }
