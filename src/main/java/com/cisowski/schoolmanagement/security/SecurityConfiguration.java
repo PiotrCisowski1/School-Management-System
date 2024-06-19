@@ -1,9 +1,8 @@
 package com.cisowski.schoolmanagement.security;
 
-import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
+import com.cisowski.schoolmanagement.service.impl.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Role;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -26,7 +25,7 @@ public class SecurityConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        return new SchoolUserDetailsServiceImpl();
+        return new UserDetailsServiceImpl();
     }
 
     @Bean
@@ -73,7 +72,7 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
 
-                //  https://stackoverflow.com/questions/78344252/spring-security-implement-multiple-sql-tables-authentication
+
     }
     @Bean
     public RoleHierarchy roleHierarchy(){

@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.model;
+package com.cisowski.schoolmanagement.model.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ManyToAny;

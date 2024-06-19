@@ -1,23 +1,21 @@
-package com.cisowski.schoolmanagement.model;
+package com.cisowski.schoolmanagement.model.entity;
 
 import jakarta.persistence.*;
-import org.springframework.security.core.GrantedAuthority;
 
-import javax.management.relation.Role;
 import java.util.Collection;
 
 @Entity
 @Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-    @Column(name = "user_name", nullable = false, unique = true)
-    private String userName;
-    @Column(nullable = false)
+public class User extends Person {
+
+      @Column(nullable = false)
     private String password;
     @Column(nullable = false)
-    private boolean enabled;
+    private boolean isEnabled;
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
+    @Column
+    private long phoneNumber;
     @Column(nullable = false)
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "users_authorities",
@@ -28,15 +26,22 @@ public class User {
     private Collection<Authority> authority;
 
 
-    public User(Integer id, String userName, String password, boolean enabled, Collection<Authority> authority) {
+    public User(Integer id/*, String userName, String password*/, boolean isEnabled, Collection<Authority> authority) {
         this.id = id;
-        this.userName = userName;
-        this.password = password;
-        this.enabled = enabled;
+//        this.userName = userName;
+//        this.password = password;
+        this.isEnabled = isEnabled;
         this.authority = authority;
     }
     public User() {}
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
     protected Integer getId() {
         return id;
     }
@@ -52,12 +57,12 @@ public class User {
         this.authority = authority;
     }
 
-    public String getUserName() {
-        return userName;
+    public long getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setPhoneNumber(long phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getPassword() {
@@ -69,21 +74,11 @@ public class User {
     }
 
     public boolean isEnabled() {
-        return enabled;
+        return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+        this.isEnabled = enabled;
     }
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", userName='" + userName + '\'' +
-                ", password='" + password + '\'' +
-                ", enabled=" + enabled +
-                ", authority=" + authority.toString() +
-                '}';
-    }
 }

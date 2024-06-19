@@ -1,19 +1,19 @@
 package com.cisowski.schoolmanagement.service.impl;
 
-import com.cisowski.schoolmanagement.model.Authority;
-import com.cisowski.schoolmanagement.model.User;
+import com.cisowski.schoolmanagement.model.entity.Authority;
+import com.cisowski.schoolmanagement.model.entity.Teacher;
+import com.cisowski.schoolmanagement.model.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SchoolUserDetails implements UserDetails {
+public class UserDetails implements org.springframework.security.core.userdetails.UserDetails {
     private User user;
 
-    public SchoolUserDetails(User user) {
+    public UserDetails(User user) {
         this.user = user;
     }
 
@@ -34,7 +34,7 @@ public class SchoolUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUserName();
+        return user.getEmail();
     }
 
     @Override
