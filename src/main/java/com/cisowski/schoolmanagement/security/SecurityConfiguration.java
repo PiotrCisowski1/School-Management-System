@@ -57,14 +57,16 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request ->
                         request.anyRequest().authenticated())
                */
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/admin/**").hasAuthority("ADMIN"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/user/**").hasAuthority("USER"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/public/**").permitAll())
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/*").hasAnyAuthority("ADMIN"))
+                .authorizeHttpRequests((request ->
+                        request.anyRequest().permitAll()))
+//                .authorizeHttpRequests(request ->
+//                        request.requestMatchers("/admin/**").hasAuthority("SYS_ADMIN"))
+//                .authorizeHttpRequests(request ->
+//                        request.requestMatchers("/student/**").hasAuthority("STUDENT"))
+//                .authorizeHttpRequests(request ->
+//                        request.requestMatchers("/teacher/**").hasAuthority("TEACHER"))
+//                .authorizeHttpRequests(request ->
+//                        request.requestMatchers("/*").hasAnyAuthority("SYS_ADMIN"))
                 .formLogin(formLogin ->
                         formLogin.loginPage("/login").permitAll())
                 .httpBasic(Customizer.withDefaults())
@@ -77,7 +79,7 @@ public class SecurityConfiguration {
     @Bean
     public RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-        hierarchy.setHierarchy("ADMIN > USER");  // '>' mean 'include'; admin is also user - can reach any user endpoint
+        hierarchy.setHierarchy("SYS_ADMIN > ADMINISTRATOR > PRINCIPAL > TEACHER \n SYS_ADMIN > PARENT > STUDENT");
         return hierarchy;
     }
 }

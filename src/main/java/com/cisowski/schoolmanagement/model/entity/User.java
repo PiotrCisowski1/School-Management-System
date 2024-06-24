@@ -6,11 +6,12 @@ import java.util.Collection;
 
 @Entity
 @Table(name = "users")
+@DiscriminatorValue("user")
 public class User extends Person {
 
       @Column(nullable = false)
     private String password;
-    @Column(nullable = false)
+    @Column(nullable = false, name = "enabled")
     private boolean isEnabled;
     @Column(name = "email", nullable = false, unique = true)
     private String email;

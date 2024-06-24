@@ -8,6 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "teachers")
+@PrimaryKeyJoinColumn(name = "id")
 public class Teacher extends User{
     @Column(nullable = false)
     private Date employmentStartDate;
