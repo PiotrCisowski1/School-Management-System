@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.model.entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "specializations")
 public class Specialization {
 
     @Id
