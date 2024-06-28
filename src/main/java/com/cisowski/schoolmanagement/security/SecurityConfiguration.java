@@ -45,26 +45,15 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         return security.csrf(AbstractHttpConfigurer::disable)
-                /*
 
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/test/publicHello")
-                                .permitAll())
+                        request.requestMatchers("/admin/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/test/adminHello")
-                                .hasRole("ADMIN"))
-
+                        request.requestMatchers("/teacher/**").hasAuthority("TEACHER"))
                 .authorizeHttpRequests(request ->
-                        request.anyRequest().authenticated())
-               */
+                        request.requestMatchers("/student/**").hasAuthority("STUDENT"))
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/admin/**").hasAuthority("ADMIN"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/user/**").hasAuthority("USER"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/public/**").permitAll())
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/*").hasAnyAuthority("ADMIN"))
+                        request.requestMatchers("/*").hasAnyAuthority("SYS_ADMIN"))
                 .formLogin(formLogin ->
                         formLogin.loginPage("/login").permitAll())
                 .httpBasic(Customizer.withDefaults())
@@ -77,7 +66,7 @@ public class SecurityConfiguration {
     @Bean
     public RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-        hierarchy.setHierarchy("ADMIN > USER");  // '>' mean 'include'; admin is also user - can reach any user endpoint
+        hierarchy.setHierarchy("SYS_ADMIN > ADMINISTRATOR > TEACHER > STUDENT\n");  // '>' mean 'include'; admin is also user - can reach any user endpoint
         return hierarchy;
     }
 }

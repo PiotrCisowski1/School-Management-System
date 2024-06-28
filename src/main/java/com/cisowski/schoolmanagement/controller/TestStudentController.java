@@ -8,13 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/admin")
-public class TestAdminController {
+@RequestMapping("/student")
+public class TestStudentController {
 
     @GetMapping("/hello")
-    public String hello(@AuthenticationPrincipal UserDetails userDetails) {
+    public String helloEveryone(@AuthenticationPrincipal UserDetails userDetails) {
 
-        String data = String.format("First name: %s, last name: %s, authorities: %s",userDetails.getFirstName(), userDetails.getLastName(), userDetails.getAuthorities().toArray()[0]);
-        return "Hello Student! Your data: \r\n\r\n"+data+"User: "+userDetails.getFirstName()+" email: "+ userDetails.getEmail();
+        return "Hello Student! Your data: \r\n\r\n"+userDetails.toString();
     }
 }
