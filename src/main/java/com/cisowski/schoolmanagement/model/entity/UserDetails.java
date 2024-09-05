@@ -1,8 +1,5 @@
-package com.cisowski.schoolmanagement.service.impl;
+package com.cisowski.schoolmanagement.model.entity;
 
-import com.cisowski.schoolmanagement.model.entity.Authority;
-import com.cisowski.schoolmanagement.model.entity.Specialization;
-import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.model.enums.Gender;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -66,8 +63,8 @@ public class UserDetails implements org.springframework.security.core.userdetail
     public String getLastName() { return user.getLastName(); }
     public Date getBirthDate() { return user.getBirthDate(); }
     public Gender getGender() { return user.getGender(); }
-    public List<User> getParents() { return user.getParents(); }
-    public List<User> getChildren() { return user.getChildren(); }
-    public List<Specialization> getSpecializations() { return user.getSpecializations(); }
 
+    public String printUser() {
+        return user.toString();
+    }
 }

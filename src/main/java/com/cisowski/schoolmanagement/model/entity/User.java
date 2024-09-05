@@ -2,11 +2,12 @@ package com.cisowski.schoolmanagement.model.entity;
 
 import com.cisowski.schoolmanagement.model.enums.Gender;
 import jakarta.persistence.*;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.springframework.lang.NonNull;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Entity
 @Table(name = "users")
@@ -20,7 +21,7 @@ public class User {
     @Column(nullable = false)
     private String password;
     @Column(nullable = false, name = "enabled")
-    private Boolean isEnabled;
+    private Boolean isEnabled = true;
     @Column
     private Long phoneNumber;
     @Column(nullable = false)
@@ -42,38 +43,6 @@ public class User {
     private Collection<Authority> authority;
 
 
-    // Optional fields referencing particular user's(Teacher, Student, Parent...) data
-    // this will be changed in future versions
-
-    /*
-               STUDENT DATA
-     */
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "students_parents", joinColumns = @JoinColumn(name = "parent_id",referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "student_id", referencedColumnName = "id"))
-    private List<User> parents;
-
-
-    /*
-                TEACHER DATA
-     */
-    @Column(nullable = false)
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(name = "teachers_specializations",
-            joinColumns = @JoinColumn(
-                    name = "user_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(
-                    name = "specialization_id", referencedColumnName = "id"))
-    private List<Specialization> specializations;
-
-    /*
-                STUDENT DATA
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "students_parents", joinColumns = @JoinColumn(name = "student_id",referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "parent_id", referencedColumnName = "id"))
-    private List<User> children;
-
 
     public User(Integer id, String email, String password, boolean isEnabled, long phoneNumber,
                 String firstName, String lastName, Date birthDate, Gender gender, Collection<Authority> authority,
@@ -88,9 +57,6 @@ public class User {
         this.birthDate = birthDate;
         this.gender = gender;
         this.authority = authority;
-        this.parents = parents;
-        this.specializations = specializations;
-        this.children = children;
     }
 
     public User() {}
@@ -173,30 +139,8 @@ public class User {
         this.isEnabled = enabled;
     }
 
-    public List<User> getParents() {
-        return parents;
-    }
 
-    public void setParents(List<User> parents) {
-        this.parents = parents;
-    }
-
-    public List<Specialization> getSpecializations() {
-        return specializations;
-    }
-
-    public void setSpecializations(List<Specialization> specializations) {
-        this.specializations = specializations;
-    }
-
-    public List<User> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<User> children) {
-        this.children = children;
-    }
-
+    // Test method, will be changed with user entities
     @Override
     public String toString() {
         return "User{" +
@@ -210,9 +154,6 @@ public class User {
                 ", birthDate=" + birthDate +
                 ", gender=" + gender +
                 ", authority=" + authority +
-                ", parents=" + parents +
-                ", specializations=" + specializations +
-                ", children=" + children +
                 '}';
     }
 }

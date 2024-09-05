@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.security;
 
-import com.cisowski.schoolmanagement.service.impl.UserDetailsServiceImpl;
+import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -25,7 +25,7 @@ public class SecurityConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        return new UserDetailsServiceImpl();
+        return new SchoolUserDetailsServiceImpl();
     }
 
     @Bean
@@ -53,7 +53,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/student/**").hasAuthority("STUDENT"))
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/*").hasAnyAuthority("SYS_ADMIN"))
+                        request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .formLogin(formLogin ->
                         formLogin.loginPage("/login").permitAll())
                 .httpBasic(Customizer.withDefaults())
