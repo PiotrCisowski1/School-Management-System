@@ -17,12 +17,13 @@ import java.util.HashSet;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
     UserServiceImpl userService;
 
-    @PostMapping("/user")
+    @PostMapping
     public ResponseEntity<User> addUser(@RequestPart User user, @RequestPart Authority[] authorities) {
         Optional<User> duplicateUser = Optional.ofNullable(userService.findByEmail(user.getEmail()));
         if(duplicateUser.isPresent())
@@ -30,22 +31,22 @@ public class UserController {
         userService.addUser(user, authorities);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
-    @DeleteMapping("/user")
-    public ResponseEntity<Integer> deleteUser(@RequestParam(name = "id") Integer userId) throws EntityNotFoundException {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Integer> deleteUser(@PathVariable Integer userId) throws EntityNotFoundException {
         userService.deleteUser(userId);
         return new ResponseEntity<>(userId, HttpStatus.OK);
     }
-    @PutMapping("/user")
+    @PutMapping
     public ResponseEntity<User> updateUser(@RequestBody User user){
         userService.updateUser(user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
-    @GetMapping("/user")
-    public ResponseEntity<User> findUserById(@RequestParam(name ="id") Integer userId) throws EntityNotFoundException {
+    @GetMapping("/{id}")
+    public ResponseEntity<User> findUserById(@PathVariable Integer userId) throws EntityNotFoundException {
         User user = userService.findById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
-    @GetMapping("/users")
+    @GetMapping
     public ResponseEntity<Collection<User>> getAllUsers() throws EntityNotFoundException {
         Collection<User> users = userService.findAll();
         return new ResponseEntity<>(users, HttpStatus.OK);
