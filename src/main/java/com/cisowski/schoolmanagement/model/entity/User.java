@@ -34,7 +34,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
     @Column(nullable = false)
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinTable(name = "users_authorities",
     joinColumns = @JoinColumn(
             name = "user_id", referencedColumnName = "id"),

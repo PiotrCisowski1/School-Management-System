@@ -25,7 +25,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> addUser(@RequestPart User user, @RequestPart Authority[] authorities) {
-        Optional<User> duplicateUser = Optional.ofNullable(userService.findByEmail(user.getEmail()));
+        Optional<User> duplicateUser = Optional.ofNullable(userService.findByEmailNoEx(user.getEmail()));
         if(duplicateUser.isPresent())
             return new ResponseEntity(duplicateUser, HttpStatus.CONFLICT);
         userService.addUser(user, authorities);

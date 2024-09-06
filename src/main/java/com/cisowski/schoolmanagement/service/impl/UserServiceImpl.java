@@ -52,6 +52,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
+        Optional<User> existingUser = userRepository.findById(user.getId());
+        if(existingUser.isEmpty())
+            throw new UserNotFoundException();
+
+        if(user.getAuthority() == null && existingUser.get().getAuthority() != null)
+            user.setAuthority(existingUser.get().getAuthority());
+
         userRepository.save(user);
         return user;
     }
@@ -70,10 +77,17 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+    @Override
     public User findByEmail(String email){
         Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
         if(user.isEmpty())
             throw new EntityNotFoundException(User.class,"Email", email);
+        return user.orElse(null);
+    }
+
+    @Override
+    public User findByEmailNoEx(String email) {
+        Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
         return user.orElse(null);
     }
 }

@@ -45,13 +45,8 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         return security.csrf(AbstractHttpConfigurer::disable)
-
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/admin/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/teacher/**").hasAuthority("TEACHER"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/student/**").hasAuthority("STUDENT"))
+                        request.requestMatchers("/users/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .formLogin(formLogin ->
@@ -60,8 +55,6 @@ public class SecurityConfiguration {
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
-
-
     }
     @Bean
     public RoleHierarchy roleHierarchy(){

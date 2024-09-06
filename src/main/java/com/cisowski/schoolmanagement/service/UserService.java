@@ -14,4 +14,5 @@ public interface UserService {
     User findById(Integer userId);
     Collection<User> findAll();
     User findByEmail(String email);
+    User findByEmailNoEx(String email);
 }
