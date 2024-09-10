@@ -28,6 +28,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UsersAuthoritiesRepositoryImpl authorityRepository;
     @Override
+    @Transactional
     public User addUser(User user, Authority[] authorities) {
         HashSet<Authority> uniqueAuthorities = new HashSet<>();
         Collections.addAll(uniqueAuthorities, authorities);
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
         if(user.getAuthority() == null && existingUser.get().getAuthority() != null)
             user.setAuthority(existingUser.get().getAuthority());
-
+        user.setPassword(existingUser.get().getPassword());
         userRepository.save(user);
         return user;
     }
