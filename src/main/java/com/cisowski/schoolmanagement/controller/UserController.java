@@ -31,7 +31,7 @@ public class UserController {
         userService.addUser(user, authorities);
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{userId}")
     public ResponseEntity<Integer> deleteUser(@PathVariable Integer userId) throws EntityNotFoundException {
         userService.deleteUser(userId);
         return new ResponseEntity<>(userId, HttpStatus.OK);
@@ -41,7 +41,7 @@ public class UserController {
         userService.updateUser(user);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
-    @GetMapping("/{id}")
+    @GetMapping("/{userId}")
     public ResponseEntity<User> findUserById(@PathVariable Integer userId) throws EntityNotFoundException {
         User user = userService.findById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);

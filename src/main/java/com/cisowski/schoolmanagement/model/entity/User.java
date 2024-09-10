@@ -1,6 +1,8 @@
 package com.cisowski.schoolmanagement.model.entity;
 
 import com.cisowski.schoolmanagement.model.enums.Gender;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.lang.NonNull;
@@ -19,8 +21,10 @@ public class User {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     @Column(nullable = false, name = "enabled")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Boolean isEnabled = true;
     @Column
     private Long phoneNumber;
@@ -34,7 +38,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
     @Column(nullable = false)
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_authorities",
     joinColumns = @JoinColumn(
             name = "user_id", referencedColumnName = "id"),
