@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.security;
 
 import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -22,6 +23,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
+
+    private final AuthEntryPoint authEntryPoint;
+
+    public SecurityConfiguration(AuthEntryPoint authEntryPoint) {
+        this.authEntryPoint = authEntryPoint;
+    }
 
     @Bean
     public UserDetailsService userDetailsService(){
@@ -45,6 +52,8 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         return security.csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(authEntryPoint))
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/users/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->

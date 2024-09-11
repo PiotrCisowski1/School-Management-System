@@ -1,24 +1,18 @@
 package com.cisowski.schoolmanagement.service.impl;
 
-import com.cisowski.schoolmanagement.exception.EntityNotFoundException;
+import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
+import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.model.entity.Authority;
 import com.cisowski.schoolmanagement.model.entity.User;
-import com.cisowski.schoolmanagement.repository.UsersAuthoritiesRepository;
 import com.cisowski.schoolmanagement.repository.impl.UsersAuthoritiesRepositoryImpl;
-import com.cisowski.schoolmanagement.utility.UserNotFoundException;
 import com.cisowski.schoolmanagement.repository.UserRepository;
 import com.cisowski.schoolmanagement.service.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -52,15 +46,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(User user) {
-        Optional<User> existingUser = userRepository.findById(user.getId());
-        if(existingUser.isEmpty())
-            throw new UserNotFoundException();
+    public User updateUser(User user) throws EmailAlreadyExistsException {
+            Optional<User> existingUser = userRepository.findById(user.getId());
+            if (existingUser.isEmpty())
+                throw new EntityNotFoundException(User.class, "ID", user.getId().toString());
 
-        if(user.getAuthority() == null && existingUser.get().getAuthority() != null)
-            user.setAuthority(existingUser.get().getAuthority());
-        user.setPassword(existingUser.get().getPassword());
-        userRepository.save(user);
+            Optional<User> sameEmailUser = Optional.ofNullable(userRepository.findByEmail(user.getEmail()));
+            if(sameEmailUser.isPresent() && !Objects.equals(sameEmailUser.get().getId(), user.getId()))
+                throw new EmailAlreadyExistsException(user.getEmail());
+
+            if (user.getAuthority() == null && existingUser.get().getAuthority() != null)
+                user.setAuthority(existingUser.get().getAuthority());
+            user.setPassword(existingUser.get().getPassword());
+            userRepository.save(user);
         return user;
     }
 
