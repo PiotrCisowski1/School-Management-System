@@ -9,8 +9,8 @@ public class LoggingDebugFilter extends Filter<ILoggingEvent> {
 
     @Override
     public FilterReply decide(ILoggingEvent iLoggingEvent) {
-        if(iLoggingEvent.getLevel().toInt() == Level.DEBUG_INT){
-            if(iLoggingEvent.getMessage().startsWith(DbLogger.DEBUG_MARKER)){
+        if(iLoggingEvent.getLevel().toInt() == Level.INFO_INT){
+            if(iLoggingEvent.getMessage().startsWith(DbLogger.INFO_LOG_MARKER)){
                 return FilterReply.ACCEPT;
             }
             return FilterReply.DENY;
