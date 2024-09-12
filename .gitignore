@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+logback.xml
+src/main/resources/application.properties
+*.properties
