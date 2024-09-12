@@ -11,4 +11,12 @@ public class Specialization {
     private Integer id;
     @Column(nullable = false)
     private String name;
+
+    @Override
+    public String toString() {
+        return "Specialization{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

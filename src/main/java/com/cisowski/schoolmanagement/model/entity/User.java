@@ -144,15 +144,11 @@ public class User {
         this.isEnabled = enabled;
     }
 
-
-    // Test method, will be changed with user entities
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
                 ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", isEnabled=" + isEnabled +
                 ", phoneNumber=" + phoneNumber +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
