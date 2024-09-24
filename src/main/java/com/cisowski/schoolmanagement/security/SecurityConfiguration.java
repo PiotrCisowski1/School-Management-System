@@ -4,10 +4,13 @@ import com.cisowski.schoolmanagement.service.impl.SchoolUserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,16 +21,25 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private final AuthEntryPoint authEntryPoint;
+    @Autowired
+    private AuthEntryPoint authEntryPoint;
+    @Lazy
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(AuthEntryPoint authEntryPoint) {
-        this.authEntryPoint = authEntryPoint;
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+        /*
+            AuthenticationManager registered as Spring Bean to avoid error 'parameter required as bean could not be found'
+         */
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
@@ -55,14 +67,15 @@ public class SecurityConfiguration {
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(authEntryPoint))
                 .authorizeHttpRequests(request ->
+                        request.requestMatchers("/login").permitAll())
+                .authorizeHttpRequests(request ->
                         request.requestMatchers("/users/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
-                .formLogin(formLogin ->
-                        formLogin.loginPage("/login").permitAll())
                 .httpBasic(Customizer.withDefaults())
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
     @Bean
