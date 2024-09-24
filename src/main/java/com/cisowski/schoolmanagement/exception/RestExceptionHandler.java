@@ -2,6 +2,8 @@ package com.cisowski.schoolmanagement.exception;
 
 import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
 import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import org.hibernate.PropertyValueException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.nio.file.AccessDeniedException;
+import java.security.SignatureException;
 import java.sql.SQLException;
 
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -25,6 +30,10 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private ResponseEntity<Object> buildResponseEntity(ApiError apiError){
+        return new ResponseEntity<>(apiError, apiError.getStatus());
+    }
 
 
     @Override
@@ -57,7 +66,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setMessage(exception);
         return buildResponseEntity(apiError);
     }
-
     @ExceptionHandler(SQLException.class)
     protected ResponseEntity<Object> handleSqlServerException(SQLException ex){
         String message;
@@ -69,8 +77,48 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setMessage(message);
         return buildResponseEntity(apiError);
     }
-
-    private ResponseEntity<Object> buildResponseEntity(ApiError apiError){
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+    @ExceptionHandler(AccountStatusException.class)
+    protected ResponseEntity<Object> handleAccountStatusException(AccountStatusException accountStatusException){
+        ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+        String exMessage = "This account is locked";
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
     }
+    @ExceptionHandler(AccessDeniedException.class)
+    protected ResponseEntity<Object> handleAuthorizationException(AccessDeniedException accessDeniedException){
+        ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+        String exMessage = "You are not authorized to access this resource";
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+    @ExceptionHandler(SignatureException.class)
+    protected ResponseEntity<Object> handleTokenSignatureException(SignatureException signatureException){
+        ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+        String exMessage = "The token signature is invalid";
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+    @ExceptionHandler(ExpiredJwtException.class)
+    protected ResponseEntity<Object> handleExpiredTokenException(ExpiredJwtException expiredJwtException){
+        ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+        String exMessage = "The token has expired";
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+    @ExceptionHandler(MalformedJwtException.class)
+    protected ResponseEntity<Object> handleMalformedTokenException(MalformedJwtException malformedJwtException){
+        ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+        String exMessage = "Given token is malformed";
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+    @ExceptionHandler(Exception.class)
+    protected ResponseEntity<Object> handleExpiredTokenException(Exception exception){
+        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        apiError.setMessage(exception.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
+
+
 }
