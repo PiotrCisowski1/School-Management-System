@@ -19,11 +19,11 @@ public class UsersAuthoritiesRepositoryImpl implements UsersAuthoritiesRepositor
 
     @PersistenceContext
     private EntityManager entityManager;
-    private Logger logger;
+
     @Transactional
     @Override
     public void addUserAuthorities(HashSet<Authority> authorities, User user) {
-        logger = DbLogger.getLogger();
+        Logger logger = DbLogger.getLogger();
         String message = String.format("Starting inserting User's authorities for UserID: %s, authorities: %s",user.getId(), authorities.toString());
         logger.info(DbLogger.buildInfoMessage(message));
 

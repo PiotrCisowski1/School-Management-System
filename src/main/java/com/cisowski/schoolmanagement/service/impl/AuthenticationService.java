@@ -19,9 +19,6 @@ public class AuthenticationService {
     public AuthenticationService(UserRepository userRepository,  AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
-
-        String message = "AuthenticationService has been created";
-        logger.info(DbLogger.buildInfoMessage(message));
     }
 
     public User authenticate(LoginUserDto input){

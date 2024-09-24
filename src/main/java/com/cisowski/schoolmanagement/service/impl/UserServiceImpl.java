@@ -19,11 +19,16 @@ import java.util.*;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    UsersAuthoritiesRepositoryImpl authorityRepository;
-    Logger logger = DbLogger.getLogger();
+
+    final UserRepository userRepository;
+    final UsersAuthoritiesRepositoryImpl authorityRepository;
+    final Logger logger;
+
+    public UserServiceImpl(UserRepository userRepository, UsersAuthoritiesRepositoryImpl authorityRepository) {
+        this.userRepository = userRepository;
+        this.authorityRepository = authorityRepository;
+        this.logger = DbLogger.getLogger();;
+    }
 
     @Override
     @Transactional

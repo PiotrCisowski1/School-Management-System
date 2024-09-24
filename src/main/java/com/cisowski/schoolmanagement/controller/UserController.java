@@ -18,10 +18,14 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/users")
 public class UserController {
+    
+    final UserServiceImpl userService;
+    final Logger logger;
 
-    @Autowired
-    UserServiceImpl userService;
-    Logger logger = DbLogger.getLogger();
+    public UserController(UserServiceImpl userService) {
+        this.userService = userService;
+        this.logger = DbLogger.getLogger();
+    }
 
     @PostMapping
     public ResponseEntity<User> addUser(@RequestPart User user, @RequestPart Authority[] authorities)
