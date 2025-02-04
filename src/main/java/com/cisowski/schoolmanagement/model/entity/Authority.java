@@ -1,10 +1,18 @@
 package com.cisowski.schoolmanagement.model.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.ManyToAny;
 
 @Entity
 @Table(name = "authorities")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Authority {
 
     @Id
@@ -13,29 +21,9 @@ public class Authority {
     @Column(nullable = false)
     private String authority;
 
-    public Authority() { }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getAuthority() {
-        return authority;
-    }
-
-    public void setAuthority(String authority) {
-        this.authority = authority;
-    }
 
     @Override
     public String toString() {
-        return "Authority{" +
-                "id=" + id +
-                ", authority='" + authority + '\'' +
-                '}';
+        return "name=" + authority;
     }
 }

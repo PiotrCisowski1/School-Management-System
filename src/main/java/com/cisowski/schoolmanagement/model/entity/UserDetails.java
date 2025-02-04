@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.model.entity;
 
 import com.cisowski.schoolmanagement.model.enums.Gender;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -9,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+@Data
 public class UserDetails implements org.springframework.security.core.userdetails.UserDetails {
     private final User user;
 
@@ -54,15 +56,8 @@ public class UserDetails implements org.springframework.security.core.userdetail
 
     @Override
     public boolean isEnabled() {
-        return user.isEnabled();
+        return user.getIsEnabled();
     }
-    public Integer getId() { return user.getId(); }
-    public String getEmail() { return user.getEmail(); }
-    public Long getPhoneNumber() { return user.getPhoneNumber(); }
-    public String getFirstName() { return user.getFirstName(); }
-    public String getLastName() { return user.getLastName(); }
-    public Date getBirthDate() { return user.getBirthDate(); }
-    public Gender getGender() { return user.getGender(); }
 
     public String printUser() {
         return user.toString();

@@ -26,11 +26,6 @@ public class JwtService {
     private String secretKey;
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
-    private final Logger logger;
-
-    public JwtService(Logger logger) {
-        this.logger = logger;
-    }
 
     public String extractUserEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -55,7 +50,7 @@ public class JwtService {
 
     private String buildToken(Map<String, Object> extraClaims, User user, long jwtExpiration) {
         String message = String.format("Generating token for User: %s", user.getId());
-        logger.info(DbLogger.buildInfoMessage(message));
+        DbLogger.info(message);
 
         return Jwts
                 .builder()

@@ -11,17 +11,20 @@ public class DbLogger {
          This wrapper is in use, because only INFO messages from code should be logged in DB.
          Any INFO messages from server are omitted and are not saved to DB.
 
-         Method 'buildInfoMessage' is temporary and should be fixed differently.
+         Errors are logged automatically.
   */
-
     private static final Logger logger = LoggerFactory.getLogger(SchoolmanagementApplication.class);
-    public static final String INFO_LOG_MARKER = "*INFO:  ";
+    protected static final String INFO_LOG_MARKER = "*INFO*  ";
 
-    public static Logger getLogger(){
-        return logger;
+    public static void info(String message){
+        logger.info(buildInfoMessage(message));
     }
-    public static String buildInfoMessage(String message){
+    private static String buildInfoMessage(String message){
         return INFO_LOG_MARKER + message;
+    }
+
+    public static void error(String message){
+        logger.error(message);
     }
 
 }

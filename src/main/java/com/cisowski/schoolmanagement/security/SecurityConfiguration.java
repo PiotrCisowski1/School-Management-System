@@ -9,7 +9,6 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -69,10 +68,13 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/login").permitAll())
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers("/users/**").hasAuthority("ADMINISTRATOR"))
+                        request.requestMatchers("/students/**").hasAuthority("ADMINISTRATOR"))
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR"))
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers("/teachers/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
-                .httpBasic(Customizer.withDefaults())
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -81,7 +83,12 @@ public class SecurityConfiguration {
     @Bean
     public RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
-        hierarchy.setHierarchy("SYS_ADMIN > ADMINISTRATOR > TEACHER > STUDENT\n");  // '>' mean 'include'; admin is also user - can reach any user endpoint
+        hierarchy.setHierarchy("""
+            SYS_ADMIN > ADMINISTRATOR
+            ADMINISTRATOR > TEACHER
+            TEACHER > STUDENT
+            PARENT > STUDENT       \s
+        """);  // '>' mean 'include'; admin is also user - can reach any user endpoint
         return hierarchy;
     }
 }
