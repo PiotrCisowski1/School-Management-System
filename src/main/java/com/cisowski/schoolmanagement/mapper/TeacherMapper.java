@@ -5,16 +5,13 @@ import com.cisowski.schoolmanagement.model.request.TeacherPatchRequest;
 import com.cisowski.schoolmanagement.model.response.AddTeacherResponse;
 import com.cisowski.schoolmanagement.model.response.TeacherDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.TeacherSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.Subject;
 import com.cisowski.schoolmanagement.model.entity.Teacher;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TeacherMapper {

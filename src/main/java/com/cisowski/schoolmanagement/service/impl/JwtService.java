@@ -1,14 +1,12 @@
 package com.cisowski.schoolmanagement.service.impl;
 
 import com.cisowski.schoolmanagement.model.entity.User;
-import com.cisowski.schoolmanagement.model.entity.UserDetails;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.internal.Function;
 import org.springframework.context.annotation.PropertySource;

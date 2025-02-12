@@ -12,18 +12,14 @@ import com.cisowski.schoolmanagement.model.request.StudentCreateRequest;
 import com.cisowski.schoolmanagement.model.response.StudentDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.model.entity.Student;
-import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.repository.ParentRepository;
 import com.cisowski.schoolmanagement.repository.StudentRepository;
 import com.cisowski.schoolmanagement.service.StudentService;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import jakarta.transaction.Transactional;
-import jdk.jfr.Frequency;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class StudentServiceImpl implements StudentService {
@@ -70,9 +66,9 @@ public class StudentServiceImpl implements StudentService {
         return response;
     }
 
-    private Collection<Parent> fetchParentEntities(Collection<Integer> parentIds){
+    private List<Parent> fetchParentEntities(Collection<Integer> parentIds){
         if (parentIds == null || parentIds.isEmpty())
-            return null;
+            return Collections.emptyList();
 
         List<Parent> parents = parentRepository.findAllById(parentIds);
         if(parents.size() != parentIds.size())
@@ -113,7 +109,10 @@ public class StudentServiceImpl implements StudentService {
 
     private void checkAndUpdateParentEntities(Student student, StudentPatchRequest request){
         if(request.getParentIdsToAdd() != null && !request.getParentIdsToAdd().isEmpty()){
-            student.getParents().addAll(fetchParentEntities(request.getParentIdsToAdd()));
+            List<Parent> parents = new ArrayList<>(fetchParentEntities(request.getParentIdsToAdd()));
+            if(student.getParents() != null)
+                parents.addAll(student.getParents());
+            student.setParents(parents);
         }
         if(request.getParentIdsToRemove() != null && !request.getParentIdsToRemove().isEmpty()){
             removeParentRelation(student, request.getParentIdsToRemove());

@@ -2,8 +2,6 @@ package com.cisowski.schoolmanagement.model.response;
 
 import lombok.Data;
 
-import java.util.Collection;
-import java.util.Set;
 
 @Data
 public class SubjectSummaryResponse {

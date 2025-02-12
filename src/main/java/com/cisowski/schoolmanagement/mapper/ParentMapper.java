@@ -6,13 +6,11 @@ import com.cisowski.schoolmanagement.model.request.ParentCreateRequest;
 import com.cisowski.schoolmanagement.model.response.ParentDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.ParentSummaryResponse;
 import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.Student;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

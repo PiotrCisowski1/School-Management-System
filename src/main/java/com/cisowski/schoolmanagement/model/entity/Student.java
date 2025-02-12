@@ -1,17 +1,14 @@
 package com.cisowski.schoolmanagement.model.entity;
 
-import com.cisowski.schoolmanagement.model.enums.Gender;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import javax.annotation.processing.Generated;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

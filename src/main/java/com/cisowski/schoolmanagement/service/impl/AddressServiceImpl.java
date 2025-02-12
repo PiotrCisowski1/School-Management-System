@@ -6,7 +6,6 @@ import com.cisowski.schoolmanagement.repository.AddressRepository;
 import com.cisowski.schoolmanagement.service.AddressService;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;

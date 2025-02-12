@@ -1,13 +1,11 @@
 package com.cisowski.schoolmanagement.model.entity;
 
-import com.cisowski.schoolmanagement.model.enums.Gender;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -59,7 +57,4 @@ public class UserDetails implements org.springframework.security.core.userdetail
         return user.getIsEnabled();
     }
 
-    public String printUser() {
-        return user.toString();
-    }
 }

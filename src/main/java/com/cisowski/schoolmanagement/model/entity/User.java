@@ -1,22 +1,13 @@
 package com.cisowski.schoolmanagement.model.entity;
 
 import com.cisowski.schoolmanagement.model.enums.Gender;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.lang.NonNull;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
 
 @Getter
 @Setter

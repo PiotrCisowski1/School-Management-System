@@ -35,7 +35,7 @@ public class TeacherServiceTests {
     private TeacherRepository repository;
     @Mock
     private TeacherMapperImpl mockedTeacherMapper;
-    private TeacherMapper teacherMapper = Mappers.getMapper(TeacherMapper.class);
+    private final TeacherMapper teacherMapper = Mappers.getMapper(TeacherMapper.class);
     @InjectMocks
     private TeacherServiceImpl service;
     private final String generatedPassword = PasswordGenerator.generatePassword();
@@ -75,7 +75,7 @@ public class TeacherServiceTests {
     @DisplayName("addTeacher should throw EmailAlreadyExistsException")
     public void addTeacher_throwsEmailAlreadyExistsEx() {
         TeacherCreateRequest dto = Instancio.create(TeacherCreateRequest.class);
-        User existingUser = new User();
+        Teacher existingUser = new Teacher();
 
         when(repository.findByEmail(any())).thenReturn(Optional.of(existingUser));
 
@@ -87,12 +87,10 @@ public class TeacherServiceTests {
     @DisplayName("updateTeacher successful - returns TeacherResponse")
     public void updateTeacher_successful() {
         TeacherPatchRequest dto = Instancio.create(TeacherPatchRequest.class);
-        User user = new User();
-        user.setPassword("strongPass123");
         Teacher teacher = teacherMapper.toTeacherEntity(dto);
         TeacherDetailedResponse response = teacherMapper.toTeacherResponse(teacher);
 
-        when(repository.findByEmail(any())).thenReturn(Optional.of(user));
+        when(repository.findByEmail(any())).thenReturn(Optional.of(teacher));
         when(mockedTeacherMapper.toTeacherEntity(dto)).thenReturn(teacher);
         when(repository.save(any())).thenReturn(teacher);
         when(mockedTeacherMapper.toTeacherResponse(any())).thenReturn(response);

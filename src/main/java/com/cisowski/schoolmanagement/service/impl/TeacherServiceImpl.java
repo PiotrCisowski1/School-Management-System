@@ -9,7 +9,6 @@ import com.cisowski.schoolmanagement.model.response.AddTeacherResponse;
 import com.cisowski.schoolmanagement.model.response.TeacherDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.model.entity.Teacher;
-import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.service.TeacherService;
 import com.cisowski.schoolmanagement.utility.DbLogger;

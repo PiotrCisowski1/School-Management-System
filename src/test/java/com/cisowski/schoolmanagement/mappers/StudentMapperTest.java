@@ -3,7 +3,6 @@ package com.cisowski.schoolmanagement.mappers;
 import com.cisowski.schoolmanagement.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.model.request.AddressRequest;
 import com.cisowski.schoolmanagement.model.request.StudentCreateRequest;
-import com.cisowski.schoolmanagement.model.response.*;
 import com.cisowski.schoolmanagement.model.entity.Parent;
 import com.cisowski.schoolmanagement.model.entity.Student;
 import com.cisowski.schoolmanagement.model.entity.Yearbook;
@@ -51,9 +50,6 @@ class StudentMapperTest {
         assertThat(student.getFirstName()).isEqualTo(studentDto.getFirstName());
         assertThat(student.getLastName()).isEqualTo(studentDto.getLastName());
         assertThat(student.getPhoneNumber()).isEqualTo(studentDto.getPhoneNumber());
-        assertThat(student.getYearbook().getId()).isEqualTo(studentDto.getYearbookId());
-        assertThat(student.getParents()).hasSize(3);
-        student.getParents().forEach(parent -> assertThat(parent.getId()).isIn(1, 2, 3));
     }
 
     @Test

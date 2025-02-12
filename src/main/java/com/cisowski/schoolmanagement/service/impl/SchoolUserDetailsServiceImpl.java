@@ -2,7 +2,6 @@ package com.cisowski.schoolmanagement.service.impl;
 
 import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.model.entity.UserDetails;
-import com.cisowski.schoolmanagement.repository.BaseUserRepository;
 import com.cisowski.schoolmanagement.repository.UserDetailsRepository;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import org.springframework.beans.factory.annotation.Autowired;

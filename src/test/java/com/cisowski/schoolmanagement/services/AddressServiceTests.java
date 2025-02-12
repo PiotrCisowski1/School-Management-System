@@ -50,16 +50,15 @@ public class AddressServiceTests {
     public void updateAddress_shouldReturnUpdatedEntity() throws IOException {
         Address savedAddress = objectMapper.readValue(
                 new File("src/test/resources/Address.json"), Address.class);
-        Address targetUpdatedAddress = savedAddress;
-        targetUpdatedAddress.setCity("XYZ");
+        savedAddress.setCity("XYZ");
 
         when(addressRepository.findById(savedAddress.getId())).thenReturn(Optional.of(savedAddress));
-        when(addressRepository.save(targetUpdatedAddress)).thenReturn(targetUpdatedAddress);
+        when(addressRepository.save(savedAddress)).thenReturn(savedAddress);
 
-        Address updatedAddress = addressService.updateAddress(targetUpdatedAddress);
+        Address updatedAddress = addressService.updateAddress(savedAddress);
 
         Assert.assertNotNull(updatedAddress);
-        Assert.assertEquals(targetUpdatedAddress,updatedAddress);
+        Assert.assertEquals(savedAddress,updatedAddress);
     }
 
     @Test(expected = EntityNotFoundException.class)
@@ -91,7 +90,7 @@ public class AddressServiceTests {
 
     @Test(expected = EntityNotFoundException.class)
     @DisplayName("deleteAddress with non existing object - should throw EntityNotFoundException")
-    public void deleteAddress_entityNotFoundEx() throws IOException{
+    public void deleteAddress_entityNotFoundEx() {
         Integer adrId = 123;
 
         when(addressRepository.findById(any())).thenReturn(Optional.empty());

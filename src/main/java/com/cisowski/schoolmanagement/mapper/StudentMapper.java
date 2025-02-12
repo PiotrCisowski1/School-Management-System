@@ -4,16 +4,13 @@ import com.cisowski.schoolmanagement.model.request.StudentCreateRequest;
 import com.cisowski.schoolmanagement.model.request.StudentPatchRequest;
 import com.cisowski.schoolmanagement.model.response.AddStudentResponse;
 import com.cisowski.schoolmanagement.model.response.StudentSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.Parent;
 import com.cisowski.schoolmanagement.model.entity.Student;
 import com.cisowski.schoolmanagement.model.response.StudentDetailedResponse;
-import com.cisowski.schoolmanagement.model.entity.Yearbook;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

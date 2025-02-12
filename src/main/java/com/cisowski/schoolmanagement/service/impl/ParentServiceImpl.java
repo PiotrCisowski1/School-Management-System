@@ -11,13 +11,11 @@ import com.cisowski.schoolmanagement.model.request.ParentCreateRequest;
 import com.cisowski.schoolmanagement.model.response.ParentDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.ParentSummaryResponse;
 import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.repository.ParentRepository;
 import com.cisowski.schoolmanagement.repository.StudentRepository;
 import com.cisowski.schoolmanagement.service.ParentService;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import jakarta.transaction.Transactional;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -72,9 +70,9 @@ public class ParentServiceImpl implements ParentService {
         List<Student> children = fetchStudentEntities(childrenIds);
 
         children.forEach(child -> {
-            parent.getChildren().add(child);
             child.getParents().add(parent);
         });
+        parent.getChildren().addAll(children);
     }
 
     private List<Student> fetchStudentEntities(Collection<Integer> studentIds){
@@ -184,8 +182,6 @@ public class ParentServiceImpl implements ParentService {
     }
 
     private void removeChildParentRelation(Parent parent, Collection<Student> children){
-        children.forEach(child ->{
-            child.getParents().remove(parent);
-        });
+        children.forEach(child -> child.getParents().remove(parent));
     }
 }

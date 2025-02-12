@@ -2,15 +2,17 @@ package com.cisowski.schoolmanagement.services;
 
 import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
 import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.mapper.ParentMapper;
 import com.cisowski.schoolmanagement.mapper.ParentMapperImpl;
+import com.cisowski.schoolmanagement.model.entity.Student;
 import com.cisowski.schoolmanagement.model.request.*;
 import com.cisowski.schoolmanagement.model.response.AddParentResponse;
 import com.cisowski.schoolmanagement.model.response.ParentDetailedResponse;
 import com.cisowski.schoolmanagement.model.response.ParentSummaryResponse;
 import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.User;
 import com.cisowski.schoolmanagement.repository.ParentRepository;
+import com.cisowski.schoolmanagement.repository.StudentRepository;
 import com.cisowski.schoolmanagement.service.impl.ParentServiceImpl;
 import com.cisowski.schoolmanagement.utility.PasswordGenerator;
 import org.instancio.Instancio;
@@ -22,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +39,8 @@ public class ParentServiceTests {
     @Mock
     private ParentRepository repository;
     @Mock
+    private StudentRepository studentRepository;
+    @Mock
     private ParentMapperImpl mockedMapper;
     private final ParentMapper parentMapper = Mappers.getMapper(ParentMapper.class);
     @InjectMocks
@@ -47,37 +53,48 @@ public class ParentServiceTests {
     @DisplayName("add Parent successful - returns full ParentResponse")
     public void addParent_successful() {
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
+        List<Student> children = Instancio.ofList(Student.class).size(3).create();
+        List<Integer> childrenIds = children.stream().map(Student::getId).toList();
+        dto.setChildrenIds(childrenIds);
         Parent parent = parentMapper.toParentEntity(dto);
         parent.setPassword(generatedPassword);
+        parent.setChildren(children);
         parent.setId(1);
-        AddParentResponse response = parentMapper.toAddParentResponse(parent);
+
+        AddParentResponse mockResponse = parentMapper.toAddParentResponse(parent);
+        mockResponse.setId(1);
+        mockResponse.setPassword("ThePass123");
 
         when(repository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
         when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
+        when(studentRepository.findAllById(any())).thenReturn(children);
         when(repository.save(any())).thenReturn(parent);
-        when(mockedMapper.toAddParentResponse(any())).thenReturn(response);
+        when(mockedMapper.toAddParentResponse(any())).thenReturn(mockResponse);
 
         AddParentResponse result = service.addParent(dto);
 
         assertNotNull(result);
         assertNotNull(result.getPassword());
-        assertEquals(response, result);
-        assertEquals(response.getId(), result.getId());
-        assertEquals(response.getEmail(), result.getEmail());
-        assertEquals(response.getFirstName(), result.getFirstName());
-        assertEquals(response.getLastName(), result.getLastName());
-        assertEquals(response.getPhoneNumber(), result.getPhoneNumber());
-        assertEquals(response.getBirthDate(), result.getBirthDate());
-        assertEquals(response.getGender(), result.getGender());
-        assertIterableEquals(response.getAuthority(), result.getAuthority());
-        assertIterableEquals(response.getChildren(), result.getChildren());
+        assertNotNull(result.getId());
+        assertEquals(dto.getEmail(), result.getEmail());
+        assertEquals(dto.getFirstName(), result.getFirstName());
+        assertEquals(dto.getLastName(), result.getLastName());
+        assertEquals(dto.getPhoneNumber(), result.getPhoneNumber());
+        assertEquals(dto.getBirthDate(), result.getBirthDate());
+        assertEquals(dto.getGender(), result.getGender());
+        assertIterableEquals(dto.getAuthority(), result.getAuthority());
+        assertEquals(childrenIds.size(), result.getChildren().size());
+        verify(repository, times(1)).findByEmail(dto.getEmail());
+        verify(repository, times(1)).save(any());
+        verify(mockedMapper,times(1)).toParentEntity(dto);
+        verify(mockedMapper,times(1)).toAddParentResponse(any());
     }
 
     @Test
     @DisplayName("addParent should throw EmailAlreadyExistsException")
     public void addParent_throwsEmailAlreadyExistsEx() {
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
-        User existingUser = new User();
+        Parent existingUser = new Parent();
 
         when(repository.findByEmail(any())).thenReturn(Optional.of(existingUser));
 
@@ -86,18 +103,69 @@ public class ParentServiceTests {
     }
 
     @Test
+    @DisplayName("addParent throws SpecificationBrokenException - no children selected")
+    public void addParent_throwsSpecBrokenEx(){
+        ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
+        dto.setChildrenIds(null);
+        Parent parent = parentMapper.toParentEntity(dto);
+
+        when(repository.findByEmail(any())).thenReturn(Optional.empty());
+        when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
+
+        SpecificationBrokenException exception = assertThrows(
+                SpecificationBrokenException.class,
+                () -> service.addParent(dto));
+        assertTrue(exception.getMessage().contains("without children"));
+    }
+
+    @Test
+    @DisplayName("addParent throws SpecificationBrokenException - not every childrenId exists")
+    public void addParent_throwsSpecBrokenEx2(){
+        ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
+        List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
+        dto.setChildrenIds(childrenIds);
+        List<Student> children = Instancio.ofList(Student.class).size(1).create();
+        Parent parent = parentMapper.toParentEntity(dto);
+
+        when(repository.findByEmail(any())).thenReturn(Optional.empty());
+        when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
+        when(studentRepository.findAllById(any())).thenReturn(children);
+
+        SpecificationBrokenException thrown = assertThrows(
+                SpecificationBrokenException.class,
+                () -> service.addParent(dto));
+        assertTrue(thrown.getMessage().contains("children IDs are invalid"));
+    }
+
+    @Test
     @DisplayName("updateParent successful - returns ParentResponse")
     public void updateParent_successful() {
         ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
-        User user = new User();
-        user.setPassword("strongPass123");
+        List<Student> children = Instancio.ofList(Student.class).size(1).create();
+        children.get(0).setId(1);
+        Student studentToRemove = Instancio.create(Student.class);
+        children.add(studentToRemove);
+        List<Integer> childrenIdsToRemove = Collections.singletonList(studentToRemove.getId());
+        List<Integer> childrenIdsToAdd = Arrays.asList(3,4);
+        List<Student> childrenToAdd = Instancio.ofList(Student.class).size(2).create();
+        childrenToAdd.get(0).setId(3);
+        childrenToAdd.get(1).setId(4);
+        List<Student> childrenToRemove = Collections.singletonList(studentToRemove);
+        childrenToRemove.get(0).setId(1);
+        dto.setChildrenIdsToAdd(childrenIdsToAdd);
+        dto.setChildrenIdsToRemove(childrenIdsToRemove);
         Parent parent = parentMapper.toParentEntity(dto);
+        parent.setId(1);
+        children.addAll(childrenToAdd);
+        parent.setChildren(children);
         ParentDetailedResponse response = parentMapper.toParentDetailedResponse(parent);
 
-        when(repository.findByEmail(any())).thenReturn(Optional.of(user));
+        when(repository.findById(any())).thenReturn(Optional.of(parent));
         when(repository.save(any())).thenReturn(parent);
         when(mockedMapper.toParentDetailedResponse(any())).thenReturn(response);
         when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
+        when(studentRepository.findAllById(any())).thenReturn(childrenToAdd,childrenToRemove);
+        doNothing().when(mockedMapper).patchParentEntity(any(), any());
 
         ParentDetailedResponse result = service.updateParent(dto, 1);
 
@@ -111,7 +179,14 @@ public class ParentServiceTests {
         assertEquals(response.getBirthDate(), result.getBirthDate());
         assertEquals(response.getGender(), result.getGender());
         assertIterableEquals(response.getAuthority(), result.getAuthority());
-        assertIterableEquals(response.getChildren(), result.getChildren());
+        Integer expectedChildrenSize = children.size() + childrenToAdd.size() - childrenToRemove.size();
+        assertEquals(expectedChildrenSize, result.getChildren().size());
+        verify(repository, times(1)).findById(any());
+        verify(mockedMapper, times(1)).toParentEntity(dto);
+        verify(mockedMapper, times(1)).patchParentEntity(any(), any());
+        verify(mockedMapper, times(1)).toParentDetailedResponse(any());
+        verify(repository, times(1)).save(any());
+        verify(studentRepository, times(2)).findAllById(any());
     }
 
     @Test
@@ -119,10 +194,47 @@ public class ParentServiceTests {
     public void updateParent_throwsEntityNotFoundEx() {
         ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
 
-        when(repository.findByEmail(any())).thenReturn(Optional.empty());
+        when(repository.findById(any())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () ->
                 service.updateParent(dto, 1));
+    }
+
+    @Test
+    @DisplayName("updateParent throws SpecificationBrokenException - child to remove does not exist")
+    public void updateParent_throwsSpecBrokenEx(){
+        ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
+        List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
+        dto.setChildrenIdsToAdd(null);
+        dto.setChildrenIdsToRemove(childrenIds);
+        List<Student> children = Instancio.ofList(Student.class).size(3).create();
+        Parent parent = parentMapper.toParentEntity(dto);
+
+        when(repository.findById(any())).thenReturn(Optional.of(parent));
+        when(studentRepository.findAllById(any())).thenReturn(children);
+
+        SpecificationBrokenException exception = assertThrows(
+                SpecificationBrokenException.class,
+                () -> service.updateParent(dto, 1));
+        assertTrue(exception.getMessage().contains("not associated with Parent"));
+    }
+
+    @Test
+    @DisplayName("updateParent throws SpecificationBrokenException - not every childrenId exists")
+    public void updateParent_throwsSpecBrokenEx2(){
+        ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
+        List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
+        dto.setChildrenIdsToAdd(childrenIds);
+        List<Student> children = Instancio.ofList(Student.class).size(1).create();
+        Parent parent = parentMapper.toParentEntity(dto);
+
+        when(repository.findById(any())).thenReturn(Optional.of(parent));
+        when(studentRepository.findAllById(any())).thenReturn(children);
+
+        SpecificationBrokenException thrown = assertThrows(
+                SpecificationBrokenException.class,
+                () -> service.updateParent(dto, 1));
+        assertTrue(thrown.getMessage().contains("children IDs are invalid"));
     }
 
     @Test

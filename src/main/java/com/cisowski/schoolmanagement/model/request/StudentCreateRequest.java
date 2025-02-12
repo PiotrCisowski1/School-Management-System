@@ -8,7 +8,6 @@ import java.util.Collection;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-
 public class StudentCreateRequest extends BaseCreateUserRequest {
 
     @NotNull

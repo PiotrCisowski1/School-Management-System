@@ -5,7 +5,6 @@ import com.cisowski.schoolmanagement.model.enums.Gender;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Getter;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;

@@ -3,7 +3,6 @@ package com.cisowski.schoolmanagement.model.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.Year;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;

@@ -3,7 +3,6 @@ package com.cisowski.schoolmanagement.service.impl;
 import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.model.request.LoginUserRequest;
 import com.cisowski.schoolmanagement.model.entity.User;
-import com.cisowski.schoolmanagement.repository.BaseUserRepository;
 import com.cisowski.schoolmanagement.repository.UserDetailsRepository;
 import com.cisowski.schoolmanagement.utility.DbLogger;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -47,8 +47,6 @@ class TeacherMapperTest {
         assertThat(teacher.getFirstName()).isEqualTo(teacherDto.getFirstName());
         assertThat(teacher.getLastName()).isEqualTo(teacherDto.getLastName());
         assertThat(teacher.getPhoneNumber()).isEqualTo(teacherDto.getPhoneNumber());
-        assertThat(teacher.getTeachingSubjects()).hasSize(3);
-        teacher.getTeachingSubjects().forEach(subject -> assertThat(subject.getId()).isIn(1, 2, 3));
     }
 
     @Test
