@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.model.response;
 
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import lombok.Data;
 
 import java.time.ZonedDateTime;

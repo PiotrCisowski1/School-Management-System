@@ -1,25 +1,24 @@
 package com.cisowski.schoolmanagement.services;
 
-import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
-import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.exception.type.SpecificationBrokenException;
-import com.cisowski.schoolmanagement.mapper.ParentMapper;
-import com.cisowski.schoolmanagement.mapper.StudentMapper;
-import com.cisowski.schoolmanagement.mapper.StudentMapperImpl;
-import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.Yearbook;
-import com.cisowski.schoolmanagement.model.request.StudentCreateRequest;
-import com.cisowski.schoolmanagement.model.request.StudentPatchRequest;
-import com.cisowski.schoolmanagement.model.response.AddStudentResponse;
-import com.cisowski.schoolmanagement.model.response.BaseUserSummaryResponse;
-import com.cisowski.schoolmanagement.model.response.StudentDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.StudentSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.Student;
-import com.cisowski.schoolmanagement.model.entity.User;
-import com.cisowski.schoolmanagement.repository.ParentRepository;
-import com.cisowski.schoolmanagement.repository.StudentRepository;
-import com.cisowski.schoolmanagement.service.impl.StudentServiceImpl;
-import com.cisowski.schoolmanagement.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapperImpl;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
+import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
+import com.cisowski.schoolmanagement.users.student.model.StudentPatchRequest;
+import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
+import com.cisowski.schoolmanagement.users.common.model.BaseUserSummaryResponse;
+import com.cisowski.schoolmanagement.users.student.model.StudentDetailedResponse;
+import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
+import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
+import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
+import com.cisowski.schoolmanagement.users.student.service.StudentServiceImpl;
+import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +28,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -59,8 +57,8 @@ public class StudentServiceTests {
     public void addStudent_successful() {
         StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
         studentDto.setParentsIds(Collections.singletonList(2));
-        Student student = studentMapper.toStudentEntity(studentDto);
-        List<Parent> parents = Collections.singletonList(Instancio.create(Parent.class));
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
+        List<ParentEntity> parents = Collections.singletonList(Instancio.create(ParentEntity.class));
         parents.get(0).setId(2);
         student.setPassword(generatedPassword);
         student.setId(1);
@@ -102,7 +100,7 @@ public class StudentServiceTests {
     @DisplayName("addStudent should throw EmailAlreadyExistsException")
     public void addStudent_throwsEmailAlreadyExistsEx() {
         StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
-        Student existingUser = new Student();
+        StudentEntity existingUser = new StudentEntity();
 
         when(studentRepository.findByEmail(any())).thenReturn(Optional.of(existingUser));
 
@@ -115,7 +113,7 @@ public class StudentServiceTests {
     public void addStudent_throwsSpecificationBrokenEx() {
         StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
         studentDto.setParentsIds(Collections.singletonList(2));
-        Student student = studentMapper.toStudentEntity(studentDto);
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
 
         when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
@@ -137,11 +135,11 @@ public class StudentServiceTests {
         List<Integer> parentIdsToRemove = Collections.singletonList(3);
         studentDto.setParentIdsToAdd(parentIdsToAdd);
         studentDto.setParentIdsToRemove(parentIdsToRemove);
-        Student student = studentMapper.toStudentEntity(studentDto);
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
-        student.setYearbook(Instancio.create(Yearbook.class));
-        Parent parentToAdd = Instancio.create(Parent.class);
-        Parent parentToRemove = Instancio.create(Parent.class);
+        student.setYearbook(Instancio.create(YearbookEntity.class));
+        ParentEntity parentToAdd = Instancio.create(ParentEntity.class);
+        ParentEntity parentToRemove = Instancio.create(ParentEntity.class);
         student.setParents(Collections.singletonList(parentToRemove));
         StudentDetailedResponse studentResponse = studentMapper.toStudentResponse(student);
         studentResponse.setParents(Collections.singletonList(parentMapper.toSummaryResponse(parentToAdd)));
@@ -191,9 +189,9 @@ public class StudentServiceTests {
         Integer studentId = 1;
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
         studentDto.setParentIdsToAdd(Collections.singletonList(2));
-        Student student = studentMapper.toStudentEntity(studentDto);
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
-        student.setYearbook(Instancio.create(Yearbook.class));
+        student.setYearbook(Instancio.create(YearbookEntity.class));
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
@@ -213,10 +211,10 @@ public class StudentServiceTests {
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
         studentDto.setParentIdsToRemove(Collections.singletonList(parentToRemoveId));
         studentDto.setParentIdsToAdd(null);
-        Student student = studentMapper.toStudentEntity(studentDto);
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
-        student.setYearbook(Instancio.create(Yearbook.class));
-        Parent parentToRemove = Instancio.create(Parent.class);
+        student.setYearbook(Instancio.create(YearbookEntity.class));
+        ParentEntity parentToRemove = Instancio.create(ParentEntity.class);
         parentToRemove.setId(parentToRemoveId);
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
@@ -234,7 +232,7 @@ public class StudentServiceTests {
     @DisplayName("deleteStudent should invoke delete method in repo")
     public void deleteStudent_successful() {
         Integer studentId = 1;
-        Student student = new Student();
+        StudentEntity student = new StudentEntity();
         student.setId(studentId);
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
@@ -259,7 +257,7 @@ public class StudentServiceTests {
     @Test
     @DisplayName("findAll successful - should return Collection<StudentResponse>")
     public void findAll_successful() {
-        List<Student> students = Instancio.createList(Student.class);
+        List<StudentEntity> students = Instancio.createList(StudentEntity.class);
         List<StudentSummaryResponse> responses = studentMapper.toStudentsResponse(students);
 
         when(studentRepository.findAll()).thenReturn(students);
@@ -277,7 +275,7 @@ public class StudentServiceTests {
     @DisplayName("findById successful - should return StudentResponse")
     public void findById_successful() {
         Integer studentId = 1;
-        Student existingStudent = Instancio.create(Student.class);
+        StudentEntity existingStudent = Instancio.create(StudentEntity.class);
         StudentDetailedResponse studentResponse = studentMapper.toStudentResponse(existingStudent);
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));

@@ -1,18 +1,18 @@
 package com.cisowski.schoolmanagement.services;
 
-import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
-import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.mapper.TeacherMapper;
-import com.cisowski.schoolmanagement.mapper.TeacherMapperImpl;
-import com.cisowski.schoolmanagement.model.request.TeacherCreateRequest;
-import com.cisowski.schoolmanagement.model.request.TeacherPatchRequest;
-import com.cisowski.schoolmanagement.model.response.AddTeacherResponse;
-import com.cisowski.schoolmanagement.model.response.TeacherDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.TeacherSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.*;
-import com.cisowski.schoolmanagement.repository.TeacherRepository;
-import com.cisowski.schoolmanagement.service.impl.TeacherServiceImpl;
-import com.cisowski.schoolmanagement.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapperImpl;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.AddTeacherResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
+import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherServiceImpl;
+import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ public class TeacherServiceTests {
     @DisplayName("add Teacher successful - returns full TeacherResponse")
     public void addTeacher_successful() {
         TeacherCreateRequest dto = Instancio.create(TeacherCreateRequest.class);
-        Teacher teacher = teacherMapper.toTeacherEntity(dto);
+        TeacherEntity teacher = teacherMapper.toTeacherEntity(dto);
         teacher.setPassword(generatedPassword);
         teacher.setId(1);
         AddTeacherResponse response = teacherMapper.toAddTeacherResponse(teacher);
@@ -75,7 +75,7 @@ public class TeacherServiceTests {
     @DisplayName("addTeacher should throw EmailAlreadyExistsException")
     public void addTeacher_throwsEmailAlreadyExistsEx() {
         TeacherCreateRequest dto = Instancio.create(TeacherCreateRequest.class);
-        Teacher existingUser = new Teacher();
+        TeacherEntity existingUser = new TeacherEntity();
 
         when(repository.findByEmail(any())).thenReturn(Optional.of(existingUser));
 
@@ -87,7 +87,7 @@ public class TeacherServiceTests {
     @DisplayName("updateTeacher successful - returns TeacherResponse")
     public void updateTeacher_successful() {
         TeacherPatchRequest dto = Instancio.create(TeacherPatchRequest.class);
-        Teacher teacher = teacherMapper.toTeacherEntity(dto);
+        TeacherEntity teacher = teacherMapper.toTeacherEntity(dto);
         TeacherDetailedResponse response = teacherMapper.toTeacherResponse(teacher);
 
         when(repository.findByEmail(any())).thenReturn(Optional.of(teacher));
@@ -126,7 +126,7 @@ public class TeacherServiceTests {
     @DisplayName("deleteTeacher should invoke delete method in repo")
     public void deleteTeacher_successful() {
         Integer userId = 1;
-        Teacher teacher = new Teacher();
+        TeacherEntity teacher = new TeacherEntity();
         teacher.setId(userId);
 
         when(repository.findById(userId)).thenReturn(Optional.of(teacher));
@@ -151,7 +151,7 @@ public class TeacherServiceTests {
     @Test
     @DisplayName("findAll successful - should return Collection<TeacherResponse>")
     public void findAll_successful() {
-        List<Teacher> teachers = Instancio.createList(Teacher.class);
+        List<TeacherEntity> teachers = Instancio.createList(TeacherEntity.class);
         List<TeacherSummaryResponse> responses = teacherMapper.toTeachersResponse(teachers);
 
         when(repository.findAll()).thenReturn(teachers);
@@ -169,7 +169,7 @@ public class TeacherServiceTests {
     @DisplayName("findById successful - should return TeacherResponse")
     public void findById_successful() {
         Integer userId = 1;
-        Teacher existingTeacher = Instancio.create(Teacher.class);
+        TeacherEntity existingTeacher = Instancio.create(TeacherEntity.class);
         TeacherDetailedResponse response = teacherMapper.toTeacherResponse(existingTeacher);
 
         when(repository.findById(userId)).thenReturn(Optional.of(existingTeacher));

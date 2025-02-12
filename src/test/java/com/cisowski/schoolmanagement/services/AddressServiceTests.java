@@ -1,9 +1,9 @@
 package com.cisowski.schoolmanagement.services;
 
-import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.model.entity.Address;
-import com.cisowski.schoolmanagement.repository.AddressRepository;
-import com.cisowski.schoolmanagement.service.impl.AddressServiceImpl;
+import com.cisowski.schoolmanagement.users.common.model.AddressEntity;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.users.common.repository.AddressRepository;
+import com.cisowski.schoolmanagement.users.common.service.AddressServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,12 +34,12 @@ public class AddressServiceTests {
     @Test
     @DisplayName("addAddress - successful")
     public void addAddress_shouldReturnSavedAddress() throws IOException {
-        Address targetAddress = objectMapper.readValue(
-                new File("src/test/resources/Address.json"), Address.class);
+        AddressEntity targetAddress = objectMapper.readValue(
+                new File("src/test/resources/Address.json"), AddressEntity.class);
 
-        when(addressRepository.save(any(Address.class))).thenReturn(targetAddress);
+        when(addressRepository.save(any(AddressEntity.class))).thenReturn(targetAddress);
 
-        Address createdAddress = addressService.addAddress(targetAddress);
+        AddressEntity createdAddress = addressService.addAddress(targetAddress);
 
         verify(addressRepository, times(1)).save(targetAddress);
         Assert.assertNotNull(createdAddress);
@@ -48,14 +48,14 @@ public class AddressServiceTests {
     @Test
     @DisplayName("updateAddress - successful")
     public void updateAddress_shouldReturnUpdatedEntity() throws IOException {
-        Address savedAddress = objectMapper.readValue(
-                new File("src/test/resources/Address.json"), Address.class);
+        AddressEntity savedAddress = objectMapper.readValue(
+                new File("src/test/resources/Address.json"), AddressEntity.class);
         savedAddress.setCity("XYZ");
 
         when(addressRepository.findById(savedAddress.getId())).thenReturn(Optional.of(savedAddress));
         when(addressRepository.save(savedAddress)).thenReturn(savedAddress);
 
-        Address updatedAddress = addressService.updateAddress(savedAddress);
+        AddressEntity updatedAddress = addressService.updateAddress(savedAddress);
 
         Assert.assertNotNull(updatedAddress);
         Assert.assertEquals(savedAddress,updatedAddress);
@@ -64,8 +64,8 @@ public class AddressServiceTests {
     @Test(expected = EntityNotFoundException.class)
     @DisplayName("updateAddress with non existing object - should throw EntityNotFoundException")
     public void updateAddress_entityNotFoundEx() throws IOException{
-        Address address = objectMapper.readValue(
-                new File("src/test/resources/Address.json"), Address.class);
+        AddressEntity address = objectMapper.readValue(
+                new File("src/test/resources/Address.json"), AddressEntity.class);
 
         when(addressRepository.findById(any())).thenReturn(Optional.empty());
 
@@ -77,8 +77,8 @@ public class AddressServiceTests {
     @Test
     @DisplayName("deleteAddress - successful")
     public void deleteAddress_shouldDeleteEntity() throws IOException{
-        Address existingAddress = objectMapper.readValue(
-                new File("src/test/resources/Address.json"), Address.class);
+        AddressEntity existingAddress = objectMapper.readValue(
+                new File("src/test/resources/Address.json"), AddressEntity.class);
 
         when(addressRepository.findById(existingAddress.getId())).thenReturn(Optional.of(existingAddress));
 
@@ -103,12 +103,12 @@ public class AddressServiceTests {
     @Test
     @DisplayName("findAddressById - successful")
     public void findAddressById_shouldReturnEntity() throws IOException{
-        Address existingAddress = objectMapper.readValue(
-                new File("src/test/resources/Address.json"), Address.class);
+        AddressEntity existingAddress = objectMapper.readValue(
+                new File("src/test/resources/Address.json"), AddressEntity.class);
 
         when(addressRepository.findById(any())).thenReturn(Optional.of(existingAddress));
 
-        Address foundAddress = addressService.findById(existingAddress.getId());
+        AddressEntity foundAddress = addressService.findById(existingAddress.getId());
 
         Assert.assertNotNull(foundAddress);
         Assert.assertEquals(existingAddress,foundAddress);
@@ -131,7 +131,7 @@ public class AddressServiceTests {
     public void findAddresses_shouldReturnCollectionOfAddress() {
         when(addressRepository.findAll()).thenReturn(Collections.emptyList());
 
-        Collection<Address> addresses = addressService.findAll();
+        Collection<AddressEntity> addresses = addressService.findAll();
 
         verify(addressRepository, times(1)).findAll();
         Assert.assertNotNull(addresses);

@@ -1,15 +1,15 @@
 package com.cisowski.schoolmanagement.mappers;
 
-import com.cisowski.schoolmanagement.mapper.ParentMapper;
-import com.cisowski.schoolmanagement.model.request.AddressRequest;
-import com.cisowski.schoolmanagement.model.request.ParentCreateRequest;
-import com.cisowski.schoolmanagement.model.entity.Address;
-import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.Student;
-import com.cisowski.schoolmanagement.model.enums.Gender;
-import com.cisowski.schoolmanagement.model.response.AddParentResponse;
-import com.cisowski.schoolmanagement.model.response.ParentDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.ParentSummaryResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
+import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
+import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
+import com.cisowski.schoolmanagement.users.common.model.AddressEntity;
+import com.cisowski.schoolmanagement.users.common.model.Gender;
+import com.cisowski.schoolmanagement.users.parent.model.AddParentResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentDetailedResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
@@ -43,7 +43,7 @@ class ParentMapperTest {
         parentDto.setAddress(addressDto);
 
         // Act
-        Parent parent = mapper.toParentEntity(parentDto);
+        ParentEntity parent = mapper.toParentEntity(parentDto);
 
         // Assert
         assertThat(parent.getEmail()).isEqualTo(parentDto.getEmail());
@@ -55,7 +55,7 @@ class ParentMapperTest {
     @Test
     void shouldMapParentToParentDetailedResponse() {
         // Arrange
-        Parent parent = new Parent();
+        ParentEntity parent = new ParentEntity();
         parent.setId(1);
         parent.setEmail("parent@example.com");
         parent.setFirstName("John");
@@ -64,17 +64,17 @@ class ParentMapperTest {
         parent.setBirthDate(new Date());
         parent.setGender(Gender.MALE);
 
-        Address address = new Address();
+        AddressEntity address = new AddressEntity();
         address.setCity("City");
         address.setStreet("Street");
         address.setZipCode("12345");
         parent.setAddress(address);
 
-        Student child1 = new Student();
+        StudentEntity child1 = new StudentEntity();
         child1.setId(1);
         child1.setFirstName("Child1");
 
-        Student child2 = new Student();
+        StudentEntity child2 = new StudentEntity();
         child2.setId(2);
         child2.setFirstName("Child2");
 
@@ -95,7 +95,7 @@ class ParentMapperTest {
     @Test
     void shouldMapParentToAddParentResponse() {
         // Arrange
-        Parent parent = new Parent();
+        ParentEntity parent = new ParentEntity();
         parent.setId(1);
         parent.setEmail("parent@example.com");
         parent.setFirstName("John");
@@ -118,21 +118,21 @@ class ParentMapperTest {
     @Test
     void shouldMapCollectionOfParentsToParentSummaryResponses() {
         // Arrange
-        Parent parent1 = new Parent();
+        ParentEntity parent1 = new ParentEntity();
         parent1.setEmail("parent1@example.com");
         parent1.setFirstName("John");
         parent1.setLastName("Doe");
         parent1.setBirthDate(new Date());
         parent1.setPhoneNumber("123456789");
 
-        Parent parent2 = new Parent();
+        ParentEntity parent2 = new ParentEntity();
         parent2.setEmail("parent2@example.com");
         parent2.setFirstName("Jane");
         parent2.setLastName("Smith");
         parent2.setBirthDate(new Date());
         parent2.setPhoneNumber("987654321");
 
-        Collection<Parent> parents = Arrays.asList(parent1, parent2);
+        Collection<ParentEntity> parents = Arrays.asList(parent1, parent2);
 
         // Act
         List<ParentSummaryResponse> responses = mapper.toParentsResponse(parents);

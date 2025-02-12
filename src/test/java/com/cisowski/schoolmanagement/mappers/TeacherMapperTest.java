@@ -1,15 +1,15 @@
 package com.cisowski.schoolmanagement.mappers;
 
-import com.cisowski.schoolmanagement.mapper.TeacherMapper;
-import com.cisowski.schoolmanagement.model.request.AddressRequest;
-import com.cisowski.schoolmanagement.model.request.TeacherCreateRequest;
-import com.cisowski.schoolmanagement.model.response.AddTeacherResponse;
-import com.cisowski.schoolmanagement.model.response.TeacherDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.TeacherSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.Subject;
-import com.cisowski.schoolmanagement.model.entity.Teacher;
-import com.cisowski.schoolmanagement.model.entity.Yearbook;
-import com.cisowski.schoolmanagement.model.enums.Gender;
+import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
+import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
+import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.AddTeacherResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.users.common.model.Gender;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
@@ -40,7 +40,7 @@ class TeacherMapperTest {
         teacherDto.setAddress(addressDto);
 
         // Act
-        Teacher teacher = mapper.toTeacherEntity(teacherDto);
+        TeacherEntity teacher = mapper.toTeacherEntity(teacherDto);
 
         // Assert
         assertThat(teacher.getEmail()).isEqualTo(teacherDto.getEmail());
@@ -52,7 +52,7 @@ class TeacherMapperTest {
     @Test
     void shouldMapTeacherToTeacherDetailedResponse() {
         // Arrange
-        Teacher teacher = new Teacher();
+        TeacherEntity teacher = new TeacherEntity();
         teacher.setId(1);
         teacher.setEmail("teacher@example.com");
         teacher.setFirstName("John");
@@ -61,17 +61,17 @@ class TeacherMapperTest {
         teacher.setBirthDate(new Date());
         teacher.setGender(Gender.MALE);
 
-        Subject subject1 = new Subject();
+        SubjectEntity subject1 = new SubjectEntity();
         subject1.setId(1);
         subject1.setName("Math");
 
-        Subject subject2 = new Subject();
+        SubjectEntity subject2 = new SubjectEntity();
         subject2.setId(2);
         subject2.setName("Physics");
 
         teacher.setTeachingSubjects(new HashSet<>(Arrays.asList(subject1, subject2)));
 
-        Yearbook leadingYearbook = new Yearbook();
+        YearbookEntity leadingYearbook = new YearbookEntity();
         leadingYearbook.setId(1);
         leadingYearbook.setSymbol("Yearbook 2025");
         teacher.setLeadingYearbook(leadingYearbook);
@@ -91,7 +91,7 @@ class TeacherMapperTest {
     @Test
     void shouldMapTeacherToAddTeacherResponse() {
         // Arrange
-        Teacher teacher = new Teacher();
+        TeacherEntity teacher = new TeacherEntity();
         teacher.setId(1);
         teacher.setEmail("teacher@example.com");
         teacher.setFirstName("John");
@@ -113,21 +113,21 @@ class TeacherMapperTest {
     @Test
     void shouldMapCollectionOfTeachersToTeacherSummaryResponses() {
         // Arrange
-        Teacher teacher1 = new Teacher();
+        TeacherEntity teacher1 = new TeacherEntity();
         teacher1.setEmail("teacher1@example.com");
         teacher1.setFirstName("John");
         teacher1.setLastName("Doe");
         teacher1.setBirthDate(new Date());
         teacher1.setPhoneNumber("123456789");
 
-        Teacher teacher2 = new Teacher();
+        TeacherEntity teacher2 = new TeacherEntity();
         teacher2.setEmail("teacher2@example.com");
         teacher2.setFirstName("Jane");
         teacher2.setLastName("Smith");
         teacher2.setBirthDate(new Date());
         teacher2.setPhoneNumber("987654321");
 
-        Collection<Teacher> teachers = Arrays.asList(teacher1, teacher2);
+        Collection<TeacherEntity> teachers = Arrays.asList(teacher1, teacher2);
 
         // Act
         List<TeacherSummaryResponse> responses = mapper.toTeachersResponse(teachers);

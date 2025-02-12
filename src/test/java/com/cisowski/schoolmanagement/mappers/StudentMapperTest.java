@@ -1,15 +1,15 @@
 package com.cisowski.schoolmanagement.mappers;
 
-import com.cisowski.schoolmanagement.mapper.StudentMapper;
-import com.cisowski.schoolmanagement.model.request.AddressRequest;
-import com.cisowski.schoolmanagement.model.request.StudentCreateRequest;
-import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.model.entity.Student;
-import com.cisowski.schoolmanagement.model.entity.Yearbook;
-import com.cisowski.schoolmanagement.model.enums.Gender;
-import com.cisowski.schoolmanagement.model.response.AddStudentResponse;
-import com.cisowski.schoolmanagement.model.response.StudentDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.StudentSummaryResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
+import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
+import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
+import com.cisowski.schoolmanagement.users.common.model.Gender;
+import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
+import com.cisowski.schoolmanagement.users.student.model.StudentDetailedResponse;
+import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
@@ -43,7 +43,7 @@ class StudentMapperTest {
         studentDto.setAddress(addressDto);
 
         // Act
-        Student student = mapper.toStudentEntity(studentDto);
+        StudentEntity student = mapper.toStudentEntity(studentDto);
 
         // Assert
         assertThat(student.getEmail()).isEqualTo(studentDto.getEmail());
@@ -55,7 +55,7 @@ class StudentMapperTest {
     @Test
     void shouldMapStudentToStudentDetailedResponse() {
         // Arrange
-        Student student = new Student();
+        StudentEntity student = new StudentEntity();
         student.setId(1);
         student.setEmail("student@example.com");
         student.setFirstName("Alice");
@@ -64,16 +64,16 @@ class StudentMapperTest {
         student.setBirthDate(new Date());
         student.setGender(Gender.FEMALE);
 
-        Yearbook yearbook = new Yearbook();
+        YearbookEntity yearbook = new YearbookEntity();
         yearbook.setId(1);
         yearbook.setSymbol("Yearbook 2025");
         student.setYearbook(yearbook);
 
-        Parent parent1 = new Parent();
+        ParentEntity parent1 = new ParentEntity();
         parent1.setId(1);
         parent1.setFirstName("John");
 
-        Parent parent2 = new Parent();
+        ParentEntity parent2 = new ParentEntity();
         parent2.setId(2);
         parent2.setFirstName("Jane");
 
@@ -94,7 +94,7 @@ class StudentMapperTest {
     @Test
     void shouldMapStudentToAddStudentResponse() {
         // Arrange
-        Student student = new Student();
+        StudentEntity student = new StudentEntity();
         student.setId(1);
         student.setEmail("student@example.com");
         student.setFirstName("Alice");
@@ -116,21 +116,21 @@ class StudentMapperTest {
     @Test
     void shouldMapCollectionOfStudentsToStudentSummaryResponses() {
         // Arrange
-        Student student1 = new Student();
+        StudentEntity student1 = new StudentEntity();
         student1.setEmail("student1@example.com");
         student1.setFirstName("Alice");
         student1.setLastName("Smith");
         student1.setBirthDate(new Date());
         student1.setPhoneNumber("123456789");
 
-        Student student2 = new Student();
+        StudentEntity student2 = new StudentEntity();
         student2.setEmail("student2@example.com");
         student2.setFirstName("Bob");
         student2.setLastName("Jones");
         student2.setBirthDate(new Date());
         student2.setPhoneNumber("987654321");
 
-        Collection<Student> students = Arrays.asList(student1, student2);
+        Collection<StudentEntity> students = Arrays.asList(student1, student2);
 
         // Act
         List<StudentSummaryResponse> responses = mapper.toStudentsResponse(students);

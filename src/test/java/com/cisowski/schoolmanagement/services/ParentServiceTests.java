@@ -1,20 +1,21 @@
 package com.cisowski.schoolmanagement.services;
 
-import com.cisowski.schoolmanagement.exception.type.EmailAlreadyExistsException;
-import com.cisowski.schoolmanagement.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.exception.type.SpecificationBrokenException;
-import com.cisowski.schoolmanagement.mapper.ParentMapper;
-import com.cisowski.schoolmanagement.mapper.ParentMapperImpl;
-import com.cisowski.schoolmanagement.model.entity.Student;
-import com.cisowski.schoolmanagement.model.request.*;
-import com.cisowski.schoolmanagement.model.response.AddParentResponse;
-import com.cisowski.schoolmanagement.model.response.ParentDetailedResponse;
-import com.cisowski.schoolmanagement.model.response.ParentSummaryResponse;
-import com.cisowski.schoolmanagement.model.entity.Parent;
-import com.cisowski.schoolmanagement.repository.ParentRepository;
-import com.cisowski.schoolmanagement.repository.StudentRepository;
-import com.cisowski.schoolmanagement.service.impl.ParentServiceImpl;
-import com.cisowski.schoolmanagement.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapperImpl;
+import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
+import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.parent.model.ParentPatchRequest;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
+import com.cisowski.schoolmanagement.users.parent.model.AddParentResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentDetailedResponse;
+import com.cisowski.schoolmanagement.users.parent.model.ParentSummaryResponse;
+import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
+import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
+import com.cisowski.schoolmanagement.users.parent.service.ParentServiceImpl;
+import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,10 +54,10 @@ public class ParentServiceTests {
     @DisplayName("add Parent successful - returns full ParentResponse")
     public void addParent_successful() {
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
-        List<Student> children = Instancio.ofList(Student.class).size(3).create();
-        List<Integer> childrenIds = children.stream().map(Student::getId).toList();
+        List<StudentEntity> children = Instancio.ofList(StudentEntity.class).size(3).create();
+        List<Integer> childrenIds = children.stream().map(StudentEntity::getId).toList();
         dto.setChildrenIds(childrenIds);
-        Parent parent = parentMapper.toParentEntity(dto);
+        ParentEntity parent = parentMapper.toParentEntity(dto);
         parent.setPassword(generatedPassword);
         parent.setChildren(children);
         parent.setId(1);
@@ -94,7 +95,7 @@ public class ParentServiceTests {
     @DisplayName("addParent should throw EmailAlreadyExistsException")
     public void addParent_throwsEmailAlreadyExistsEx() {
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
-        Parent existingUser = new Parent();
+        ParentEntity existingUser = new ParentEntity();
 
         when(repository.findByEmail(any())).thenReturn(Optional.of(existingUser));
 
@@ -107,7 +108,7 @@ public class ParentServiceTests {
     public void addParent_throwsSpecBrokenEx(){
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
         dto.setChildrenIds(null);
-        Parent parent = parentMapper.toParentEntity(dto);
+        ParentEntity parent = parentMapper.toParentEntity(dto);
 
         when(repository.findByEmail(any())).thenReturn(Optional.empty());
         when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
@@ -124,8 +125,8 @@ public class ParentServiceTests {
         ParentCreateRequest dto = Instancio.create(ParentCreateRequest.class);
         List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
         dto.setChildrenIds(childrenIds);
-        List<Student> children = Instancio.ofList(Student.class).size(1).create();
-        Parent parent = parentMapper.toParentEntity(dto);
+        List<StudentEntity> children = Instancio.ofList(StudentEntity.class).size(1).create();
+        ParentEntity parent = parentMapper.toParentEntity(dto);
 
         when(repository.findByEmail(any())).thenReturn(Optional.empty());
         when(mockedMapper.toParentEntity(dto)).thenReturn(parent);
@@ -141,20 +142,20 @@ public class ParentServiceTests {
     @DisplayName("updateParent successful - returns ParentResponse")
     public void updateParent_successful() {
         ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
-        List<Student> children = Instancio.ofList(Student.class).size(1).create();
+        List<StudentEntity> children = Instancio.ofList(StudentEntity.class).size(1).create();
         children.get(0).setId(1);
-        Student studentToRemove = Instancio.create(Student.class);
+        StudentEntity studentToRemove = Instancio.create(StudentEntity.class);
         children.add(studentToRemove);
         List<Integer> childrenIdsToRemove = Collections.singletonList(studentToRemove.getId());
         List<Integer> childrenIdsToAdd = Arrays.asList(3,4);
-        List<Student> childrenToAdd = Instancio.ofList(Student.class).size(2).create();
+        List<StudentEntity> childrenToAdd = Instancio.ofList(StudentEntity.class).size(2).create();
         childrenToAdd.get(0).setId(3);
         childrenToAdd.get(1).setId(4);
-        List<Student> childrenToRemove = Collections.singletonList(studentToRemove);
+        List<StudentEntity> childrenToRemove = Collections.singletonList(studentToRemove);
         childrenToRemove.get(0).setId(1);
         dto.setChildrenIdsToAdd(childrenIdsToAdd);
         dto.setChildrenIdsToRemove(childrenIdsToRemove);
-        Parent parent = parentMapper.toParentEntity(dto);
+        ParentEntity parent = parentMapper.toParentEntity(dto);
         parent.setId(1);
         children.addAll(childrenToAdd);
         parent.setChildren(children);
@@ -207,8 +208,8 @@ public class ParentServiceTests {
         List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
         dto.setChildrenIdsToAdd(null);
         dto.setChildrenIdsToRemove(childrenIds);
-        List<Student> children = Instancio.ofList(Student.class).size(3).create();
-        Parent parent = parentMapper.toParentEntity(dto);
+        List<StudentEntity> children = Instancio.ofList(StudentEntity.class).size(3).create();
+        ParentEntity parent = parentMapper.toParentEntity(dto);
 
         when(repository.findById(any())).thenReturn(Optional.of(parent));
         when(studentRepository.findAllById(any())).thenReturn(children);
@@ -225,8 +226,8 @@ public class ParentServiceTests {
         ParentPatchRequest dto = Instancio.create(ParentPatchRequest.class);
         List<Integer> childrenIds = Instancio.ofList(Integer.class).size(3).create();
         dto.setChildrenIdsToAdd(childrenIds);
-        List<Student> children = Instancio.ofList(Student.class).size(1).create();
-        Parent parent = parentMapper.toParentEntity(dto);
+        List<StudentEntity> children = Instancio.ofList(StudentEntity.class).size(1).create();
+        ParentEntity parent = parentMapper.toParentEntity(dto);
 
         when(repository.findById(any())).thenReturn(Optional.of(parent));
         when(studentRepository.findAllById(any())).thenReturn(children);
@@ -241,7 +242,7 @@ public class ParentServiceTests {
     @DisplayName("deleteParent should invoke delete method in repo")
     public void deleteParent_successful() {
         Integer userId = 1;
-        Parent parent = new Parent();
+        ParentEntity parent = new ParentEntity();
         parent.setId(userId);
 
         when(repository.findById(userId)).thenReturn(Optional.of(parent));
@@ -266,7 +267,7 @@ public class ParentServiceTests {
     @Test
     @DisplayName("findAll successful - should return Collection<ParentResponse>")
     public void findAll_successful() {
-        List<Parent> parents = Instancio.createList(Parent.class);
+        List<ParentEntity> parents = Instancio.createList(ParentEntity.class);
         List<ParentSummaryResponse> responses = parentMapper.toParentsResponse(parents);
 
         when(repository.findAll()).thenReturn(parents);
@@ -283,7 +284,7 @@ public class ParentServiceTests {
     @DisplayName("findById successful - should return ParentResponse")
     public void findById_successful() {
         Integer userId = 1;
-        Parent existingParent = Instancio.create(Parent.class);
+        ParentEntity existingParent = Instancio.create(ParentEntity.class);
         ParentDetailedResponse response = parentMapper.toAddParentResponse(existingParent);
 
         when(repository.findById(userId)).thenReturn(Optional.of(existingParent));
