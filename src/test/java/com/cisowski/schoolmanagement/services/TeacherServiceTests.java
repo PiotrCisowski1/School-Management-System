@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.services;
 
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapperImpl;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -13,7 +14,9 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -39,6 +43,12 @@ public class TeacherServiceTests {
     @InjectMocks
     private TeacherServiceImpl service;
     private final String generatedPassword = PasswordGenerator.generatePassword();
+
+    @BeforeEach
+    public void setUp(){
+        YearbookMapper yearbookMapper = Mappers.getMapper(YearbookMapper.class);
+        ReflectionTestUtils.setField(teacherMapper, "yearbookMapper", yearbookMapper);
+    }
 
     @Test
     @DisplayName("add Teacher successful - returns full TeacherResponse")

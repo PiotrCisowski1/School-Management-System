@@ -1,6 +1,5 @@
 package com.cisowski.schoolmanagement.users.common.model;
 
-import com.cisowski.schoolmanagement.users.common.model.Gender;
 import lombok.Data;
 
 import java.util.Date;

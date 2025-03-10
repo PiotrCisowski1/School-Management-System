@@ -1,7 +1,7 @@
 package com.cisowski.schoolmanagement.users.student.model;
 
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import jakarta.persistence.*;
 import lombok.Data;

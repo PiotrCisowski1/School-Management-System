@@ -6,22 +6,24 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.AddTeacherResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import org.mapstruct.*;
 
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+    uses = {YearbookMapper.class})
 public interface TeacherMapper {
     @Mapping(target = "password", ignore = true)
     TeacherEntity toTeacherEntity(TeacherCreateRequest teacherDto);
     TeacherEntity toTeacherEntity(TeacherPatchRequest teacherDto);
+    @Mapping(target = "leadingYearbook", source = "leadingYearbook", qualifiedByName = "toYearbookSummaryResponse")
     TeacherDetailedResponse toTeacherResponse(TeacherEntity teacher);
     @Mapping(target = "authority", source = "authority")
     AddTeacherResponse toAddTeacherResponse(TeacherEntity teacher);
     List<TeacherSummaryResponse>toTeachersResponse(Collection<TeacherEntity> teachers);
+    @Named("toTeacherSummaryResponse")
     TeacherSummaryResponse toSummaryResponse(TeacherEntity teacher);
 
 }

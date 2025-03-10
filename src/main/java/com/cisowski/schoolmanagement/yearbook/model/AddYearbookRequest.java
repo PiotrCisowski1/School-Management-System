@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.model.request;
+package com.cisowski.schoolmanagement.yearbook.model;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -8,15 +8,14 @@ import java.time.ZonedDateTime;
 import java.util.Collection;
 
 @Data
-public class YearbookRequest {
+public class AddYearbookRequest {
     @NotNull
     private Integer headTeacherId;
     @NotNull
     private String symbol;
     @NotNull
     private ZonedDateTime startingYear;
-    private ZonedDateTime targetGraduationYear;
-    private Collection<Integer> studentsIdInYearbook;
+    private ZonedDateTime graduationYear;
     @NotEmpty
     @NotNull
     private Collection<Integer> mainCourseSubjectsIds;

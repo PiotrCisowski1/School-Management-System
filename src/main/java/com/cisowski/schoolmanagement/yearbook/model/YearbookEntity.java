@@ -1,5 +1,6 @@
-package com.cisowski.schoolmanagement.model.entity;
+package com.cisowski.schoolmanagement.yearbook.model;
 
+import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -31,7 +32,7 @@ public class YearbookEntity {
     @OnDelete(action = OnDeleteAction.NO_ACTION)
     @JsonIgnore
     private Collection<StudentEntity> studentsInYearbook = new ArrayList<>();
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "yearbooks_subjects",
             joinColumns = {@JoinColumn(name = "yearbook_id", referencedColumnName = "id")},

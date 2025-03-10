@@ -1,8 +1,7 @@
 package com.cisowski.schoolmanagement.users.teacher.model;
 
 import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
-import com.cisowski.schoolmanagement.users.teacher.model.EmployeeEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -3,7 +3,9 @@ package com.cisowski.schoolmanagement.services;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapperImpl;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
@@ -19,7 +21,10 @@ import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.student.service.StudentServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookSummaryResponse;
+import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +32,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -46,11 +52,22 @@ public class StudentServiceTests {
     private ParentRepository parentRepository;
     @Mock
     private StudentMapperImpl mockedStudentMapper;
+    @Mock
+    private YearbookRepository yearbookRepository;
     private final StudentMapper studentMapper = Mappers.getMapper(StudentMapper.class);
     private final ParentMapper parentMapper = Mappers.getMapper(ParentMapper.class);
     @InjectMocks
     private StudentServiceImpl studentService;
     private final String generatedPassword = PasswordGenerator.generatePassword();
+
+    @BeforeEach
+    public void setUp(){
+        ReflectionTestUtils.setField(studentMapper, "parentMapper", parentMapper);
+        YearbookMapper yearbookMapper = Mappers.getMapper(YearbookMapper.class);
+        ReflectionTestUtils.setField(studentMapper, "yearbookMapper", yearbookMapper);
+        TeacherMapper teacherMapper = Mappers.getMapper(TeacherMapper.class);
+        ReflectionTestUtils.setField(yearbookMapper, "teacherMapper", teacherMapper);
+    }
 
     @Test
     @DisplayName("add Student successful - returns full StudentResponse")
@@ -58,18 +75,24 @@ public class StudentServiceTests {
         StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
         studentDto.setParentsIds(Collections.singletonList(2));
         StudentEntity student = studentMapper.toStudentEntity(studentDto);
+        YearbookEntity yearbook = new YearbookEntity();
+        yearbook.setId(studentDto.getYearbookId());
         List<ParentEntity> parents = Collections.singletonList(Instancio.create(ParentEntity.class));
         parents.get(0).setId(2);
         student.setPassword(generatedPassword);
         student.setId(1);
         student.setParents(parents);
         AddStudentResponse response = studentMapper.toAddStudentResponse(student);
+        YearbookSummaryResponse yearbookSummaryResponse = new YearbookSummaryResponse();
+        yearbookSummaryResponse.setId(yearbook.getId());
+        response.setYearbook(yearbookSummaryResponse);
 
         when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
         when(parentRepository.findAllById(any())).thenReturn(parents);
         when(studentRepository.save(any())).thenReturn(student);
         when(mockedStudentMapper.toAddStudentResponse(any())).thenReturn(response);
+        when(yearbookRepository.findById(any())).thenReturn(Optional.of(yearbook));
 
         AddStudentResponse result = studentService.addStudent(studentDto);
 
@@ -86,6 +109,7 @@ public class StudentServiceTests {
         assertIterableEquals(response.getParents(), result.getParents());
         assertEquals(response.getYearbook(), result.getYearbook());
         assertEquals(studentDto.getParentsIds().size(), result.getParents().size());
+        assertEquals(response.getYearbook().getId(), result.getYearbook().getId());
         assertIterableEquals(studentDto.getParentsIds(), result.getParents().stream()
                 .map(BaseUserSummaryResponse::getId)
                 .collect(Collectors.toList()));
@@ -94,6 +118,7 @@ public class StudentServiceTests {
         verify(parentRepository, times(1)).findAllById(studentDto.getParentsIds());
         verify(studentRepository, times(1)).save(student);
         verify(mockedStudentMapper, times(1)).toAddStudentResponse(student);
+        verify(yearbookRepository).findById(any());
     }
 
     @Test
@@ -127,6 +152,25 @@ public class StudentServiceTests {
     }
 
     @Test
+    @DisplayName("addStudent should throw SpecificationBrokenException - not existent Yearbook")
+    public void addStudent_throwExceptionYearbook(){
+        StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
+        List<ParentEntity> parents = Instancio.ofList(ParentEntity.class).size(studentDto.getParentsIds().size()).create();
+
+        when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
+        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
+        when(yearbookRepository.findById(any())).thenReturn(Optional.empty());
+        when(parentRepository.findAllById(any())).thenReturn(parents);
+
+        SpecificationBrokenException thrown = assertThrows(
+                SpecificationBrokenException.class,
+                () -> studentService.addStudent(studentDto)
+        );
+        assertTrue(thrown.getMessage().contains("Yearbook ID does not exist"));
+    }
+
+    @Test
     @DisplayName("updateStudent successful - returns StudentResponse")
     public void updateStudent_successful() {
         Integer studentId = 1;
@@ -137,7 +181,9 @@ public class StudentServiceTests {
         studentDto.setParentIdsToRemove(parentIdsToRemove);
         StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
-        student.setYearbook(Instancio.create(YearbookEntity.class));
+        YearbookEntity yearbook = new YearbookEntity();
+        yearbook.setId(studentDto.getYearbookId());
+        student.setYearbook(yearbook);
         ParentEntity parentToAdd = Instancio.create(ParentEntity.class);
         ParentEntity parentToRemove = Instancio.create(ParentEntity.class);
         student.setParents(Collections.singletonList(parentToRemove));
@@ -151,6 +197,7 @@ public class StudentServiceTests {
         when(parentRepository.findAllById(any())).thenReturn(
                 Collections.singletonList(parentToAdd),
                 Collections.singletonList(parentToRemove));
+        when(yearbookRepository.findById(any())).thenReturn(Optional.of(yearbook));
 
         StudentDetailedResponse result = studentService.updateStudent(studentDto, studentId);
 
@@ -165,11 +212,13 @@ public class StudentServiceTests {
         assertEquals(studentResponse.getGender(), result.getGender());
         assertIterableEquals(studentResponse.getAuthority(), result.getAuthority());
         assertIterableEquals(studentResponse.getParents(), result.getParents());
+        assertEquals(studentResponse.getYearbook().getId(), result.getYearbook().getId());
         verify(studentRepository, times(1)).findById(studentId);
         verify(mockedStudentMapper, times(1)).toStudentEntity(studentDto);
         verify(mockedStudentMapper, times(1)).patchStudent(any(), any());
         verify(studentRepository, times(1)).save(any());
         verify(mockedStudentMapper, times(1)).toStudentResponse(any());
+        verify(yearbookRepository).findById(any());
     }
 
     @Test
@@ -181,6 +230,25 @@ public class StudentServiceTests {
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.updateStudent(studentDto, 1));
+    }
+
+    @Test
+    @DisplayName("updateStudent should throw SpecificationBrokenException - not existent Yearbook")
+    public void updateStudent_throwExceptionYearbook(){
+        StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
+        studentDto.setParentIdsToAdd(Collections.emptyList());
+        studentDto.setParentIdsToRemove(Collections.emptyList());
+        StudentEntity student = studentMapper.toStudentEntity(studentDto);
+
+        when(studentRepository.findById(any())).thenReturn(Optional.of(new StudentEntity()));
+        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
+        when(yearbookRepository.findById(any())).thenReturn(Optional.empty());
+
+        SpecificationBrokenException thrown = assertThrows(
+                SpecificationBrokenException.class,
+                () -> studentService.updateStudent(studentDto, 1)
+        );
+        assertTrue(thrown.getMessage().contains("Yearbook ID does not exist"));
     }
 
     @Test
@@ -198,7 +266,7 @@ public class StudentServiceTests {
 
         SpecificationBrokenException thrown = assertThrows(
                 SpecificationBrokenException.class,
-                () -> studentService.updateStudent(studentDto ,studentId)
+                () -> studentService.updateStudent(studentDto, studentId)
         );
         assertTrue(thrown.getMessage().contains("Parent IDs are invalid"));
     }
