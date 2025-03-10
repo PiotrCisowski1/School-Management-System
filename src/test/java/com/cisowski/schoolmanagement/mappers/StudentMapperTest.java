@@ -1,8 +1,10 @@
 package com.cisowski.schoolmanagement.mappers;
 
+import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
@@ -10,9 +12,11 @@ import com.cisowski.schoolmanagement.users.common.model.Gender;
 import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentDetailedResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -22,6 +26,14 @@ class StudentMapperTest {
 
     @InjectMocks
     private final StudentMapper mapper = Mappers.getMapper(StudentMapper.class);
+
+    @BeforeEach
+    public void setUp(){
+        YearbookMapper yearbookMapper = Mappers.getMapper(YearbookMapper.class);
+        ReflectionTestUtils.setField(mapper, "yearbookMapper", yearbookMapper);
+        ParentMapper parentMapper = Mappers.getMapper(ParentMapper.class);
+        ReflectionTestUtils.setField(mapper, "parentMapper", parentMapper);
+    }
 
     @Test
     void shouldMapStudentDtoToStudentEntity() {

@@ -1,7 +1,8 @@
 package com.cisowski.schoolmanagement.mappers;
 
 import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
@@ -10,9 +11,12 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.common.model.Gender;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +24,12 @@ class TeacherMapperTest {
 
     @InjectMocks
     private final TeacherMapper mapper = Mappers.getMapper(TeacherMapper.class);
+
+    @BeforeEach
+    public void setUp(){
+        YearbookMapper yearbookMapper = Mappers.getMapper(YearbookMapper.class);
+        ReflectionTestUtils.setField(mapper, "yearbookMapper", yearbookMapper);
+    }
 
     @Test
     void shouldMapTeacherDtoToTeacherEntity() {

@@ -6,7 +6,7 @@ import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundExcepti
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
-import com.cisowski.schoolmanagement.model.entity.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentPatchRequest;
 import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
@@ -15,23 +15,20 @@ import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-
+@AllArgsConstructor
 @Service
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository repository;
     private final StudentMapper studentMapper;
     private final ParentRepository parentRepository;
-
-    public StudentServiceImpl(StudentRepository repository, StudentMapper studentMapper, ParentRepository parentRepository) {
-        this.repository = repository;
-        this.studentMapper = studentMapper;
-        this.parentRepository = parentRepository;
-    }
+    private final YearbookRepository yearbookRepository;
 
     @Override
     @Transactional
@@ -48,11 +45,7 @@ public class StudentServiceImpl implements StudentService {
         String hashedPassword = this.hashPassword(firstPassword);
         requestStudent.setPassword(hashedPassword);
         requestStudent.setParents(fetchParentEntities(studentDto.getParentsIds()));
-
-        //TODO: fetch yearbook - not yet implemented
-        YearbookEntity yearbook = new YearbookEntity();
-        yearbook.setId(studentDto.getYearbookId());
-        requestStudent.setYearbook(yearbook);
+        requestStudent.setYearbook(fetchYearbookEntity(studentDto.getYearbookId()));
 
         StudentEntity savedStudent = repository.save(requestStudent);
 
@@ -63,6 +56,15 @@ public class StudentServiceImpl implements StudentService {
         response.setPassword(firstPassword);
 
         return response;
+    }
+
+    private YearbookEntity fetchYearbookEntity(Integer yearbookId){
+        if(yearbookId == null)
+            return null;
+        Optional<YearbookEntity> yearbook = yearbookRepository.findById(yearbookId);
+        if(yearbook.isEmpty())
+            throw new SpecificationBrokenException(String.format("Given Yearbook ID does not exist: (%s)", yearbookId));
+        return yearbook.get();
     }
 
     private List<ParentEntity> fetchParentEntities(Collection<Integer> parentIds){
@@ -89,14 +91,8 @@ public class StudentServiceImpl implements StudentService {
         StudentEntity existingStudentEntity = existingStudent.get();
         StudentEntity requestStudent = studentMapper.toStudentEntity(studentDto);
 
-        //TODO: fetch Yearbook - yearbook not yet implemented
-        YearbookEntity yearbook = new YearbookEntity();
-        if(studentDto.getYearbookId() != null && studentDto.getYearbookId().toString().isEmpty())
-            yearbook.setId(studentDto.getYearbookId());
-        else
-            yearbook.setId(existingStudentEntity.getYearbook().getId());
-        requestStudent.setYearbook(yearbook);
         checkAndUpdateParentEntities(existingStudentEntity, studentDto);
+        requestStudent.setYearbook(fetchYearbookEntity(studentDto.getYearbookId()));
         studentMapper.patchStudent(requestStudent, existingStudent.get());
         StudentEntity updatedStudent = repository.save(existingStudentEntity);
 

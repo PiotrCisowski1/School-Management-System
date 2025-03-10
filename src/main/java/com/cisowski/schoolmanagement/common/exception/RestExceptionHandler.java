@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.common.exception;
 
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
+import com.cisowski.schoolmanagement.common.exception.type.EntityAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -163,7 +164,15 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(SpecificationBrokenException.class)
     protected ResponseEntity<Object> handleSpecificationBrokenException(SpecificationBrokenException exception){
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
+        ApiError apiError = new ApiError(HttpStatus.EXPECTATION_FAILED);
+        String exMessage = exception.getMessage();
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(EntityAlreadyExistsException.class)
+    protected ResponseEntity<Object> handleEntityExistsEx(EntityAlreadyExistsException exception){
+        ApiError apiError = new ApiError(CONFLICT);
         String exMessage = exception.getMessage();
         apiError.setMessage(exMessage);
         return buildResponseEntity(apiError);

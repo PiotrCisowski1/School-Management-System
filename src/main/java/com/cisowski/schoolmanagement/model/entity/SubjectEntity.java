@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.model.entity;
 
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,7 +24,7 @@ public class SubjectEntity {
     private Collection<TeacherEntity> teachers;
     @Column
     private String description;
-    @ManyToMany(mappedBy = "mainCourseSubjects")
+    @ManyToMany(mappedBy = "mainCourseSubjects", fetch = FetchType.EAGER)
     private Set<YearbookEntity> yearbooksTakingSubject = new HashSet<>();
 
 

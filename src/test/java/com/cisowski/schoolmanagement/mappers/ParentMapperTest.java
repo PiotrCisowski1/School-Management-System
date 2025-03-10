@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.mappers;
 
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
 import com.cisowski.schoolmanagement.users.common.model.AddressRequest;
@@ -10,9 +11,13 @@ import com.cisowski.schoolmanagement.users.common.model.Gender;
 import com.cisowski.schoolmanagement.users.parent.model.AddParentResponse;
 import com.cisowski.schoolmanagement.users.parent.model.ParentDetailedResponse;
 import com.cisowski.schoolmanagement.users.parent.model.ParentSummaryResponse;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -23,6 +28,12 @@ class ParentMapperTest {
 
     @InjectMocks
     private final ParentMapper mapper = Mappers.getMapper(ParentMapper.class);
+
+    @BeforeEach
+    public void setUp(){
+        StudentMapper studentMapper = Mappers.getMapper(StudentMapper.class);
+        ReflectionTestUtils.setField(mapper, "studentMapper", studentMapper);
+    }
 
     @Test
     void shouldMapParentDtoToParentEntity() {

@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.model.response;
+package com.cisowski.schoolmanagement.yearbook.model;
 
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import lombok.Data;
@@ -11,5 +11,5 @@ public class YearbookSummaryResponse {
     private String symbol;
     private TeacherSummaryResponse headTeacher;
     private ZonedDateTime startingYear;
-
+    private ZonedDateTime graduationYear;
 }

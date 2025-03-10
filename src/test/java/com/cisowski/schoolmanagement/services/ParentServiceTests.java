@@ -4,6 +4,7 @@ import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapperImpl;
 import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentPatchRequest;
+import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
@@ -16,7 +17,9 @@ import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.parent.service.ParentServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
+import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +27,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +53,11 @@ public class ParentServiceTests {
     private final String generatedPassword = PasswordGenerator.generatePassword();
 
 
+    @BeforeEach
+    public void setUp(){
+        StudentMapper studentMapper = Mappers.getMapper(StudentMapper.class);
+        ReflectionTestUtils.setField(parentMapper, "studentMapper", studentMapper);
+    }
 
     @Test
     @DisplayName("add Parent successful - returns full ParentResponse")
