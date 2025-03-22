@@ -34,12 +34,12 @@ public class TeacherController {
         return new ResponseEntity<>(savedTeacher, HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<TeacherDetailedResponse> updateTeacher(@Valid @RequestBody TeacherPatchRequest dto){
+    @PatchMapping("/{teacherId}")
+    public ResponseEntity<TeacherDetailedResponse> updateTeacher(@Valid @RequestBody TeacherPatchRequest dto, @PathVariable Integer teacherId){
         String message = String.format("Received Teacher PUT request for object: %s", dto.toString());
         DbLogger.info(message);
 
-        TeacherDetailedResponse updatedTeacher = service.updateTeacher(dto);
+        TeacherDetailedResponse updatedTeacher = service.updateTeacher(dto, teacherId);
         return new ResponseEntity<>(updatedTeacher, HttpStatus.OK);
     }
 

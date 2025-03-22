@@ -2,13 +2,13 @@ package com.cisowski.schoolmanagement.services;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.subject.service.SubjectService;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
-import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapperImpl;
 import com.cisowski.schoolmanagement.yearbook.model.*;
@@ -37,11 +37,13 @@ public class YearbookServiceTest {
     @Mock
     private YearbookRepository yearbookRepository;
     @Mock
-    private TeacherRepository teacherRepository;
-    @Mock
     private StudentRepository studentRepository;
     @Mock
+    private TeacherService teacherService;
+    @Mock
     private YearbookMapperImpl mockedMapper;
+    @Mock
+    private SubjectService subjectService;
     @InjectMocks
     private YearbookServiceImpl yearbookService;
 
@@ -69,9 +71,10 @@ public class YearbookServiceTest {
 
         when(yearbookRepository.findYearbookBySymbolOrHeadTeacher(any(), any())).thenReturn(Optional.empty());
         when(mockedMapper.toYearbookEntity(request)).thenReturn(requestEntity);
-        when(teacherRepository.findById(any())).thenReturn(Optional.of(fetchedTeacher));
         when(yearbookRepository.save(any())).thenReturn(savedEntity);
         when(mockedMapper.toDetailedResponse(any())).thenReturn(response);
+        when(teacherService.fetchTeacher(any())).thenReturn(fetchedTeacher);
+        when(subjectService.fetchSubjects(any())).thenReturn(Collections.emptyList());
 
         YearbookDetailedResponse actual = yearbookService.addYearbook(request);
 
@@ -83,7 +86,6 @@ public class YearbookServiceTest {
         assertEquals(requestEntity.getStudentsInYearbook().size(), actual.getStudentsInYearbook().size());
         verify(yearbookRepository, times(1)).findYearbookBySymbolOrHeadTeacher(any(), any());
         verify(mockedMapper, times(1)).toYearbookEntity(request);
-        verify(teacherRepository, times(1)).findById(any());
         verify(yearbookRepository, times(1)).save(any());
         verify(mockedMapper, times(1)).toDetailedResponse(any());
     }
@@ -102,27 +104,12 @@ public class YearbookServiceTest {
     }
 
     @Test
-    @DisplayName("addYearbook HeadTeacher not found - should throw EntityAlreadyExistsException")
-    public void addYearbook_noTeacherFound() {
-        AddYearbookRequest request = Instancio.create(AddYearbookRequest.class);
-        YearbookEntity entity = Instancio.create(YearbookEntity.class);
-
-        when(yearbookRepository.findYearbookBySymbolOrHeadTeacher(any(), any())).thenReturn(Optional.empty());
-        when(mockedMapper.toYearbookEntity(request)).thenReturn(entity);
-        when(teacherRepository.findById(any())).thenReturn(Optional.empty());
-
-        assertThrows(
-                EntityNotFoundException.class,
-                () -> yearbookService.addYearbook(request));
-    }
-
-
-    @Test
     @DisplayName("deleteYearbook successful - no exception thrown")
     public void deleteYearbook_successful() {
         YearbookEntity existingEntity = Instancio.create(YearbookEntity.class);
 
         when(yearbookRepository.findById(any())).thenReturn(Optional.of(existingEntity));
+        when(studentRepository.existsByYearbook(any())).thenReturn(false);
 
         yearbookService.deleteYearbook(1);
 
@@ -198,13 +185,14 @@ public class YearbookServiceTest {
 
         when(yearbookRepository.findById(yearbookId)).thenReturn(Optional.of(existingYearbook));
         when(mockedMapper.toYearbookEntity(request)).thenReturn(requestEntity);
-        when(teacherRepository.findById(any())).thenReturn(Optional.of(headTeacher));
         doAnswer(invocation -> {
             mapper.patchYearbook(existingYearbook, requestEntity);
             return null;
         }).when(mockedMapper).patchYearbook(any(), any());
         when(yearbookRepository.save(any())).thenReturn(existingYearbook);
         when(mockedMapper.toDetailedResponse(any())).thenReturn(response);
+        when(teacherService.fetchTeacher(any())).thenReturn(headTeacher);
+        when(subjectService.fetchSubjects(any())).thenReturn(Collections.emptyList());
 
         YearbookDetailedResponse actual = yearbookService.updateYearbook(request, yearbookId);
 

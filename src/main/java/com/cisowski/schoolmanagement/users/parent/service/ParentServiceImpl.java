@@ -68,9 +68,7 @@ public class ParentServiceImpl implements ParentService {
 
         List<StudentEntity> children = fetchStudentEntities(childrenIds);
 
-        children.forEach(child -> {
-            child.getParents().add(parent);
-        });
+        children.forEach(child -> child.getParents().add(parent));
         parent.getChildren().addAll(children);
     }
 
@@ -182,5 +180,16 @@ public class ParentServiceImpl implements ParentService {
 
     private void removeChildParentRelation(ParentEntity parent, Collection<StudentEntity> children){
         children.forEach(child -> child.getParents().remove(parent));
+    }
+    @Override
+    public List<ParentEntity> fetchParentEntities(Collection<Integer> parentIds){
+        if (parentIds == null || parentIds.isEmpty())
+            return Collections.emptyList();
+
+        List<ParentEntity> parents = parentRepository.findAllById(parentIds);
+        if(parents.size() != parentIds.size())
+            throw new SpecificationBrokenException("Some of given Parent IDs are invalid or non-existent");
+
+        return parents;
     }
 }

@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.yearbook.mapper;
 
+import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.yearbook.model.*;
@@ -65,4 +66,9 @@ public abstract class YearbookMapper {
 
     public abstract void patchYearbook(@MappingTarget YearbookEntity targetEntity, YearbookEntity requestEntity);
 
+    String toStringSubjectType(SubjectTypeEntity subjectType){
+        if(subjectType == null)
+            return null;
+        return subjectType.getName();
+    }
 }

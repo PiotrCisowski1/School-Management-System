@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.services;
 
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.parent.service.ParentService;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapperImpl;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
@@ -17,12 +18,11 @@ import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
 import com.cisowski.schoolmanagement.users.common.model.BaseUserSummaryResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentDetailedResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
-import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.student.service.StudentServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookSummaryResponse;
-import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
+import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,11 +49,11 @@ public class StudentServiceTests {
     @Mock
     private StudentRepository studentRepository;
     @Mock
-    private ParentRepository parentRepository;
-    @Mock
     private StudentMapperImpl mockedStudentMapper;
     @Mock
-    private YearbookRepository yearbookRepository;
+    private YearbookService yearbookService;
+    @Mock
+    private ParentService parentService;
     private final StudentMapper studentMapper = Mappers.getMapper(StudentMapper.class);
     private final ParentMapper parentMapper = Mappers.getMapper(ParentMapper.class);
     @InjectMocks
@@ -89,10 +89,10 @@ public class StudentServiceTests {
 
         when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(parentRepository.findAllById(any())).thenReturn(parents);
         when(studentRepository.save(any())).thenReturn(student);
         when(mockedStudentMapper.toAddStudentResponse(any())).thenReturn(response);
-        when(yearbookRepository.findById(any())).thenReturn(Optional.of(yearbook));
+        when(yearbookService.fetchYearbookEntity(any())).thenReturn(yearbook);
+        when(parentService.fetchParentEntities(any())).thenReturn(parents);
 
         AddStudentResponse result = studentService.addStudent(studentDto);
 
@@ -113,12 +113,8 @@ public class StudentServiceTests {
         assertIterableEquals(studentDto.getParentsIds(), result.getParents().stream()
                 .map(BaseUserSummaryResponse::getId)
                 .collect(Collectors.toList()));
-        verify(studentRepository, times(1)).findByEmail(studentDto.getEmail());
         verify(mockedStudentMapper, times(1)).toStudentEntity(studentDto);
-        verify(parentRepository, times(1)).findAllById(studentDto.getParentsIds());
-        verify(studentRepository, times(1)).save(student);
         verify(mockedStudentMapper, times(1)).toAddStudentResponse(student);
-        verify(yearbookRepository).findById(any());
     }
 
     @Test
@@ -131,43 +127,6 @@ public class StudentServiceTests {
 
         assertThrows(EmailAlreadyExistsException.class, () ->
                 studentService.addStudent(studentDto));
-    }
-
-    @Test
-    @DisplayName("addStudent should throw SpecificationBrokenException - not existent Parent given")
-    public void addStudent_throwsSpecificationBrokenEx() {
-        StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
-        studentDto.setParentsIds(Collections.singletonList(2));
-        StudentEntity student = studentMapper.toStudentEntity(studentDto);
-
-        when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
-        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(parentRepository.findAllById(any())).thenReturn(Collections.emptyList());
-
-        SpecificationBrokenException thrown = assertThrows(
-                SpecificationBrokenException.class,
-                () -> studentService.addStudent(studentDto)
-        );
-        assertTrue(thrown.getMessage().contains("Parent IDs are invalid or non-existent"));
-    }
-
-    @Test
-    @DisplayName("addStudent should throw SpecificationBrokenException - not existent Yearbook")
-    public void addStudent_throwExceptionYearbook(){
-        StudentCreateRequest studentDto = Instancio.create(StudentCreateRequest.class);
-        StudentEntity student = studentMapper.toStudentEntity(studentDto);
-        List<ParentEntity> parents = Instancio.ofList(ParentEntity.class).size(studentDto.getParentsIds().size()).create();
-
-        when(studentRepository.findByEmail(studentDto.getEmail())).thenReturn(Optional.empty());
-        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(yearbookRepository.findById(any())).thenReturn(Optional.empty());
-        when(parentRepository.findAllById(any())).thenReturn(parents);
-
-        SpecificationBrokenException thrown = assertThrows(
-                SpecificationBrokenException.class,
-                () -> studentService.addStudent(studentDto)
-        );
-        assertTrue(thrown.getMessage().contains("Yearbook ID does not exist"));
     }
 
     @Test
@@ -194,10 +153,9 @@ public class StudentServiceTests {
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
         when(studentRepository.save(any())).thenReturn(student);
         when(mockedStudentMapper.toStudentResponse(any())).thenReturn(studentResponse);
-        when(parentRepository.findAllById(any())).thenReturn(
-                Collections.singletonList(parentToAdd),
-                Collections.singletonList(parentToRemove));
-        when(yearbookRepository.findById(any())).thenReturn(Optional.of(yearbook));
+        when(parentService.fetchParentEntities(any()))
+                .thenReturn(Collections.singletonList(parentToAdd))
+                .thenReturn(Collections.singletonList(parentToRemove));
 
         StudentDetailedResponse result = studentService.updateStudent(studentDto, studentId);
 
@@ -218,7 +176,6 @@ public class StudentServiceTests {
         verify(mockedStudentMapper, times(1)).patchStudent(any(), any());
         verify(studentRepository, times(1)).save(any());
         verify(mockedStudentMapper, times(1)).toStudentResponse(any());
-        verify(yearbookRepository).findById(any());
     }
 
     @Test
@@ -230,45 +187,6 @@ public class StudentServiceTests {
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.updateStudent(studentDto, 1));
-    }
-
-    @Test
-    @DisplayName("updateStudent should throw SpecificationBrokenException - not existent Yearbook")
-    public void updateStudent_throwExceptionYearbook(){
-        StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
-        studentDto.setParentIdsToAdd(Collections.emptyList());
-        studentDto.setParentIdsToRemove(Collections.emptyList());
-        StudentEntity student = studentMapper.toStudentEntity(studentDto);
-
-        when(studentRepository.findById(any())).thenReturn(Optional.of(new StudentEntity()));
-        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(yearbookRepository.findById(any())).thenReturn(Optional.empty());
-
-        SpecificationBrokenException thrown = assertThrows(
-                SpecificationBrokenException.class,
-                () -> studentService.updateStudent(studentDto, 1)
-        );
-        assertTrue(thrown.getMessage().contains("Yearbook ID does not exist"));
-    }
-
-    @Test
-    @DisplayName("updateStudent should throw SpecificationBrokenException - non existent Parent to update")
-    public void updateStudent_throwsSpecificationBrokenException(){
-        Integer studentId = 1;
-        StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
-        studentDto.setParentIdsToAdd(Collections.singletonList(2));
-        StudentEntity student = studentMapper.toStudentEntity(studentDto);
-        student.setId(studentId);
-        student.setYearbook(Instancio.create(YearbookEntity.class));
-
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
-        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-
-        SpecificationBrokenException thrown = assertThrows(
-                SpecificationBrokenException.class,
-                () -> studentService.updateStudent(studentDto, studentId)
-        );
-        assertTrue(thrown.getMessage().contains("Parent IDs are invalid"));
     }
 
     @Test
@@ -287,7 +205,8 @@ public class StudentServiceTests {
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(parentRepository.findAllById(any())).thenReturn(Collections.singletonList(parentToRemove));
+        when(parentService.fetchParentEntities(any()))
+                .thenReturn(Collections.singletonList(parentToRemove));
 
         SpecificationBrokenException thrown = assertThrows(
                 SpecificationBrokenException.class,

@@ -1,13 +1,12 @@
 package com.cisowski.schoolmanagement.users.teacher.model;
 
-import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -18,13 +17,13 @@ import java.util.Set;
 public class TeacherEntity extends EmployeeEntity {
     @OneToOne(mappedBy = "headTeacher")
     private YearbookEntity leadingYearbook;
-    @ManyToMany()
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "teachers_subjects",
             joinColumns = {@JoinColumn(name = "teacher_details_id", referencedColumnName = "user_id")},
             inverseJoinColumns = {@JoinColumn(name = "subject_id", referencedColumnName = "id")}
     )
-    private Set<SubjectEntity> teachingSubjects = new HashSet<>();
+    private Collection<SubjectEntity> teachingSubjects;
 
     @Override
     public String toString() {

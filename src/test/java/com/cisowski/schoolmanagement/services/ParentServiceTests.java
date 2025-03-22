@@ -17,7 +17,6 @@ import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.parent.service.ParentServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
-import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,10 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -314,6 +310,20 @@ public class ParentServiceTests {
 
         assertThrows(EntityNotFoundException.class, () ->
                 service.findById(1));
+    }
+
+    @Test
+    @DisplayName("fetchParentEntities successful")
+    public void fetchParentEntities_successful(){
+        Collection<Integer> parentIds = Arrays.asList(1,2,3);
+        List<ParentEntity> parents = Instancio.ofList(ParentEntity.class).size(3).create();
+
+        when(repository.findAllById(parentIds)).thenReturn(parents);
+
+        List<ParentEntity> result = service.fetchParentEntities(parentIds);
+        assertNotNull(result);
+        assertEquals(parents, result);
+        verify(repository).findAllById(parentIds);
     }
 
 }
