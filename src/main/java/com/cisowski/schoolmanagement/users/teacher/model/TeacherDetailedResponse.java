@@ -1,7 +1,7 @@
 package com.cisowski.schoolmanagement.users.teacher.model;
 
 
-import com.cisowski.schoolmanagement.model.response.SubjectSummaryResponse;
+import com.cisowski.schoolmanagement.subject.model.SubjectSummaryResponse;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookSummaryResponse;
 import com.cisowski.schoolmanagement.users.common.model.BaseUserDetailedResponse;
 import lombok.Data;

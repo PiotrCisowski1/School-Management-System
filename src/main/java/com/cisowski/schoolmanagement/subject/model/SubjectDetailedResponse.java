@@ -1,11 +1,10 @@
-package com.cisowski.schoolmanagement.model.response;
+package com.cisowski.schoolmanagement.subject.model;
 
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookSummaryResponse;
 import lombok.Data;
 
 import java.util.Collection;
-import java.util.Set;
 
 @Data
 public class SubjectDetailedResponse {
@@ -14,6 +13,6 @@ public class SubjectDetailedResponse {
     private String code;
     private Collection<TeacherSummaryResponse> teachers;
     private String description;
-    private Set<YearbookSummaryResponse> yearbooksTakingSubject;
-
+    private Collection<YearbookSummaryResponse> yearbooksTakingSubject;
+    private String subjectType;
 }

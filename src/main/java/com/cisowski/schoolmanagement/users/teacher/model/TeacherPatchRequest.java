@@ -4,14 +4,14 @@ package com.cisowski.schoolmanagement.users.teacher.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Set;
+import java.util.Collection;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class TeacherPatchRequest extends EmployeePatchRequest {
 
-    private Set<Integer> teachingSubjectsIdsToAdd;
-    private Set<Integer> teachingSubjectsIdsToRemove;
+    private Collection<Integer> teachingSubjectsIdsToAdd;
+    private Collection<Integer> teachingSubjectsIdsToRemove;
 
 
 }

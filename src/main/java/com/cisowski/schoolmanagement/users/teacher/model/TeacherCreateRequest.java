@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Set;
+import java.util.Collection;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -14,6 +14,6 @@ public class TeacherCreateRequest extends EmployeeCreateRequest {
 
     @NotNull(message = "Teacher's main subjects cannot be null")
     @NotEmpty(message = "Teacher's main subjects cannot be empty")
-    private Set<Integer> teachingSubjectsIds;
+    private Collection<Integer> teachingSubjectsIds;
 
 }

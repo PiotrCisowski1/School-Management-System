@@ -2,20 +2,21 @@ package com.cisowski.schoolmanagement.yearbook.service;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
-import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
-import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
-import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import com.cisowski.schoolmanagement.yearbook.model.*;
 import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,8 +24,10 @@ import java.util.Optional;
 public class YearbookServiceImpl implements YearbookService {
 
     private final YearbookRepository yearbookRepository;
-    private final TeacherRepository teacherRepository;
+    private final SubjectService subjectService;
     private final YearbookMapper mapper;
+    private final StudentRepository studentRepository;
+    private final TeacherService teacherService;
 
     @Override
     @Transactional
@@ -36,25 +39,13 @@ public class YearbookServiceImpl implements YearbookService {
             throw new EntityAlreadyExistsException(YearbookEntity.class, existingYearbook.get().getSymbol());
 
         YearbookEntity requestEntity = mapper.toYearbookEntity(request);
-        requestEntity.setHeadTeacher(fetchTeacher(request.getHeadTeacherId()));
-        requestEntity.setMainCourseSubjects(fetchSubjects(request.getMainCourseSubjectsIds()));
+        requestEntity.setHeadTeacher(teacherService.fetchTeacher(request.getHeadTeacherId()));
+        requestEntity.setMainCourseSubjects(subjectService.fetchSubjects(request.getMainCourseSubjectsIds()));
 
         YearbookEntity savedYearbook = yearbookRepository.save(requestEntity);
         DbLogger.info("Yearbook saved successfully: " + savedYearbook.toString());
 
         return mapper.toDetailedResponse(savedYearbook);
-    }
-
-    private TeacherEntity fetchTeacher(Integer teacherId){
-        Optional<TeacherEntity> teacher = teacherRepository.findById(teacherId);
-        if(teacher.isEmpty())
-            throw new EntityNotFoundException(TeacherEntity.class, "ID", teacherId.toString());
-        return teacher.get();
-    }
-
-    private List<SubjectEntity> fetchSubjects(Collection<Integer> subjectIds){
-        //TODO: subject not yet implemented
-        return Collections.emptyList();
     }
 
     @Override
@@ -67,15 +58,35 @@ public class YearbookServiceImpl implements YearbookService {
             throw new EntityNotFoundException(YearbookEntity.class, "ID", yearbookId.toString());
         YearbookEntity existingYearbookEntity = existingYearbook.get();
         YearbookEntity requestYearbook = mapper.toYearbookEntity(request);
-        requestYearbook.setHeadTeacher(fetchTeacher(request.getHeadTeacherId()));
-        //TODO: fetch subjects to request
+        existingYearbookEntity.setHeadTeacher(teacherService.fetchTeacher(request.getHeadTeacherId()));
+        updateSubjects(request.getMainCourseSubjectsIdsToAdd(), request.getMainCourseSubjectsIdsToRemove(), existingYearbookEntity);
         mapper.patchYearbook(existingYearbookEntity, requestYearbook);
         YearbookEntity updatedYearbook = yearbookRepository.save(existingYearbookEntity);
 
         DbLogger.info(String.format("Yearbook updated successfully: %s", updatedYearbook.toString()));
 
-        YearbookDetailedResponse response = mapper.toDetailedResponse(updatedYearbook);
-        return response;
+        return mapper.toDetailedResponse(updatedYearbook);
+    }
+
+    private void updateSubjects(Collection<Integer> subjectsToAdd, Collection<Integer> subjectsToRemove, YearbookEntity yearbookEntity){
+        if(!CollectionUtils.isEmpty(subjectsToRemove))
+            removeSubjectsFromYearbook(yearbookEntity, subjectsToRemove);
+        if(!CollectionUtils.isEmpty(subjectsToAdd))
+            addNewSubjectsToYearbook(yearbookEntity, subjectsToAdd);
+
+    }
+
+    private void addNewSubjectsToYearbook(YearbookEntity yearbookEntity, Collection<Integer> subjectsIds){
+        Collection<SubjectEntity> subjects = subjectService.fetchSubjects(subjectsIds);
+        yearbookEntity.setMainCourseSubjects(subjects);
+    }
+
+    private void removeSubjectsFromYearbook(YearbookEntity yearbookEntity, Collection<Integer> subjectsIds){
+        Collection<SubjectEntity> subjects = subjectService.fetchSubjects(subjectsIds);
+        subjects.forEach(subject -> {
+            if(!yearbookEntity.getMainCourseSubjects().contains(subject))
+                throw new SpecificationBrokenException(String.format("Subject with ID %s is not associated with Yearbook with ID %s", subject.getId(), yearbookEntity.getId()));
+        });
     }
 
     @Override
@@ -86,9 +97,15 @@ public class YearbookServiceImpl implements YearbookService {
         Optional<YearbookEntity> existingYearbook = yearbookRepository.findById(yearbookId);
         if(existingYearbook.isEmpty())
             throw new EntityNotFoundException(YearbookEntity.class, "ID", yearbookId.toString());
+        checkIfYearbookIsAssociatedWithStudents(existingYearbook.get());
         yearbookRepository.deleteById(yearbookId);
 
         DbLogger.info(String.format("Yearbook with ID %s removed successfully",yearbookId));
+    }
+
+    private void checkIfYearbookIsAssociatedWithStudents(YearbookEntity yearbookEntity){
+        if(studentRepository.existsByYearbook(yearbookEntity))
+            throw new SpecificationBrokenException(String.format("Cannot remove Yearbook with ID %s, because there are Students associated with it", yearbookEntity.getId()));
     }
 
     @Override
@@ -110,5 +127,15 @@ public class YearbookServiceImpl implements YearbookService {
         Collection<YearbookEntity> yearbooks = yearbookRepository.findAll();
         DbLogger.info(String.format("Found %d Yearbook entities", yearbooks.size()));
         return mapper.toYearbookList(yearbooks);
+    }
+
+    @Override
+    public YearbookEntity fetchYearbookEntity(Integer yearbookId){
+        if(yearbookId == null)
+            return null;
+        Optional<YearbookEntity> yearbook = yearbookRepository.findById(yearbookId);
+        if(yearbook.isEmpty())
+            throw new SpecificationBrokenException(String.format("Given Yearbook ID does not exist: (%s)", yearbookId));
+        return yearbook.get();
     }
 }

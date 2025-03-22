@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.teacher.mapper;
 
+import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
@@ -25,5 +26,12 @@ public interface TeacherMapper {
     List<TeacherSummaryResponse>toTeachersResponse(Collection<TeacherEntity> teachers);
     @Named("toTeacherSummaryResponse")
     TeacherSummaryResponse toSummaryResponse(TeacherEntity teacher);
+    void patchTeacher(@MappingTarget TeacherEntity targetEntity, TeacherEntity sourceEntity);
+
+    default String toStringSubjectType(SubjectTypeEntity subjectType){
+        if(subjectType == null)
+            return null;
+        return subjectType.getName();
+    }
 
 }

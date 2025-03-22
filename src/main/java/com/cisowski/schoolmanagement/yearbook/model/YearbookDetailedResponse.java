@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.yearbook.model;
 
-import com.cisowski.schoolmanagement.model.response.SubjectSummaryResponse;
+import com.cisowski.schoolmanagement.subject.model.SubjectSummaryResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import lombok.Data;

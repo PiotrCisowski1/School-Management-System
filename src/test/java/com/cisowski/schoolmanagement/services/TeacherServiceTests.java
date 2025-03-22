@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.services;
 
-import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.service.SubjectServiceImpl;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapperImpl;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -15,6 +16,7 @@ import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherServiceImpl;
 import com.cisowski.schoolmanagement.common.utility.PasswordGenerator;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
+import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,13 +41,17 @@ public class TeacherServiceTests {
     private TeacherRepository repository;
     @Mock
     private TeacherMapperImpl mockedTeacherMapper;
+    @Mock
+    private SubjectServiceImpl subjectService;
+    @Mock
+    private YearbookRepository yearbookRepository;
     private final TeacherMapper teacherMapper = Mappers.getMapper(TeacherMapper.class);
     @InjectMocks
     private TeacherServiceImpl service;
     private final String generatedPassword = PasswordGenerator.generatePassword();
 
     @BeforeEach
-    public void setUp(){
+    public void setUp() {
         YearbookMapper yearbookMapper = Mappers.getMapper(YearbookMapper.class);
         ReflectionTestUtils.setField(teacherMapper, "yearbookMapper", yearbookMapper);
     }
@@ -58,11 +64,13 @@ public class TeacherServiceTests {
         teacher.setPassword(generatedPassword);
         teacher.setId(1);
         AddTeacherResponse response = teacherMapper.toAddTeacherResponse(teacher);
+        List<SubjectEntity> subjects = Instancio.ofList(SubjectEntity.class).size(3).create();
 
         when(repository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
         when(mockedTeacherMapper.toTeacherEntity(dto)).thenReturn(teacher);
         when(repository.save(any())).thenReturn(teacher);
         when(mockedTeacherMapper.toAddTeacherResponse(any())).thenReturn(response);
+        when(subjectService.fetchSubjects(any())).thenReturn(subjects);
 
         AddTeacherResponse result = service.addTeacher(dto);
 
@@ -100,12 +108,12 @@ public class TeacherServiceTests {
         TeacherEntity teacher = teacherMapper.toTeacherEntity(dto);
         TeacherDetailedResponse response = teacherMapper.toTeacherResponse(teacher);
 
-        when(repository.findByEmail(any())).thenReturn(Optional.of(teacher));
+        when(repository.findById(any())).thenReturn(Optional.of(teacher));
         when(mockedTeacherMapper.toTeacherEntity(dto)).thenReturn(teacher);
         when(repository.save(any())).thenReturn(teacher);
         when(mockedTeacherMapper.toTeacherResponse(any())).thenReturn(response);
 
-        TeacherDetailedResponse result = service.updateTeacher(dto);
+        TeacherDetailedResponse result = service.updateTeacher(dto, 1);
 
         assertNotNull(result);
         assertEquals(response, result);
@@ -126,10 +134,10 @@ public class TeacherServiceTests {
     public void updateTeacher_throwsEntityNotFoundEx() {
         TeacherPatchRequest dto = Instancio.create(TeacherPatchRequest.class);
 
-        when(repository.findByEmail(any())).thenReturn(Optional.empty());
+        when(repository.findById(any())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () ->
-                service.updateTeacher(dto));
+                service.updateTeacher(dto, 1));
     }
 
     @Test
@@ -140,6 +148,7 @@ public class TeacherServiceTests {
         teacher.setId(userId);
 
         when(repository.findById(userId)).thenReturn(Optional.of(teacher));
+        when(yearbookRepository.existsByHeadTeacher(any())).thenReturn(false);
 
         service.deleteUser(userId);
 
@@ -200,6 +209,15 @@ public class TeacherServiceTests {
 
         assertThrows(EntityNotFoundException.class, () ->
                 service.findById(1));
+    }
+
+    @Test
+    @DisplayName("fetchTeacher successful")
+    public void fetchTeacher_successful() {
+        TeacherEntity teacher = Instancio.create(TeacherEntity.class);
+        when(repository.findById(1)).thenReturn(Optional.of(teacher));
+        TeacherEntity response = service.fetchTeacher(1);
+        assertEquals(teacher, response);
     }
 }
 

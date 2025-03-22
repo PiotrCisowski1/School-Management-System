@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.mappers;
 
-import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;

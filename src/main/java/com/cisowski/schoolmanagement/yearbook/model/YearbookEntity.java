@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.yearbook.model;
 
-import com.cisowski.schoolmanagement.model.entity.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,7 +20,7 @@ public class YearbookEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @OneToOne()
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "head_teacher_user_id", referencedColumnName = "user_id")
     private TeacherEntity headTeacher;
     @Column(nullable = false)
@@ -28,11 +28,11 @@ public class YearbookEntity {
     @Column(nullable = false)
     private ZonedDateTime startingYear;
     private ZonedDateTime graduationYear;
-    @OneToMany(mappedBy = "yearbook")
+    @OneToMany(mappedBy = "yearbook", fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.NO_ACTION)
     @JsonIgnore
     private Collection<StudentEntity> studentsInYearbook = new ArrayList<>();
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "yearbooks_subjects",
             joinColumns = {@JoinColumn(name = "yearbook_id", referencedColumnName = "id")},
