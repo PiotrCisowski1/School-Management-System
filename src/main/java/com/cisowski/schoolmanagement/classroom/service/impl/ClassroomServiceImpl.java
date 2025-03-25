@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,5 +39,17 @@ public class ClassroomServiceImpl implements ClassroomService {
             Equipment equipment = equipmentService.fetchEquipment(eq.getEquipmentId());
             classroom.addEquipment(equipment, eq.getQuantity());
         });
+    }
+
+    @Override
+    @Transactional
+    public void deleteClassroom(Integer classroomId) {
+        DbLogger.info("Removing Classroom with ID: " + classroomId);
+        Optional<ClassroomEntity> existingClassroom = classroomRepository.findById(classroomId);
+        if(existingClassroom.isEmpty())
+            throw new EntityNotFoundException(ClassroomEntity.class, "ID", classroomId.toString());
+        //TODO: after schedule - check if classroom is still in use before delete
+        classroomRepository.delete(existingClassroom.get());
+        DbLogger.info(String.format("Classroom with ID: %s, was successfully removed", classroomId));
     }
 }

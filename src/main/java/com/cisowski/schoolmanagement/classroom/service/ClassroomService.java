@@ -5,4 +5,6 @@ import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
 
 public interface ClassroomService {
     public ClassroomDetailedResponse addClassroom(ClassroomRequest request);
+
+    void deleteClassroom(Integer classroomId);
 }

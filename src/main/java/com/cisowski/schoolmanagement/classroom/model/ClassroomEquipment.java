@@ -2,13 +2,14 @@ package com.cisowski.schoolmanagement.classroom.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Entity
 @Table(name = "classroom_equipment")
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClassroomEquipment {
     @EmbeddedId
     private ClassroomEquipmentId id;
