@@ -57,4 +57,11 @@ public class ClassroomController {
         ClassroomDetailedResponse response = classroomService.addClassroom(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{classroomId}")
+    public ResponseEntity deleteClassroom(@PathVariable Integer classroomId){
+        DbLogger.info("Received Classroom DELETE request for ID: " + classroomId);
+        classroomService.deleteClassroom(classroomId);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
 }

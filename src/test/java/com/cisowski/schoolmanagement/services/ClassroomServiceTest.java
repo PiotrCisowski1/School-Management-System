@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.classroom.service.impl.ClassroomServiceImpl;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ClassroomServiceTest {
@@ -78,6 +79,29 @@ public class ClassroomServiceTest {
         assertEquals(expectedResponse.getId(), response.getId());
         assertEquals(expectedResponse.getName(), response.getName());
         assertTrue(savedEntity.getClassroomEquipments().stream().anyMatch(ce -> ce.getEquipment().equals(equipment) && ce.getQuantity() == 2));
+    }
 
+    @Test
+    void testDeleteClassroom_whenClassroomExists() {
+        Integer classroomId = 1;
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.of(savedEntity));
+
+        classroomService.deleteClassroom(classroomId);
+
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomRepository).delete(savedEntity);
+    }
+
+    @Test
+    void testDeleteClassroom_whenClassroomDoesNotExist() {
+        Integer classroomId = 999;
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            classroomService.deleteClassroom(classroomId);
+        });
+
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomRepository, never()).delete(any());
     }
 }
