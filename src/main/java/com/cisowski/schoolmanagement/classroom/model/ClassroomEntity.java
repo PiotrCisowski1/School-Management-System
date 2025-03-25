@@ -1,8 +1,10 @@
 package com.cisowski.schoolmanagement.classroom.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 @Entity
@@ -21,13 +23,18 @@ public class ClassroomEntity {
 
     private String notes;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "classroom_equipment",
-            joinColumns = {@JoinColumn(name = "classroom_id", referencedColumnName = "id")},
-            inverseJoinColumns = {@JoinColumn(name = "subject_id", referencedColumnName = "id")}
-    )
-    private Collection<Equipment> equipments;
+    @OneToMany(mappedBy = "classroom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private Collection<ClassroomEquipment> classroomEquipments = new ArrayList<>();
+
+    public void addEquipment(Equipment equipment, int quantity){
+        classroomEquipments.add(ClassroomEquipment.builder()
+                .id(new ClassroomEquipmentId(this.id, equipment.getId()))
+                .classroom(this)
+                .equipment(equipment)
+                .quantity(quantity)
+                .build());
+    }
 
     @Override
     public String toString() {

@@ -1,7 +1,10 @@
 package com.cisowski.schoolmanagement.classroom.controller;
 
+import com.cisowski.schoolmanagement.classroom.model.ClassroomDetailedResponse;
+import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentRequest;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentResponse;
+import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.validation.Valid;
@@ -18,6 +21,7 @@ import java.util.Collection;
 public class ClassroomController {
 
     private final EquipmentService equipmentService;
+    private final ClassroomService classroomService;
 
     @PostMapping("/equipments")
     public ResponseEntity<EquipmentResponse> addEquipment(@Valid @RequestBody EquipmentRequest request){
@@ -45,5 +49,12 @@ public class ClassroomController {
         DbLogger.info("Received GET Equipment request for ID: " + equipmentId);
         EquipmentResponse response = equipmentService.getById(equipmentId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<ClassroomDetailedResponse> addClassroom(@RequestBody @Valid ClassroomRequest request){
+        DbLogger.info("Received Classroom POST request: " + request.toString());
+        ClassroomDetailedResponse response = classroomService.addClassroom(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

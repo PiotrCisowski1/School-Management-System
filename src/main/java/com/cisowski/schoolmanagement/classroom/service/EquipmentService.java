@@ -10,7 +10,6 @@ import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -23,7 +22,7 @@ public class EquipmentService {
 
     @Transactional
     public EquipmentResponse addEquipment(EquipmentRequest request){
-        DbLogger.info("Add Equipment for request: " + request.toString());
+        DbLogger.info("Adding Equipment for request: " + request.toString());
         Equipment requestEntity = equipmentMapper.toEquipmentEntity(request);
         Equipment saved = equipmentRepository.save(requestEntity);
         DbLogger.info("Equipment was saved successfully: " + saved.toString());
@@ -32,7 +31,7 @@ public class EquipmentService {
 
     @Transactional
     public void deleteEquipment(Integer equipmentId) {
-        DbLogger.info("Delete equipment for ID: " + equipmentId);
+        DbLogger.info("Deleting equipment for ID: " + equipmentId);
         Optional<Equipment> existingEquipment = equipmentRepository.findById(equipmentId);
         if(existingEquipment.isEmpty())
             throw new EntityNotFoundException(Equipment.class, "ID", equipmentId.toString());
@@ -54,5 +53,13 @@ public class EquipmentService {
             throw new EntityNotFoundException(Equipment.class, "ID", equipmentId.toString());
         DbLogger.info(String.format("Found Equipment with ID %s, object: %s", equipmentId, equipment.get().toString()));
         return equipmentMapper.toEquipmentResponse(equipment.get());
+    }
+
+    public Equipment fetchEquipment(Integer equipmentId){
+        DbLogger.info("Fetching Equipment for ID: " + equipmentId);
+        Optional<Equipment> equipment = equipmentRepository.findById(equipmentId);
+        if(equipment.isEmpty())
+            throw new EntityNotFoundException(Equipment.class, "ID", equipmentId.toString());
+        return equipment.get();
     }
 }
