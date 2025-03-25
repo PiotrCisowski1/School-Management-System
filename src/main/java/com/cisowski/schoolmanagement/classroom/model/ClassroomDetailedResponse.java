@@ -10,5 +10,5 @@ public class ClassroomDetailedResponse {
     private String name;
     private Integer capacity;
     private String notes;
-    private Collection<Equipment> equipments;
+    private Collection<ClassroomEquipment> equipments;
 }
