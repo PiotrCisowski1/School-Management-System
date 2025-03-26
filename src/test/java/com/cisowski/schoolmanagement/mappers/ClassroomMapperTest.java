@@ -4,8 +4,8 @@ import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomDetailedResponse;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
+import com.cisowski.schoolmanagement.classroom.model.ClassroomSummaryResponse;
 import org.instancio.Instancio;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -42,5 +42,16 @@ public class ClassroomMapperTest {
         assertEquals(entity.getName(), result.getName());
         assertEquals(entity.getCapacity(), result.getCapacity());
         assertEquals(entity.getNotes(), result.getNotes());
+    }
+
+    @Test
+    public void toClassroomSummaryResponse(){
+        ClassroomEntity entity = Instancio.create(ClassroomEntity.class);
+        ClassroomSummaryResponse result = classroomMapper.toSummaryResponse(entity);
+        assertNotNull(result);
+        assertEquals(entity.getCapacity(), result.getCapacity());
+        assertEquals(entity.getId(), result.getId());
+        assertEquals(entity.getName(), result.getName());
+        assertEquals(entity.getClassroomEquipments().size(), result.getEquipmentCount());
     }
 }

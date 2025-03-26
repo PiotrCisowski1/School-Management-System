@@ -1,11 +1,10 @@
 package com.cisowski.schoolmanagement.classroom.mapper;
 
-import com.cisowski.schoolmanagement.classroom.model.ClassroomDetailedResponse;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.cisowski.schoolmanagement.classroom.model.*;
+import org.mapstruct.*;
+
+import java.util.Collection;
+import java.util.List;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ClassroomMapper {
@@ -15,4 +14,21 @@ public interface ClassroomMapper {
 
     @Mapping(target = "equipments", source = "classroomEquipments")
     ClassroomDetailedResponse toClassroomDetailedResponse(ClassroomEntity entity);
+
+    @Mapping(target = "equipmentCount", source = "classroomEquipments", qualifiedByName = "countEquipments")
+    ClassroomSummaryResponse toSummaryResponse(ClassroomEntity entity);
+
+    List<ClassroomSummaryResponse> toSummaryResponseList(List<ClassroomEntity> entities);
+
+    ClassroomEntity toClassroomEntity(PatchClassroomRequest request);
+
+    @Mapping(target = "classroomEquipments", ignore = true)
+    void patchClassroom(ClassroomEntity requestEntity, @MappingTarget ClassroomEntity existingEntity);
+
+    @Named("countEquipments")
+    default Integer countEquipments(Collection<ClassroomEquipment> equipments){
+        if(equipments == null)
+            return 0;
+        return equipments.size();
+    }
 }
