@@ -7,12 +7,11 @@ import java.util.Collection;
 
 @Data
 public class PatchClassroomRequest {
-    @Size(max = 50)
+    @Size(max = 50, message = "Name can be up to 50 characters")
     private String name;
-    @Size(min = 1)
     private Integer capacity;
-    @Size(max = 250)
+    @Size(max = 250, message = "Notes cannot exceed 250 characters")
     private String notes;
-    private Collection<Integer> equipmentIdsToAdd;
-    private Collection<Integer> equipmentIdsToRemove;
+    private Collection<EquipmentQuantity> equipmentIdsToAdd;
+    private Collection<EquipmentQuantity> equipmentIdsToRemove;
 }

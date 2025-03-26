@@ -1,11 +1,13 @@
 package com.cisowski.schoolmanagement.classroom.model;
 
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 @Entity
 @Table(name = "classrooms")
@@ -34,6 +36,19 @@ public class ClassroomEntity {
                 .equipment(equipment)
                 .quantity(quantity)
                 .build());
+    }
+
+    public void removeEquipment(Equipment equipment) {
+        Optional<ClassroomEquipment> toRemove = classroomEquipments.stream()
+                .filter(classroomEq -> classroomEq.getId().getEquipmentId().equals(equipment.getId()))
+                .findFirst();
+        if(toRemove.isEmpty())
+            throw new SpecificationBrokenException(
+                    String.format(
+                            "Equipment with ID: %s, is not associated with Classroom with ID: %s",
+                            equipment.getId(),
+                            this.getId()));
+        classroomEquipments.remove(toRemove.get());
     }
 
     @Override

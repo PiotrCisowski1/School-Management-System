@@ -33,6 +33,8 @@ public class ClassroomServiceTest {
     private ClassroomEntity savedEntity;
     private ClassroomDetailedResponse expectedResponse;
     private ClassroomSummaryResponse summaryResponse;
+    private ClassroomEntity existingEntity;
+    private Integer classroomId;
 
     @BeforeEach
     void setUp() {
@@ -55,7 +57,14 @@ public class ClassroomServiceTest {
 
         summaryResponse = new ClassroomSummaryResponse();
         summaryResponse.setId(1);
-        summaryResponse.setName("Klasa 1A");
+        summaryResponse.setName("1A");
+
+        classroomId = 1;
+        existingEntity = new ClassroomEntity();
+        existingEntity.setId(classroomId);
+        existingEntity.setName("Original Name");
+        existingEntity.setCapacity(30);
+        existingEntity.setNotes("Original Notes");
     }
 
     @Test
@@ -159,5 +168,117 @@ public class ClassroomServiceTest {
         assertNotNull(responses);
         assertEquals(1, responses.size());
         assertEquals(summaryResponse.getId(), responses.iterator().next().getId());
+    }
+
+    @Test
+    void testUpdateClassroom_success_withEquipmentChanges() {
+        PatchClassroomRequest patchRequest = new PatchClassroomRequest();
+        patchRequest.setName("Updated Name");
+        patchRequest.setCapacity(35);
+        patchRequest.setNotes("Updated Notes");
+
+        EquipmentQuantity eqAdd = new EquipmentQuantity();
+        eqAdd.setEquipmentId(5);
+        eqAdd.setQuantity(10);
+        patchRequest.setEquipmentIdsToAdd(Arrays.asList(eqAdd));
+
+        EquipmentQuantity eqRemove = new EquipmentQuantity();
+        eqRemove.setEquipmentId(3);
+        eqRemove.setQuantity(2);
+        patchRequest.setEquipmentIdsToRemove(Arrays.asList(eqRemove));
+
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.of(existingEntity));
+
+        Equipment equipmentForRemovalSetup = new Equipment();
+        equipmentForRemovalSetup.setId(3);
+        existingEntity.addEquipment(equipmentForRemovalSetup, 5);
+
+        Equipment equipmentToRemove = new Equipment();
+        equipmentToRemove.setId(3);
+        when(equipmentService.fetchEquipments(patchRequest.getEquipmentIdsToRemove()))
+                .thenReturn(Arrays.asList(equipmentToRemove));
+
+        Equipment equipmentToAdd = new Equipment();
+        equipmentToAdd.setId(5);
+        when(equipmentService.fetchEquipments(patchRequest.getEquipmentIdsToAdd()))
+                .thenReturn(Arrays.asList(equipmentToAdd));
+        ClassroomEntity requestEntity = new ClassroomEntity();
+        requestEntity.setName(patchRequest.getName());
+        requestEntity.setCapacity(patchRequest.getCapacity());
+        requestEntity.setNotes(patchRequest.getNotes());
+        when(classroomMapper.toClassroomEntity(patchRequest)).thenReturn(requestEntity);
+        when(classroomRepository.save(existingEntity)).thenReturn(existingEntity);
+        ClassroomDetailedResponse detailedResponse = new ClassroomDetailedResponse();
+        detailedResponse.setId(classroomId);
+        detailedResponse.setName(patchRequest.getName());
+        detailedResponse.setCapacity(patchRequest.getCapacity());
+        detailedResponse.setNotes(patchRequest.getNotes());
+        when(classroomMapper.toClassroomDetailedResponse(existingEntity)).thenReturn(detailedResponse);
+
+        ClassroomDetailedResponse response = classroomService.updateClassroom(patchRequest, classroomId);
+
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomRepository).flush();
+        verify(classroomMapper).patchClassroom(requestEntity, existingEntity);
+        verify(classroomRepository).save(existingEntity);
+        verify(equipmentService).fetchEquipments(patchRequest.getEquipmentIdsToRemove());
+        verify(equipmentService).fetchEquipments(patchRequest.getEquipmentIdsToAdd());
+        assertNotNull(response);
+        assertEquals(patchRequest.getName(), response.getName());
+        assertEquals(patchRequest.getCapacity(), response.getCapacity());
+        assertEquals(patchRequest.getNotes(), response.getNotes());
+    }
+
+    @Test
+    void testUpdateClassroom_success_withoutEquipmentChanges() {
+        PatchClassroomRequest patchRequest = new PatchClassroomRequest();
+        patchRequest.setName("Updated Name Only");
+        patchRequest.setCapacity(40);
+        patchRequest.setNotes("Updated Notes Only");
+        patchRequest.setEquipmentIdsToAdd(null);
+        patchRequest.setEquipmentIdsToRemove(null);
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.of(existingEntity));
+        ClassroomEntity requestEntity = new ClassroomEntity();
+        requestEntity.setName(patchRequest.getName());
+        requestEntity.setCapacity(patchRequest.getCapacity());
+        requestEntity.setNotes(patchRequest.getNotes());
+        when(classroomMapper.toClassroomEntity(patchRequest)).thenReturn(requestEntity);
+        when(classroomRepository.save(existingEntity)).thenReturn(existingEntity);
+        ClassroomDetailedResponse detailedResponse = new ClassroomDetailedResponse();
+        detailedResponse.setId(classroomId);
+        detailedResponse.setName(patchRequest.getName());
+        detailedResponse.setCapacity(patchRequest.getCapacity());
+        detailedResponse.setNotes(patchRequest.getNotes());
+        when(classroomMapper.toClassroomDetailedResponse(existingEntity)).thenReturn(detailedResponse);
+
+        ClassroomDetailedResponse response = classroomService.updateClassroom(patchRequest, classroomId);
+
+        verify(equipmentService, times(2)).fetchEquipments(any());
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomRepository).flush();
+        verify(classroomRepository).save(existingEntity);
+        verify(classroomMapper).patchClassroom(requestEntity, existingEntity);
+        assertNotNull(response);
+        assertEquals(patchRequest.getName(), response.getName());
+        assertEquals(patchRequest.getCapacity(), response.getCapacity());
+        assertEquals(patchRequest.getNotes(), response.getNotes());
+    }
+
+    @Test
+    void testUpdateClassroom_classroomNotFound() {
+        PatchClassroomRequest patchRequest = new PatchClassroomRequest();
+        patchRequest.setName("Any Name");
+
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
+                classroomService.updateClassroom(patchRequest, classroomId)
+        );
+
+        assertTrue(exception.getMessage().contains("ClassroomEntity"));
+        assertTrue(exception.getMessage().contains("ID"));
+        assertTrue(exception.getMessage().contains(classroomId.toString()));
+        verify(classroomRepository).findById(classroomId);
+        verifyNoMoreInteractions(classroomRepository);
     }
 }

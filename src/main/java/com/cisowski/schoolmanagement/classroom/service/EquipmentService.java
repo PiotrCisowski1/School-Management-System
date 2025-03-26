@@ -2,17 +2,20 @@ package com.cisowski.schoolmanagement.classroom.service;
 
 import com.cisowski.schoolmanagement.classroom.mapper.EquipmentMapper;
 import com.cisowski.schoolmanagement.classroom.model.Equipment;
+import com.cisowski.schoolmanagement.classroom.model.EquipmentQuantity;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentRequest;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentResponse;
 import com.cisowski.schoolmanagement.classroom.repository.EquipmentRepository;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,5 +64,17 @@ public class EquipmentService {
         if(equipment.isEmpty())
             throw new EntityNotFoundException(Equipment.class, "ID", equipmentId.toString());
         return equipment.get();
+    }
+
+    public Collection<Equipment> fetchEquipments(Collection<EquipmentQuantity> eqIds){
+        if(CollectionUtils.isEmpty(eqIds))
+            return Collections.emptyList();
+        DbLogger.info("Fetching Equipments for IDs: " + Arrays.toString(eqIds.toArray()));
+        Collection<Equipment> equipment = equipmentRepository.findAllById(eqIds.stream()
+                .map(EquipmentQuantity::getEquipmentId)
+                .collect(Collectors.toList()));
+        if(equipment.size() != eqIds.size())
+            throw new SpecificationBrokenException("Some of given Equipment IDs are invalid or non existent: " + Arrays.toString(eqIds.toArray()));
+        return equipment;
     }
 }

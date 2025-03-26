@@ -1,10 +1,7 @@
 package com.cisowski.schoolmanagement.classroom.mapper;
 
 import com.cisowski.schoolmanagement.classroom.model.*;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +19,11 @@ public interface ClassroomMapper {
     ClassroomSummaryResponse toSummaryResponse(ClassroomEntity entity);
 
     List<ClassroomSummaryResponse> toSummaryResponseList(List<ClassroomEntity> entities);
+
+    ClassroomEntity toClassroomEntity(PatchClassroomRequest request);
+
+    @Mapping(target = "classroomEquipments", ignore = true)
+    void patchClassroom(ClassroomEntity requestEntity, @MappingTarget ClassroomEntity existingEntity);
 
     @Named("countEquipments")
     default Integer countEquipments(Collection<ClassroomEquipment> equipments){

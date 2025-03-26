@@ -75,4 +75,11 @@ public class ClassroomController {
         Collection<ClassroomSummaryResponse> response = classroomService.getAllClassrooms();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PatchMapping("/{classroomId}")
+    public ResponseEntity<ClassroomDetailedResponse> patchClassroom(@Valid @RequestBody PatchClassroomRequest request, @PathVariable Integer classroomId){
+        DbLogger.info("Received Classroom PATCH request: " + request.toString());
+        ClassroomDetailedResponse response = classroomService.updateClassroom(request, classroomId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
