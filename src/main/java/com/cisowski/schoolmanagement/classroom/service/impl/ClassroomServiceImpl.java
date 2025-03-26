@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -51,5 +52,23 @@ public class ClassroomServiceImpl implements ClassroomService {
         //TODO: after schedule - check if classroom is still in use before delete
         classroomRepository.delete(existingClassroom.get());
         DbLogger.info(String.format("Classroom with ID: %s, was successfully removed", classroomId));
+    }
+
+    @Override
+    public ClassroomDetailedResponse getClassroomById(Integer classroomId) {
+        DbLogger.info("Searching for Classroom with ID: " + classroomId);
+        Optional<ClassroomEntity> existingClassroom = classroomRepository.findById(classroomId);
+        if(existingClassroom.isEmpty())
+            throw new EntityNotFoundException(ClassroomEntity.class, "ID", classroomId.toString());
+        DbLogger.info(String.format("Found Classroom with ID %s: %s", classroomId, existingClassroom.get().toString()));
+        return classroomMapper.toClassroomDetailedResponse(existingClassroom.get());
+    }
+
+    @Override
+    public Collection<ClassroomSummaryResponse> getAllClassrooms() {
+        DbLogger.info("Searching for all Classroom records");
+        List<ClassroomEntity> entities = classroomRepository.findAll();
+        DbLogger.info(String.format("Found %s Classrooms records", entities.size()));
+        return classroomMapper.toSummaryResponseList(entities);
     }
 }

@@ -1,9 +1,6 @@
 package com.cisowski.schoolmanagement.classroom.controller;
 
-import com.cisowski.schoolmanagement.classroom.model.ClassroomDetailedResponse;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
-import com.cisowski.schoolmanagement.classroom.model.EquipmentRequest;
-import com.cisowski.schoolmanagement.classroom.model.EquipmentResponse;
+import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
@@ -63,5 +60,19 @@ public class ClassroomController {
         DbLogger.info("Received Classroom DELETE request for ID: " + classroomId);
         classroomService.deleteClassroom(classroomId);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/{classroomId}")
+    public ResponseEntity<ClassroomDetailedResponse> getClassroom(@PathVariable Integer classroomId){
+        DbLogger.info("Received Classroom GET request for ID: " + classroomId);
+        ClassroomDetailedResponse response = classroomService.getClassroomById(classroomId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping()
+    public ResponseEntity<Collection<ClassroomSummaryResponse>> getClassrooms(){
+        DbLogger.info("Received Classroom GET all request");
+        Collection<ClassroomSummaryResponse> response = classroomService.getAllClassrooms();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

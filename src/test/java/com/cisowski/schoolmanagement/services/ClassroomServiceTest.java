@@ -13,8 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,6 +32,7 @@ public class ClassroomServiceTest {
     private ClassroomRequest validRequest;
     private ClassroomEntity savedEntity;
     private ClassroomDetailedResponse expectedResponse;
+    private ClassroomSummaryResponse summaryResponse;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +52,10 @@ public class ClassroomServiceTest {
         expectedResponse.setName(savedEntity.getName());
         expectedResponse.setCapacity(savedEntity.getCapacity());
         expectedResponse.setNotes(savedEntity.getNotes());
+
+        summaryResponse = new ClassroomSummaryResponse();
+        summaryResponse.setId(1);
+        summaryResponse.setName("Klasa 1A");
     }
 
     @Test
@@ -103,5 +107,57 @@ public class ClassroomServiceTest {
 
         verify(classroomRepository).findById(classroomId);
         verify(classroomRepository, never()).delete(any());
+    }
+
+    @Test
+    void testGetClassroomById_whenClassroomExists() {
+        Integer classroomId = 1;
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.of(savedEntity));
+        when(classroomMapper.toClassroomDetailedResponse(savedEntity)).thenReturn(expectedResponse);
+
+        ClassroomDetailedResponse response = classroomService.getClassroomById(classroomId);
+
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomMapper).toClassroomDetailedResponse(savedEntity);
+        assertNotNull(response);
+        assertEquals(expectedResponse.getId(), response.getId());
+        assertEquals(expectedResponse.getName(), response.getName());
+        assertEquals(expectedResponse.getCapacity(), response.getCapacity());
+        assertEquals(expectedResponse.getNotes(), response.getNotes());
+        assertIterableEquals(expectedResponse.getEquipments(), response.getEquipments());
+    }
+
+    @Test
+    void testGetClassroomById_whenClassroomDoesNotExist() {
+        Integer classroomId = 999;
+
+        when(classroomRepository.findById(classroomId)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
+                classroomService.getClassroomById(classroomId)
+        );
+
+        assertTrue(exception.getMessage().contains("ClassroomEntity"));
+        assertTrue(exception.getMessage().contains("ID"));
+        assertTrue(exception.getMessage().contains(classroomId.toString()));
+        verify(classroomRepository).findById(classroomId);
+        verify(classroomMapper, never()).toClassroomDetailedResponse(any());
+    }
+
+    @Test
+    void testGetAllClassrooms() {
+        List<ClassroomEntity> entities = Collections.singletonList(savedEntity);
+        List<ClassroomSummaryResponse> summaryList = Collections.singletonList(summaryResponse);
+
+        when(classroomRepository.findAll()).thenReturn(entities);
+        when(classroomMapper.toSummaryResponseList(entities)).thenReturn(summaryList);
+
+        Collection<ClassroomSummaryResponse> responses = classroomService.getAllClassrooms();
+
+        verify(classroomRepository).findAll();
+        verify(classroomMapper).toSummaryResponseList(entities);
+        assertNotNull(responses);
+        assertEquals(1, responses.size());
+        assertEquals(summaryResponse.getId(), responses.iterator().next().getId());
     }
 }
