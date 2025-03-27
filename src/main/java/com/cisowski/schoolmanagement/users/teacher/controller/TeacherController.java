@@ -5,9 +5,13 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.AddTeacherResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityResponse;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherAvailabilityService;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +21,11 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/teachers")
+@RequiredArgsConstructor
 public class TeacherController {
 
     private final TeacherService service;
-
-    public TeacherController(TeacherService service) {
-        this.service = service;
-    }
+    private final TeacherAvailabilityService teacherAvailabilityService;
 
     @PostMapping
     public ResponseEntity<AddTeacherResponse> addTeacher(@Valid @RequestBody TeacherCreateRequest dto){
@@ -69,4 +71,45 @@ public class TeacherController {
         Collection<TeacherSummaryResponse> teacherResponses = service.findAll();
         return new ResponseEntity<>(teacherResponses, HttpStatus.OK);
     }
+
+    @PostMapping("/{teacherId}/teacher-availability")
+    public ResponseEntity<TeacherAvailabilityResponse> addTeacherAvailability(
+            @RequestBody @Valid TeacherAvailabilityRequest request,
+            @PathVariable Integer teacherId){
+        DbLogger.info(String.format(
+                "Received TeacherAvailability POST request for Teacher ID: %s and request: %s",
+                teacherId,
+                request.toString()));
+        TeacherAvailabilityResponse response = teacherAvailabilityService.addTeacherAvailability(request, teacherId);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/teacher-availability/{teacherAvailabilityId}")
+    public ResponseEntity deleteTeacherAvailability(@PathVariable Integer teacherAvailabilityId){
+        DbLogger.info("Received TeacherAvailability DELETE request for ID: " + teacherAvailabilityId);
+        teacherAvailabilityService.deleteTeacherAvailability(teacherAvailabilityId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/teacher-availability/{teacherAvailabilityId}")
+    public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityById(@PathVariable Integer teacherAvailabilityId){
+        DbLogger.info("Received TeacherAvailability GET request for ID: " + teacherAvailabilityId);
+        TeacherAvailabilityResponse response = teacherAvailabilityService.getTeacherAvailabilityById(teacherAvailabilityId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/{teacherId}/teacher-availability")
+    public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityByTeacherId(@PathVariable Integer teacherId){
+        DbLogger.info("Received TeacherAvailability GET request for Teacher ID: " + teacherId);
+        TeacherAvailabilityResponse response = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(teacherId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/teacher-availability/{dayOfWeek}")
+    public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByDayOfWeek(@PathVariable Integer dayOfWeek){
+        DbLogger.info("Received TeacherAvailability GET request for DayOfWeek: " + dayOfWeek);
+        Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(dayOfWeek);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }
