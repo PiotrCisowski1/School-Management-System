@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.time.LocalTime;
+import java.sql.Time;
 
 @Data
 @AllArgsConstructor
@@ -14,23 +14,20 @@ public class TeacherAvailabilityRequest {
     @Max(value = 7, message = "Day of week must be number between 1 and 7")
     private Integer dayOfWeek;
 
-    @NotNull
-    @NotBlank
-    private LocalTime startTime;
+    @NotNull(message = "Cannot be null or empty")
+    private Time startTime;
 
-    @NotNull
-    @NotBlank
-    private LocalTime endTime;
+    @NotNull(message = "Cannot be null or empty")
+    private Time endTime;
 
-    @NotNull
-    @NotBlank
     private boolean isAvailable;
 
+    @Size(max = 200, message = "Notes can be up to 200 characters")
     private String notes = "";
 
     @AssertTrue(message = "Start time must be before end time")
     public boolean isValidTimeRange(){
-        return startTime.isBefore(endTime);
+        return startTime != null && endTime != null && startTime.compareTo(endTime) < 0;
     }
 
     @Override
