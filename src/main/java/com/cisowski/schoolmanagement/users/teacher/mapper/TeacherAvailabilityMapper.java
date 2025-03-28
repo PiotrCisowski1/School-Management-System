@@ -9,6 +9,7 @@ import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.time.DayOfWeek;
+import java.util.List;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
     uses = {TeacherMapper.class})
@@ -20,6 +21,8 @@ public interface TeacherAvailabilityMapper {
 
     @Mapping(target = "teacher", source = "teacher", qualifiedByName = "toTeacherSummaryResponse")
     TeacherAvailabilityResponse toResponse(TeacherAvailabilityEntity entity);
+
+    List<TeacherAvailabilityResponse> toResponseList(List<TeacherAvailabilityEntity> entities);
 
     @Named("toDayOfWeek")
     default DayOfWeek map(Integer dayOfWeek){

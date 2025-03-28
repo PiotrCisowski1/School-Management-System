@@ -13,7 +13,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -55,25 +57,40 @@ public class TeacherAvailabilityServiceImpl implements TeacherAvailabilityServic
     @Transactional
     public void deleteTeacherAvailability(Integer teacherAvailabilityId) {
         DbLogger.info("Removing TeacherAvailability with ID: " + teacherAvailabilityId);
+        TeacherAvailabilityEntity entity = getEntity(teacherAvailabilityId);
+        teacherAvailabilityRepository.delete(entity);
+        DbLogger.info(String.format("TeacherAvailability with ID %s, was successfully removed", teacherAvailabilityId));
+    }
+
+    private TeacherAvailabilityEntity getEntity(Integer teacherAvailabilityId){
         Optional<TeacherAvailabilityEntity> entity = teacherAvailabilityRepository.findById(teacherAvailabilityId);
         if(entity.isEmpty())
             throw new EntityNotFoundException(TeacherAvailabilityEntity.class, "ID", teacherAvailabilityId.toString());
-        teacherAvailabilityRepository.delete(entity.get());
-        DbLogger.info(String.format("TeacherAvailability with ID %s, was successfully removed", teacherAvailabilityId));
+        return entity.get();
     }
 
     @Override
     public TeacherAvailabilityResponse getTeacherAvailabilityById(Integer teacherAvailabilityId) {
-        return null;
+        DbLogger.info("Searching for TeacherAvailability with ID: " + teacherAvailabilityId);
+        TeacherAvailabilityEntity entity = getEntity(teacherAvailabilityId);
+        DbLogger.info("Found TeacherAvailability: " + entity.toString());
+        return teacherAvailabilityMapper.toResponse(entity);
     }
 
     @Override
-    public TeacherAvailabilityResponse getTeacherAvailabilityByTeacherId(Integer teacherId) {
-        return null;
+    public Collection<TeacherAvailabilityResponse> getTeacherAvailabilityByTeacherId(Integer teacherId) {
+        DbLogger.info("Searching for TeacherAvailabilities for Teacher with ID: " + teacherId);
+        List<TeacherAvailabilityEntity> entities =  teacherAvailabilityRepository.findByTeacherId(teacherId);
+        DbLogger.info(String.format("Found %s TeacherAvailabilities for Teacher with ID: %s", entities.size(), teacherId));
+        return teacherAvailabilityMapper.toResponseList(entities);
     }
 
     @Override
     public Collection<TeacherAvailabilityResponse> getTeacherAvailabilitiesByDayOfWeek(Integer dayOfWeek) {
-        return null;
+        DayOfWeek day = DayOfWeek.of(dayOfWeek);
+        DbLogger.info("Searching for all TeacherAvailabilities on " + day.toString());
+        List<TeacherAvailabilityEntity> entities =  teacherAvailabilityRepository.findByDayOfWeek(day);
+        DbLogger.info(String.format("Found %s TeacherAvailabilities on %s", entities.size(), day.toString()));
+        return teacherAvailabilityMapper.toResponseList(entities);
     }
 }

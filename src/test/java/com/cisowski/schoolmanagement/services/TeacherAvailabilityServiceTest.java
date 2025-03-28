@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -158,5 +158,46 @@ public class TeacherAvailabilityServiceTest {
         verify(teacherAvailabilityRepository).findById(1);
         assertTrue(result.getMessage().contains("ID"));
         assertTrue(result.getMessage().contains("1"));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityById successfull - should return TeacherAvailabilityResponse")
+    public void getTeacherAvailabilityById(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        when(teacherAvailabilityMapper.toResponse(requestEntity)).thenReturn(response);
+
+        TeacherAvailabilityResponse result = teacherAvailabilityService.getTeacherAvailabilityById(1);
+        assertNotNull(result);
+        assertEquals(result, response);
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityMapper).toResponse(requestEntity);
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityByTeacherId successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilityByTeacherId(){
+        when(teacherAvailabilityRepository.findByTeacherId(1)).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(1);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByTeacherId(1);
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilitiesByDayOfWeek successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilitiesByDayOfWeek(){
+        when(teacherAvailabilityRepository.findByDayOfWeek(DayOfWeek.of(5))).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(5);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByDayOfWeek(DayOfWeek.of(5));
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
     }
 }
