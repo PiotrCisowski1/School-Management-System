@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
+import java.util.List;
 
 @Repository
 public interface TeacherAvailabilityRepository extends JpaRepository<TeacherAvailabilityEntity, Integer> {
@@ -24,4 +25,8 @@ public interface TeacherAvailabilityRepository extends JpaRepository<TeacherAvai
             @Param("startTime") Time startTime,
             @Param("endTime") Time endTime
     );
+
+    List<TeacherAvailabilityEntity> findByTeacherId(Integer teacherId);
+
+    List<TeacherAvailabilityEntity> findByDayOfWeek(DayOfWeek dayOfWeek);
 }

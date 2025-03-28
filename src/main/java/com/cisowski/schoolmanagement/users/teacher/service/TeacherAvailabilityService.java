@@ -10,7 +10,7 @@ public interface TeacherAvailabilityService {
     TeacherAvailabilityResponse addTeacherAvailability(TeacherAvailabilityRequest request, Integer teacherId);
     void deleteTeacherAvailability(Integer teacherAvailabilityId);
     TeacherAvailabilityResponse getTeacherAvailabilityById(Integer teacherAvailabilityId);
-    TeacherAvailabilityResponse getTeacherAvailabilityByTeacherId(Integer teacherId);
+    Collection<TeacherAvailabilityResponse> getTeacherAvailabilityByTeacherId(Integer teacherId);
     Collection<TeacherAvailabilityResponse> getTeacherAvailabilitiesByDayOfWeek(Integer dayOfWeek);
 
 }

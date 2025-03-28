@@ -91,7 +91,7 @@ public class TeacherController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/teacher-availability/{teacherAvailabilityId}")
+    @GetMapping("/teacher-availability/id/{teacherAvailabilityId}")
     public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityById(@PathVariable Integer teacherAvailabilityId){
         DbLogger.info("Received TeacherAvailability GET request for ID: " + teacherAvailabilityId);
         TeacherAvailabilityResponse response = teacherAvailabilityService.getTeacherAvailabilityById(teacherAvailabilityId);
@@ -99,13 +99,13 @@ public class TeacherController {
     }
 
     @GetMapping("/{teacherId}/teacher-availability")
-    public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityByTeacherId(@PathVariable Integer teacherId){
+    public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByTeacherId(@PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability GET request for Teacher ID: " + teacherId);
-        TeacherAvailabilityResponse response = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(teacherId);
+        Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(teacherId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/teacher-availability/{dayOfWeek}")
+    @GetMapping("/teacher-availability/day/{dayOfWeek}")
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByDayOfWeek(@PathVariable Integer dayOfWeek){
         DbLogger.info("Received TeacherAvailability GET request for DayOfWeek: " + dayOfWeek);
         Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(dayOfWeek);

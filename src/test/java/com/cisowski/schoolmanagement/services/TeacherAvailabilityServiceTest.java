@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.services;
 
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
@@ -21,10 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
+import java.util.*;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TeacherAvailabilityServiceTest {
@@ -132,5 +133,71 @@ public class TeacherAvailabilityServiceTest {
         assertTrue(result.getMessage().contains(requestEntity.getStartTime().toString()));
         assertTrue(result.getMessage().contains(requestEntity.getEndTime().toString()));
         assertTrue(result.getMessage().contains(requestEntity.getTeacher().getId().toString()));
+    }
+
+    @Test
+    public void deleteTeacherAvailability_successful(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        doNothing().when(teacherAvailabilityRepository).delete(requestEntity);
+
+        teacherAvailabilityService.deleteTeacherAvailability(1);
+
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityRepository).delete(requestEntity);
+    }
+
+    @Test
+    @DisplayName("deleteTeacherAvailability no availability found - should throw EntityNotFoundException")
+    public void deleteTeacherAvailability_noEntity(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.empty());
+
+        EntityNotFoundException result = assertThrows(
+                EntityNotFoundException.class,
+                () -> teacherAvailabilityService.deleteTeacherAvailability(1));
+
+        verify(teacherAvailabilityRepository).findById(1);
+        assertTrue(result.getMessage().contains("ID"));
+        assertTrue(result.getMessage().contains("1"));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityById successfull - should return TeacherAvailabilityResponse")
+    public void getTeacherAvailabilityById(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        when(teacherAvailabilityMapper.toResponse(requestEntity)).thenReturn(response);
+
+        TeacherAvailabilityResponse result = teacherAvailabilityService.getTeacherAvailabilityById(1);
+        assertNotNull(result);
+        assertEquals(result, response);
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityMapper).toResponse(requestEntity);
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityByTeacherId successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilityByTeacherId(){
+        when(teacherAvailabilityRepository.findByTeacherId(1)).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(1);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByTeacherId(1);
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilitiesByDayOfWeek successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilitiesByDayOfWeek(){
+        when(teacherAvailabilityRepository.findByDayOfWeek(DayOfWeek.of(5))).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(5);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByDayOfWeek(DayOfWeek.of(5));
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
     }
 }
