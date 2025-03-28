@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.services;
 
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
@@ -21,10 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
+import java.util.Optional;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TeacherAvailabilityServiceTest {
@@ -132,5 +133,30 @@ public class TeacherAvailabilityServiceTest {
         assertTrue(result.getMessage().contains(requestEntity.getStartTime().toString()));
         assertTrue(result.getMessage().contains(requestEntity.getEndTime().toString()));
         assertTrue(result.getMessage().contains(requestEntity.getTeacher().getId().toString()));
+    }
+
+    @Test
+    public void deleteTeacherAvailability_successful(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        doNothing().when(teacherAvailabilityRepository).delete(requestEntity);
+
+        teacherAvailabilityService.deleteTeacherAvailability(1);
+
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityRepository).delete(requestEntity);
+    }
+
+    @Test
+    @DisplayName("deleteTeacherAvailability no availability found - should throw EntityNotFoundException")
+    public void deleteTeacherAvailability_noEntity(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.empty());
+
+        EntityNotFoundException result = assertThrows(
+                EntityNotFoundException.class,
+                () -> teacherAvailabilityService.deleteTeacherAvailability(1));
+
+        verify(teacherAvailabilityRepository).findById(1);
+        assertTrue(result.getMessage().contains("ID"));
+        assertTrue(result.getMessage().contains("1"));
     }
 }

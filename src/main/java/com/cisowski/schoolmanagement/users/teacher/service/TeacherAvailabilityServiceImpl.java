@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.teacher.service;
 
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,7 +54,12 @@ public class TeacherAvailabilityServiceImpl implements TeacherAvailabilityServic
     @Override
     @Transactional
     public void deleteTeacherAvailability(Integer teacherAvailabilityId) {
-
+        DbLogger.info("Removing TeacherAvailability with ID: " + teacherAvailabilityId);
+        Optional<TeacherAvailabilityEntity> entity = teacherAvailabilityRepository.findById(teacherAvailabilityId);
+        if(entity.isEmpty())
+            throw new EntityNotFoundException(TeacherAvailabilityEntity.class, "ID", teacherAvailabilityId.toString());
+        teacherAvailabilityRepository.delete(entity.get());
+        DbLogger.info(String.format("TeacherAvailability with ID %s, was successfully removed", teacherAvailabilityId));
     }
 
     @Override
