@@ -4,8 +4,8 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.sql.Time;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 @Data
 @Entity
@@ -18,8 +18,8 @@ public class TeacherAvailabilityEntity {
     @JoinColumn(name = "teacher_id", nullable = false)
     private TeacherEntity teacher;
     private DayOfWeek dayOfWeek;
-    private Time startTime;
-    private Time endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private boolean isAvailable;
     private String notes;
 }

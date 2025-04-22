@@ -3,12 +3,16 @@ package com.cisowski.schoolmanagement.users.teacher.service;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.service.SubjectService;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherAvailabilityRepository;
+import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,9 @@ public class TeacherAvailabilityServiceImpl implements TeacherAvailabilityServic
     private final TeacherAvailabilityRepository teacherAvailabilityRepository;
     private final TeacherService teacherService;
     private final TeacherAvailabilityMapper teacherAvailabilityMapper;
+    private final TeacherRepository teacherRepository;
+    private final SubjectService subjectService;
+
     @Override
     @Transactional
     public TeacherAvailabilityResponse addTeacherAvailability(TeacherAvailabilityRequest request, Integer teacherId) {
@@ -91,6 +98,30 @@ public class TeacherAvailabilityServiceImpl implements TeacherAvailabilityServic
         DbLogger.info("Searching for all TeacherAvailabilities on " + day.toString());
         List<TeacherAvailabilityEntity> entities =  teacherAvailabilityRepository.findByDayOfWeek(day);
         DbLogger.info(String.format("Found %s TeacherAvailabilities on %s", entities.size(), day.toString()));
+        return teacherAvailabilityMapper.toResponseList(entities);
+    }
+
+    @Override
+    public Collection<TeacherAvailabilityResponse> getTeacherAvailabilityByTimeRangeAndSubjectType(TimeRange timeRange, Integer subjectId) {
+        DayOfWeek day = DayOfWeek.of(timeRange.getDayOfWeek());
+        DbLogger.info(String.format(
+                "Searching for TeacherAvailabilities between %s and %s on %s for Subject ID: %s",
+                timeRange.getStartTime(),
+                timeRange.getEndTime(),
+                day.toString(),
+                subjectId));
+        SubjectEntity subject = subjectService.fetchSubject(subjectId);
+        List<TeacherEntity> teachersBySubject = teacherRepository.findByTeachingSubjects(subject);
+        List<TeacherAvailabilityEntity> entities = teacherAvailabilityRepository.findByTeachersAndTimeRange(
+                teachersBySubject,
+                day,
+                timeRange.getStartTime(),
+                timeRange.getEndTime());
+        DbLogger.info(String.format(
+                "Found %s TeacherAvailabilityEntities for TimeRange: %s and Subject ID: %s",
+                entities.size(),
+                timeRange.toString(),
+                subjectId));
         return teacherAvailabilityMapper.toResponseList(entities);
     }
 }

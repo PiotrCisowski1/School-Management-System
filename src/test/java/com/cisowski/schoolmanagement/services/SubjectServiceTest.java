@@ -17,6 +17,7 @@ import com.cisowski.schoolmanagement.subject.service.SubjectTypeService;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -270,5 +271,36 @@ public class SubjectServiceTest {
         Collection<SubjectEntity> result = subjectService.fetchSubjects(subjectIds);
         assertNotNull(result);
         assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("fetchSubject - should return SubjectEntity")
+    public void fetchSubject_successful(){
+        when(subjectRepository.findById(updatedSubjectEntity.getId())).thenReturn(Optional.of(updatedSubjectEntity));
+
+        SubjectEntity result = subjectService.fetchSubject(updatedSubjectEntity.getId());
+
+        assertEquals(updatedSubjectEntity.getId(), result.getId());
+        assertEquals(updatedSubjectEntity.getName(), result.getName());
+        assertEquals(updatedSubjectEntity.getCode(), result.getCode());
+        assertEquals(updatedSubjectEntity.getDescription(), result.getDescription());
+        assertEquals(updatedSubjectEntity.getSubjectType(), result.getSubjectType());
+        assertIterableEquals(updatedSubjectEntity.getTeachers(), result.getTeachers());
+        assertIterableEquals(updatedSubjectEntity.getYearbooksTakingSubject(), result.getYearbooksTakingSubject());
+    }
+
+    @Test
+    @DisplayName("fetchSubject entity not found - should throw EntityNotFoundEx")
+    public void fetchSubject_entityNotFound(){
+        when(subjectRepository.findById(any())).thenReturn(Optional.empty());
+
+        EntityNotFoundException result = assertThrows(
+                EntityNotFoundException.class,
+                () -> subjectService.fetchSubject(1)
+        );
+
+        assertTrue(result.getMessage().contains("ID"));
+        assertTrue(result.getMessage().contains("1"));
+        assertTrue(result.getMessage().contains("SubjectEntity"));
     }
 }

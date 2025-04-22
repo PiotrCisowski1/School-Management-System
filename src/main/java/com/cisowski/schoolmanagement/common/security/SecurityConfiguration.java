@@ -78,6 +78,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request ->
                         request.requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR"))
                 .authorizeHttpRequests(request ->
+                        request.requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR"))
+                .authorizeHttpRequests(request ->
                         request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

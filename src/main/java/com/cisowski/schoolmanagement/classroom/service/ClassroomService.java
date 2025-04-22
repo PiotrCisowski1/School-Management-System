@@ -1,9 +1,6 @@
 package com.cisowski.schoolmanagement.classroom.service;
 
-import com.cisowski.schoolmanagement.classroom.model.ClassroomDetailedResponse;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomRequest;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomSummaryResponse;
-import com.cisowski.schoolmanagement.classroom.model.PatchClassroomRequest;
+import com.cisowski.schoolmanagement.classroom.model.*;
 
 import java.util.Collection;
 
@@ -17,4 +14,6 @@ public interface ClassroomService {
     Collection<ClassroomSummaryResponse> getAllClassrooms();
 
     ClassroomDetailedResponse updateClassroom(PatchClassroomRequest request, Integer classroomId);
+
+    ClassroomEntity fetchClassroom(Integer classroomId);
 }

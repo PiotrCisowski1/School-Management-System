@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -105,5 +106,15 @@ public class ClassroomServiceImpl implements ClassroomService {
     private void removeEqFromClassroom(Collection<EquipmentQuantity> eqIdsToRemove, ClassroomEntity entity){
         Collection<Equipment> equipment = equipmentService.fetchEquipments(eqIdsToRemove);
         equipment.forEach(entity::removeEquipment);
+    }
+
+    public ClassroomEntity fetchClassroom(Integer classroomId){
+        if(classroomId == null || classroomId <= 0)
+            throw new SpecificationBrokenException("Given Classroom ID is not valid integer value");
+        DbLogger.info("Fetching Classroom with ID: " + classroomId);
+        Optional<ClassroomEntity> classroom = classroomRepository.findById(classroomId);
+        if(classroom.isEmpty())
+            throw new EntityNotFoundException(ClassroomEntity.class, "ID", classroomId.toString());
+        return classroom.get();
     }
 }

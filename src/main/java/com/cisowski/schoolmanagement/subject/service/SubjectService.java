@@ -13,5 +13,6 @@ public interface SubjectService {
     SubjectDetailedResponse getSubjectByCode(String subjectCode);
     Collection<SubjectSummaryResponse> getSubjectsByType(String subjectType);
     Collection<SubjectEntity> fetchSubjects(Collection<Integer> subjectIds);
+    SubjectEntity fetchSubject(Integer subjectId);
     void deleteSubject(Integer subjectId);
 }
