@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.users.teacher.model;
 
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -24,6 +25,9 @@ public class TeacherEntity extends EmployeeEntity {
             inverseJoinColumns = {@JoinColumn(name = "subject_id", referencedColumnName = "id")}
     )
     private Collection<SubjectEntity> teachingSubjects;
+
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.REMOVE)
+    private Collection<TeacherAvailabilityEntity> availability;
 
     @Override
     public String toString() {

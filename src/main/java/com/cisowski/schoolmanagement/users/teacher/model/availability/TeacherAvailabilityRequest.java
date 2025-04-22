@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.sql.Time;
+import java.time.LocalTime;
 
 @Data
 @AllArgsConstructor
@@ -15,10 +15,10 @@ public class TeacherAvailabilityRequest {
     private Integer dayOfWeek;
 
     @NotNull(message = "Cannot be null or empty")
-    private Time startTime;
+    private LocalTime startTime;
 
     @NotNull(message = "Cannot be null or empty")
-    private Time endTime;
+    private LocalTime endTime;
 
     private boolean isAvailable;
 

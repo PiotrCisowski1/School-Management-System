@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherDetailedResponse
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherAvailabilityService;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
@@ -109,6 +110,14 @@ public class TeacherController {
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByDayOfWeek(@PathVariable Integer dayOfWeek){
         DbLogger.info("Received TeacherAvailability GET request for DayOfWeek: " + dayOfWeek);
         Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(dayOfWeek);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/subject/{subjectId}/teacher-availability")
+    public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityBySubjectAndTimeRange(
+            @Valid @RequestBody TimeRange timeRange, @PathVariable Integer subjectId){
+        DbLogger.info(String.format("Received TeacherAvailability GET request for Subject ID: %s and TimeRange: %s", subjectId, timeRange.toString()));
+        Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilityByTimeRangeAndSubjectType(timeRange, subjectId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

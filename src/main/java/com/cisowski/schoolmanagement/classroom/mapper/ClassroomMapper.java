@@ -15,6 +15,7 @@ public interface ClassroomMapper {
     @Mapping(target = "equipments", source = "classroomEquipments")
     ClassroomDetailedResponse toClassroomDetailedResponse(ClassroomEntity entity);
 
+    @Named("toClassroomSummaryResponse")
     @Mapping(target = "equipmentCount", source = "classroomEquipments", qualifiedByName = "countEquipments")
     ClassroomSummaryResponse toSummaryResponse(ClassroomEntity entity);
 

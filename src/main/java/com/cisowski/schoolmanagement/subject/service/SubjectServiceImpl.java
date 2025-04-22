@@ -122,4 +122,14 @@ public class SubjectServiceImpl implements SubjectService {
             throw new SpecificationBrokenException("Some of given Subject IDs are invalid or non-existent");
         return new HashSet<>(subjectEntities);
     }
+
+    @Override
+    public SubjectEntity fetchSubject(Integer subjectId) {
+        if(subjectId == null || subjectId <= 0)
+            throw new SpecificationBrokenException("Given Subject ID is not valid integer value");
+        Optional<SubjectEntity> subject = subjectRepository.findById(subjectId);
+        if(subject.isEmpty())
+            throw new EntityNotFoundException(SubjectEntity.class, "ID", subjectId.toString());
+        return subject.get();
+    }
 }

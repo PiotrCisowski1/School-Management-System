@@ -2,26 +2,34 @@ package com.cisowski.schoolmanagement.services;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.service.SubjectService;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapperImpl;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherAvailabilityRepository;
+import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherAvailabilityServiceImpl;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import org.instancio.Instancio;
+import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +43,11 @@ public class TeacherAvailabilityServiceTest {
     private TeacherService teacherService;
     @Mock
     private TeacherAvailabilityMapper teacherAvailabilityMapper;
+    private TeacherAvailabilityMapper mapper;
+    @Mock
+    private SubjectService subjectService;
+    @Mock
+    private TeacherRepository teacherRepository;
     @InjectMocks
     private TeacherAvailabilityServiceImpl teacherAvailabilityService;
 
@@ -47,8 +60,8 @@ public class TeacherAvailabilityServiceTest {
     public void setUp(){
         request = new TeacherAvailabilityRequest(
              4,
-                Time.valueOf("08:30:00"),
-                Time.valueOf("10:00:00"),
+                LocalTime.of(8,30,0),
+                LocalTime.of(10,0,0),
                 true,
                 "The notes"
         );
@@ -74,6 +87,8 @@ public class TeacherAvailabilityServiceTest {
         response.setEndTime(requestEntity.getEndTime());
         response.setAvailable(requestEntity.isAvailable());
         response.setNotes(requestEntity.getNotes());
+
+        mapper = Mappers.getMapper(TeacherAvailabilityMapper.class);
     }
 
 
@@ -199,5 +214,33 @@ public class TeacherAvailabilityServiceTest {
         assertIterableEquals(result, Collections.singletonList(response));
         verify(teacherAvailabilityRepository).findByDayOfWeek(DayOfWeek.of(5));
         verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailability by TimeRange and SubjectType - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilityByTimeRangeAndSubjectType(){
+        TimeRange timeRange = Instancio.create(TimeRange.class);
+        timeRange.setDayOfWeek(2);
+        DayOfWeek day = DayOfWeek.of(timeRange.getDayOfWeek());
+        SubjectEntity subject = Instancio.create(SubjectEntity.class);
+        List<TeacherEntity> teachersBySubjects = Instancio.createList(TeacherEntity.class);
+        List<TeacherAvailabilityEntity> availabilities = Instancio.createList(TeacherAvailabilityEntity.class);
+        List<TeacherAvailabilityResponse> availabilityResponses = teacherAvailabilityMapper.toResponseList(availabilities);
+
+
+        when(subjectService.fetchSubject(subject.getId())).thenReturn(subject);
+        when(teacherRepository.findByTeachingSubjects(subject)).thenReturn(teachersBySubjects);
+        when(teacherAvailabilityRepository.findByTeachersAndTimeRange(
+                teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime())).thenReturn(availabilities);
+        when(teacherAvailabilityMapper.toResponseList(availabilities)).thenReturn(availabilityResponses);
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilityByTimeRangeAndSubjectType(
+                timeRange, subject.getId());
+
+        assertNotNull(result);
+        assertIterableEquals(availabilityResponses, result);
+        verify(subjectService).fetchSubject(subject.getId());
+        verify(teacherRepository).findByTeachingSubjects(subject);
+        verify(teacherAvailabilityRepository).findByTeachersAndTimeRange(teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime());
     }
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 @Data
@@ -16,7 +17,9 @@ public class ScheduleVersionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Timestamp createDate;
+    private String name;
+
+    private ZonedDateTime createDate;
 
     private boolean isActive;
 
@@ -27,4 +30,15 @@ public class ScheduleVersionEntity {
     @OneToMany(mappedBy = "scheduleVersion", cascade = CascadeType.ALL)
     private Collection<ScheduleEntity> schedules;
 
+    @Override
+    public String toString() {
+        return "ScheduleVersionEntity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", createDate=" + createDate +
+                ", isActive=" + isActive +
+                ", yearbook=" + yearbook.getId() +
+                ", schedules=" + schedules.size() +
+                '}';
+    }
 }

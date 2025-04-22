@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.sql.Time;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 @Data
 public class ScheduleDetailedResponse {
@@ -15,7 +16,23 @@ public class ScheduleDetailedResponse {
     private TeacherSummaryResponse teacher;
     private ClassroomSummaryResponse classroom;
     private DayOfWeek dayOfWeek;
-    private Time startTime;
-    private Time endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private ScheduleRecurrenceType recurrenceType;
+    private ScheduleVersionSummaryResponse scheduleVersion;
+
+    @Override
+    public String toString() {
+        return "ScheduleDetailedResponse{" +
+                "id=" + id +
+                ", subject=" + subject.getId() +
+                ", teacher=" + teacher.getId() +
+                ", classroom=" + classroom.getId() +
+                ", dayOfWeek=" + dayOfWeek +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", recurrenceType=" + recurrenceType +
+                ", scheduleVersion=" + scheduleVersion.getId() +
+                '}';
+    }
 }

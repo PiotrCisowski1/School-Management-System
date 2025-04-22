@@ -6,7 +6,9 @@ import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.classroom.service.impl.ClassroomServiceImpl;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -280,5 +282,34 @@ public class ClassroomServiceTest {
         assertTrue(exception.getMessage().contains(classroomId.toString()));
         verify(classroomRepository).findById(classroomId);
         verifyNoMoreInteractions(classroomRepository);
+    }
+
+    @Test
+    @DisplayName("fetchClassroom - should return ClassroomEntity")
+    void fetchClassroom_successful(){
+        ClassroomEntity classroom = Instancio.create(ClassroomEntity.class);
+
+        when(classroomRepository.findById(classroom.getId())).thenReturn(Optional.of(classroom));
+
+        ClassroomEntity result = classroomService.fetchClassroom(classroom.getId());
+
+        assertEquals(classroom.getId(), result.getId());
+        assertEquals(classroom.getName(), result.getName());
+        assertEquals(classroom.getCapacity(), result.getCapacity());
+        assertEquals(classroom.getNotes(), result.getNotes());
+    }
+
+    @Test
+    @DisplayName("fetchClassroom - no entity found")
+    void fetchClassroom_entityNotFound(){
+        when(classroomRepository.findById(any())).thenReturn(Optional.empty());
+
+        EntityNotFoundException result = assertThrows(
+                EntityNotFoundException.class,
+                () -> classroomService.fetchClassroom(1)
+        );
+        assertTrue(result.getMessage().contains("ID"));
+        assertTrue(result.getMessage().contains("1"));
+        assertTrue(result.getMessage().contains("ClassroomEntity"));
     }
 }

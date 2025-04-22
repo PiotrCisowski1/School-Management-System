@@ -18,4 +18,18 @@ public class PatchScheduleRequest {
     private Time startTime;
     private Time endTime;
     private ScheduleRecurrenceType recurrenceType;
+
+    @Override
+    public String toString() {
+        return "PatchScheduleRequest{" +
+                "subjectId=" + subjectId +
+                ", teacherId=" + teacherId +
+                ", classroomId=" + classroomId +
+                ", yearbookId=" + yearbookId +
+                ", dayOfWeek=" + dayOfWeek +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", recurrenceType=" + recurrenceType +
+                '}';
+    }
 }

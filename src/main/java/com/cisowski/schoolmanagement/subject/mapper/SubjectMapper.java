@@ -3,10 +3,7 @@ package com.cisowski.schoolmanagement.subject.mapper;
 import com.cisowski.schoolmanagement.subject.model.*;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.yearbook.mapper.YearbookMapper;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -34,6 +31,7 @@ public interface SubjectMapper {
 
     Collection<SubjectSummaryResponse> toSubjectSummaryResponseList(List<SubjectEntity> subjects);
 
+    @Named("toSubjectSummaryResponse")
     SubjectSummaryResponse toSubjectSummaryResponse(SubjectEntity subjectEntity);
 
 }
