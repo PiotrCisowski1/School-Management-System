@@ -5,4 +5,5 @@ import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 
 public interface ScheduleService {
     ScheduleDetailedResponse addSchedule(AddScheduleRequest request, Integer scheduleVersionId);
+    void deleteSchedule(Integer scheduleId);
 }
