@@ -1,10 +1,11 @@
 package com.cisowski.schoolmanagement.schedule.model;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 
-import java.sql.Time;
+import java.time.LocalTime;
 
 @Data
 public class PatchScheduleRequest {
@@ -15,8 +16,9 @@ public class PatchScheduleRequest {
     @Min(value = 1, message = "Day of week must be a Integer value between 1 and 7")
     @Max(value = 7, message = "Day of week must be a Integer value between 1 and 7")
     private Integer dayOfWeek;
-    private Time startTime;
-    private Time endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    @Valid
     private ScheduleRecurrenceType recurrenceType;
 
     @Override

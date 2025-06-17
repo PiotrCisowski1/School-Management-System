@@ -2,6 +2,7 @@ package com.cisowski.schoolmanagement.schedule.controller;
 
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
+import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
@@ -29,5 +30,12 @@ public class ScheduleController {
         DbLogger.info("Received DELETE Schedule request for ID: " + scheduleId);
         scheduleService.deleteSchedule(scheduleId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PatchMapping
+    public ResponseEntity<ScheduleDetailedResponse> patchSchedule(@RequestParam Integer scheduleId, @Valid @RequestBody PatchScheduleRequest request){
+        DbLogger.info("Received PATCH Schedule request for ID: " + scheduleId);
+        ScheduleDetailedResponse response = scheduleService.patchSchedule(scheduleId, request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
