@@ -23,4 +23,11 @@ public class ScheduleController {
         ScheduleDetailedResponse response = scheduleService.addSchedule(request, scheduleVersionId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+    @DeleteMapping
+    public ResponseEntity deleteSchedule(@RequestParam Integer scheduleId){
+        DbLogger.info("Received DELETE Schedule request for ID: " + scheduleId);
+        scheduleService.deleteSchedule(scheduleId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

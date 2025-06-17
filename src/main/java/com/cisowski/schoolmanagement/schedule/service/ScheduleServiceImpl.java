@@ -2,6 +2,7 @@ package com.cisowski.schoolmanagement.schedule.service;
 
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
@@ -37,6 +38,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ClassroomService classroomService;
     private final ScheduleMapper scheduleMapper;
     private final ScheduleVersionService scheduleVersionService;
+
     @Override
     @Transactional
     public ScheduleDetailedResponse addSchedule(AddScheduleRequest request, Integer scheduleVersionId) {
@@ -114,5 +116,17 @@ public class ScheduleServiceImpl implements ScheduleService {
                     existingEntity.get().getStartTime(),
                     existingEntity.get().getEndTime()
                     ));
+    }
+
+    @Override
+    public void deleteSchedule(Integer scheduleId) {
+        DbLogger.info(String.format("Deleting Schedule with ID %s", scheduleId));
+
+        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+        if(schedule.isEmpty())
+            throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+
+        scheduleRepository.delete(schedule.get());
+        DbLogger.info(String.format("Schedule with ID %s was deleted successfully", scheduleId));
     }
 }
