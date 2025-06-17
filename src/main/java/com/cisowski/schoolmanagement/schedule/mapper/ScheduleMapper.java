@@ -1,20 +1,16 @@
 package com.cisowski.schoolmanagement.schedule.mapper;
 
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
-import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
-import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
-import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {SubjectMapper.class, TeacherMapper.class, ClassroomMapper.class, ScheduleVersionMapper.class,
@@ -41,6 +37,13 @@ public interface ScheduleMapper {
     @Mapping(target = "dayOfWeek",source = "dayOfWeek", qualifiedByName = "toDayOfWeek")
     ScheduleEntity toEntity(PatchScheduleRequest request);
 
+    List<ScheduleSummaryResponse> toSummaryResponseList(List<ScheduleEntity> entities);
+
+    @Mapping(target = "classroomName", source = "entity.classroom.name")
+    @Mapping(target = "subjectName", source = "entity.subject.name")
+    @Mapping(target = "scheduleVersionId", source = "entity.scheduleVersion.id")
+    @Mapping(target = "teacherName", expression = "java(entity.getTeacher().getFullName())")
+    ScheduleSummaryResponse toSummaryResponse(ScheduleEntity entity);
 
     default void patchEntities(ScheduleEntity request, @MappingTarget ScheduleEntity existingEntity){
         if ( request == null || existingEntity == null) {

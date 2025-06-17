@@ -71,4 +71,8 @@ public class UserEntity {
         return String.format("ID: %s, First name: %s, Last name: %s, Email: %s, IsEnabled: %s",  this.id, this.firstName, this.lastName, this.email, this.isEnabled.toString());
     }
 
+    public String getFullName() {
+        return String.format("%s %s", this.firstName, this.lastName);
+    }
+
 }
