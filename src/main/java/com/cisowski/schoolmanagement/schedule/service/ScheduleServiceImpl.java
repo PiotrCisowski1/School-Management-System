@@ -6,10 +6,7 @@ import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundExcepti
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
@@ -128,5 +125,52 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         scheduleRepository.delete(schedule.get());
         DbLogger.info(String.format("Schedule with ID %s was deleted successfully", scheduleId));
+    }
+
+    @Override
+    public ScheduleDetailedResponse patchSchedule(Integer scheduleId, PatchScheduleRequest request) {
+        DbLogger.info(String.format("Updating Schedule with ID %s, with given request: %s", scheduleId, request));
+
+        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+        if(schedule.isEmpty())
+            throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+
+        ScheduleEntity requestSchedule = scheduleMapper.toEntity(request);
+        SubjectEntity subject = fetchSubject(request.getSubjectId());
+        requestSchedule.setSubject(subject);
+        TeacherEntity teacher = fetchTeacher(request.getTeacherId());
+        if(teacher != null)
+            checkTeacherAvailability(teacher, requestSchedule.getDayOfWeek(), requestSchedule.getStartTime(), requestSchedule.getEndTime());
+        requestSchedule.setTeacher(teacher);
+        ClassroomEntity classroom = fetchClassroom(request.getClassroomId());
+        if(classroom != null)
+            checkClassroomAvailability(classroom, requestSchedule.getDayOfWeek(), requestSchedule.getStartTime(), requestSchedule.getEndTime());
+        requestSchedule.setClassroom(classroom);
+
+        ScheduleEntity existingSchedule = schedule.get();
+        scheduleMapper.patchEntities(requestSchedule, existingSchedule);
+
+        ScheduleEntity savedSchedule = scheduleRepository.save(existingSchedule);
+        DbLogger.info(String.format("Schedule with ID %s was updated successfully: %s", scheduleId, savedSchedule.toString()));
+
+        return scheduleMapper.toDetailedResponse(savedSchedule);
+    }
+
+    private SubjectEntity fetchSubject(Integer subjectId){
+        if(subjectId == null)
+            return null;
+        return subjectService.fetchSubject(subjectId);
+    }
+
+    private TeacherEntity fetchTeacher(Integer teacherId){
+        if(teacherId == null)
+            return null;
+        return teacherService.fetchTeacher(teacherId);
+    }
+
+    private ClassroomEntity fetchClassroom(Integer classroomId){
+        if(classroomId == null)
+            return null;
+        return classroomService.fetchClassroom(classroomId);
     }
 }
