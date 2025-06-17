@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -172,5 +173,28 @@ public class ScheduleServiceImpl implements ScheduleService {
         if(classroomId == null)
             return null;
         return classroomService.fetchClassroom(classroomId);
+    }
+
+    @Override
+    public ScheduleDetailedResponse getSchedule(Integer scheduleId) {
+        DbLogger.info(String.format("Searching for Schedule with ID: %s", scheduleId));
+
+        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+        if(schedule.isEmpty())
+            throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+
+        DbLogger.info(String.format("Found Schedule with ID: %s", scheduleId));
+        return scheduleMapper.toDetailedResponse(schedule.get());
+    }
+
+    @Override
+    public List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek) {
+        DbLogger.info(String.format("Searching for Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", dayOfWeek, scheduleVersionId));
+        DayOfWeek day = DayOfWeek.of(dayOfWeek);
+
+        List<ScheduleEntity> schedules = scheduleRepository.findByScheduleVersionIdAndDayOfWeek(scheduleVersionId, day);
+
+        DbLogger.info(String.format("Found %s Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", schedules.size(), dayOfWeek, scheduleVersionId));
+        return scheduleMapper.toSummaryResponseList(schedules);
     }
 }

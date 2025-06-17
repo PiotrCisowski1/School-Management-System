@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,4 +25,6 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Intege
             DayOfWeek dayOfWeek,
             LocalTime startTime,
             LocalTime endTime);
+
+    List<ScheduleEntity> findByScheduleVersionIdAndDayOfWeek(Integer scheduleVersionId, DayOfWeek dayOfWeek);
 }
