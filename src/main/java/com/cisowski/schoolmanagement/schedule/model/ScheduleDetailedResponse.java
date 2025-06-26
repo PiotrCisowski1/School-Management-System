@@ -1,11 +1,11 @@
 package com.cisowski.schoolmanagement.schedule.model;
 
 import com.cisowski.schoolmanagement.classroom.model.ClassroomSummaryResponse;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.subject.model.SubjectSummaryResponse;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import lombok.Data;
 
-import java.sql.Time;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 

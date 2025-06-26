@@ -5,7 +5,10 @@ import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    private final  ScheduleService scheduleService;
+    private final ScheduleService scheduleService;
+    private final ScheduleVersionService scheduleVersionService;
 
     @PostMapping("/version/{scheduleVersionId}")
     public ResponseEntity<ScheduleDetailedResponse> addSchedule(@Valid @RequestBody AddScheduleRequest request, @PathVariable Integer scheduleVersionId){
@@ -54,5 +58,21 @@ public class ScheduleController {
         DbLogger.info(String.format("Received GET Schedule request for day: %s in ScheduleVersion with ID: %s ", dayOfWeek, scheduleVersionId));
         List<ScheduleSummaryResponse> response = scheduleService.getScheduleByDayOfWeek(scheduleVersionId, dayOfWeek);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/version")
+    public ResponseEntity<ScheduleVersionDetailedResponse> createScheduleVersion(@RequestBody @Valid AddScheduleVersionRequest request){
+        DbLogger.info(String.format(
+                "Received POST ScheduleVersion request (named: %s) for Yearbook with ID %s, isActive - %s",
+                request.getScheduleName(), request.getYearbookId(), request.isActive()));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.createScheduleVersion(request.getYearbookId(), request.getScheduleName(), request.isActive());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/version/{scheduleVersionId}/clone")
+    public ResponseEntity<ScheduleVersionDetailedResponse> cloneScheduleVersion(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received GET (clone) ScheduleVersion request for ScheduleVersion with ID %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.cloneScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

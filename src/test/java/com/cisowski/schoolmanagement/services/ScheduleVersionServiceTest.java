@@ -1,7 +1,7 @@
 package com.cisowski.schoolmanagement.services;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionServiceImpl;
 import org.instancio.Instancio;

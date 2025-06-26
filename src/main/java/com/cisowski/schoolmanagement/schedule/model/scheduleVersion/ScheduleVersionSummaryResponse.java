@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.schedule.model;
+package com.cisowski.schoolmanagement.schedule.model.scheduleVersion;
 
 import lombok.Data;
 
