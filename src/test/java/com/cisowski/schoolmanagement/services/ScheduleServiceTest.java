@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.services;
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
@@ -10,7 +11,7 @@ import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleServiceImpl;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
@@ -35,6 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -242,5 +244,31 @@ public class ScheduleServiceTest {
                         schedule.getStartTime(),
                         schedule.getEndTime())
         ));
+    }
+
+    @Test
+    void deleteSchedule_successful(){
+       Integer scheduleId = 1;
+       ScheduleEntity schedule = new ScheduleEntity();
+
+       when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+
+       scheduleService.deleteSchedule(scheduleId);
+
+       verify(scheduleRepository).findById(scheduleId);
+       verify(scheduleRepository).delete(schedule);
+    }
+
+    @Test
+    @DisplayName("deleteSchedule with non existing object - should throw EntityNotFoundException")
+    void deleteSchedule_scheduleNotfound(){
+        Integer scheduleId = 1;
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->  scheduleService.deleteSchedule(scheduleId))
+                .isInstanceOf(EntityNotFoundException.class);
+
+        verify(scheduleRepository).findById(scheduleId);
     }
 }

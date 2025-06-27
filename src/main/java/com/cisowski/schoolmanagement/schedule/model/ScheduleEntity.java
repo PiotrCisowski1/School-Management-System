@@ -1,10 +1,12 @@
 package com.cisowski.schoolmanagement.schedule.model;
 
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -12,6 +14,7 @@ import java.time.LocalTime;
 @Data
 @Entity
 @Table(name = "schedules")
+@NoArgsConstructor
 public class ScheduleEntity {
 
     @Id
@@ -41,6 +44,17 @@ public class ScheduleEntity {
     private LocalTime endTime;
 
     private ScheduleRecurrenceType recurrenceType = ScheduleRecurrenceType.NONE;
+
+    public ScheduleEntity(ScheduleEntity entity, ScheduleVersionEntity scheduleVersion) {
+         this.scheduleVersion = scheduleVersion;
+         this.subject = entity.getSubject();
+         this.teacher = entity.getTeacher();
+         this.classroom = entity.getClassroom();
+         this.dayOfWeek = entity.getDayOfWeek();
+         this.startTime = entity.getStartTime();
+         this.endTime = entity.getEndTime();
+         this.recurrenceType = entity.getRecurrenceType();
+    }
 
     @Override
     public String toString() {

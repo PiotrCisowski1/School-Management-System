@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenEx
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
 import com.cisowski.schoolmanagement.schedule.model.*;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;

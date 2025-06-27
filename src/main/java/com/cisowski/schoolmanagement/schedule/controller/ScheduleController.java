@@ -5,13 +5,19 @@ import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -19,7 +25,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    private final  ScheduleService scheduleService;
+    private final ScheduleService scheduleService;
+    private final ScheduleVersionService scheduleVersionService;
 
     @PostMapping("/version/{scheduleVersionId}")
     public ResponseEntity<ScheduleDetailedResponse> addSchedule(@Valid @RequestBody AddScheduleRequest request, @PathVariable Integer scheduleVersionId){
@@ -53,6 +60,50 @@ public class ScheduleController {
     public ResponseEntity<List<ScheduleSummaryResponse>> getSchedule(@PathVariable Integer scheduleVersionId, @PathVariable Integer dayOfWeek){
         DbLogger.info(String.format("Received GET Schedule request for day: %s in ScheduleVersion with ID: %s ", dayOfWeek, scheduleVersionId));
         List<ScheduleSummaryResponse> response = scheduleService.getScheduleByDayOfWeek(scheduleVersionId, dayOfWeek);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/version")
+    public ResponseEntity<ScheduleVersionDetailedResponse> createScheduleVersion(@RequestBody @Valid AddScheduleVersionRequest request){
+        DbLogger.info(String.format(
+                "Received POST ScheduleVersion request (named: %s) for Yearbook with ID %s, isActive - %s",
+                request.getScheduleName(), request.getYearbookId(), request.isActive()));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.createScheduleVersion(request.getYearbookId(), request.getScheduleName(), request.isActive());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/version/{scheduleVersionId}/clone")
+    public ResponseEntity<ScheduleVersionDetailedResponse> cloneScheduleVersion(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received POST (clone) ScheduleVersion request for ScheduleVersion with ID %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.cloneScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/version/yearbook/{yearbookId}")
+    public ResponseEntity<Collection<ScheduleVersionSummaryResponse>> getScheduleVersionsForYearbook(@PathVariable Integer yearbookId){
+        DbLogger.info(String.format("Received GET all ScheduleVersions for Yearbook with ID: %s", yearbookId));
+        Collection<ScheduleVersionSummaryResponse> response = scheduleVersionService.getScheduleVersionsForYearbook(yearbookId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/version/{scheduleVersionId}")
+    public ResponseEntity<ScheduleVersionDetailedResponse> getScheduleVersionsForId(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received GET ScheduleVersions for ID: %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.getScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/version/{scheduleVersionId}")
+    public ResponseEntity deleteScheduleVersion(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received DELETE ScheduleVersion request for ID: %s", scheduleVersionId));
+        scheduleVersionService.deleteScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PatchMapping("/version/{scheduleVersionId}")
+    public ResponseEntity<ScheduleVersionDetailedResponse> patchScheduleVersion(@PathVariable Integer scheduleVersionId, @Valid @RequestBody PatchScheduleVersionRequest request){
+        DbLogger.info(String.format("Received PATCH ScheduleVersion request for ID: %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.patchScheduleVersion(scheduleVersionId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

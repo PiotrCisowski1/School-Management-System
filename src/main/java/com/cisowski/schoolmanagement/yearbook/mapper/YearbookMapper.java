@@ -35,6 +35,7 @@ public abstract class YearbookMapper {
 
     @Mapping(target = "headTeacher", ignore = true)
     @Mapping(target = "studentsInYearbook", ignore = true)
+    @Named("toYearbookDetailedResponse")
     public abstract YearbookDetailedResponse toDetailedResponse(YearbookEntity yearbookEntity);
 
     @AfterMapping
