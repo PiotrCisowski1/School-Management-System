@@ -11,6 +11,6 @@ public interface ScheduleVersionService {
     ScheduleVersionDetailedResponse getScheduleVersion(Integer scheduleVersionId);
     ScheduleVersionDetailedResponse createScheduleVersion(Integer yearbookId, String scheduleName, boolean isActive);
     ScheduleVersionDetailedResponse cloneScheduleVersion(Integer scheduleVersionId);
-
     ScheduleVersionEntity fetchScheduleVersion(Integer scheduleVersionId);
+    void deleteScheduleVersion(Integer scheduleVersionId);
 }

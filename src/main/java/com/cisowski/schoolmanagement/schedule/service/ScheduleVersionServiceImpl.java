@@ -13,9 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -99,5 +97,47 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
             throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
         DbLogger.info(String.format("Found ScheduleVersion with ID %s: %s", scheduleVersionId, scheduleVersion.get().toString()));
         return scheduleVersionMapper.toDetailedResponse(scheduleVersion.get());
+    }
+
+    @Override
+    @Transactional
+    public void deleteScheduleVersion(Integer scheduleVersionId) {
+        DbLogger.info(String.format("Deleting ScheduleVersion with ID %s and all it's Schedules", scheduleVersionId));
+        Optional<ScheduleVersionEntity> scheduleVersion = repository.findById(scheduleVersionId);
+        if(scheduleVersion.isEmpty())
+            throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+
+        Optional<ScheduleVersionEntity> activeSchedule = repository.findByIsActiveTrueAndYearbookId(scheduleVersion.get().getYearbook().getId());
+        if(activeSchedule.isEmpty() || Objects.equals(activeSchedule.get().getId(), scheduleVersionId)){
+            Integer yearbookId = scheduleVersion.get().getYearbook().getId();
+            DbLogger.info("No active ScheduleVersion found, trying to activate existing ScheduleVersion for Yearbook: " + yearbookId);
+            activateExistingScheduleVersionForYearbook(yearbookId, scheduleVersionId);
+        }
+        repository.delete(scheduleVersion.get());
+        DbLogger.info(String.format("ScheduleVersion with ID %s was deleted successfully", scheduleVersionId));
+    }
+
+    private void activateExistingScheduleVersionForYearbook(Integer yearbookId, Integer scheduleVersionId){
+        DbLogger.info(String.format("Searching for newest ScheduleVersion for Yearbook with ID %s", yearbookId));
+        List<ScheduleVersionEntity> existingSchedules = repository.findByYearbookId(yearbookId);
+        if(existingSchedules.isEmpty()) {
+            DbLogger.info(String.format("No ScheduleVersion found for Yearbook with ID %s", yearbookId));
+            return;
+        }
+        ScheduleVersionEntity existingSchedule = pickNewestScheduleVersion(existingSchedules, scheduleVersionId);
+        if(existingSchedule != null)
+            setScheduleVersionActivity(existingSchedule, true);
+    }
+
+    private ScheduleVersionEntity pickNewestScheduleVersion(List<ScheduleVersionEntity> existingSchedules, Integer scheduleVersionId){
+        if(existingSchedules == null || existingSchedules.isEmpty())
+            return null;
+        if(existingSchedules.size() == 1)
+            return existingSchedules.get(0);
+        Optional<ScheduleVersionEntity> newestScheduleVersion = existingSchedules.stream()
+                .filter(Objects::nonNull)
+                .filter(entity -> !entity.getId().equals(scheduleVersionId))
+                .max(Comparator.comparing(ScheduleVersionEntity::getCreateDate));
+        return newestScheduleVersion.orElse(null);
     }
 }

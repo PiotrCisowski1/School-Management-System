@@ -91,4 +91,11 @@ public class ScheduleController {
         ScheduleVersionDetailedResponse response = scheduleVersionService.getScheduleVersion(scheduleVersionId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @DeleteMapping("/version/{scheduleVersionId}")
+    public ResponseEntity deleteScheduleVersion(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received DELETE ScheduleVersion request for ID: %s", scheduleVersionId));
+        scheduleVersionService.deleteScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
