@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,10 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
 
     @Override
     public Collection<ScheduleVersionSummaryResponse> getScheduleVersionsForYearbook(Integer yearbookId) {
-        return null;
+        DbLogger.info(String.format("Searching for all ScheduleVersions for Yearbook with ID: %s", yearbookId));
+        List<ScheduleVersionEntity> scheduleVersions = repository.findByYearbookId(yearbookId);
+        DbLogger.info(String.format("Found %s ScheduleVersions for Yearbook with ID: %s", scheduleVersions.size(), yearbookId));
+        return scheduleVersionMapper.toSummaryResponseList(scheduleVersions);
     }
 
     @Override
@@ -85,5 +89,15 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         scheduleVersion.setActive(isActive);
         repository.save(scheduleVersion);
         DbLogger.info(String.format("ScheduleVersion with ID %s was set to %s", scheduleVersion.getId(), isActive ? "active" : "inactive"));
+    }
+
+    @Override
+    public ScheduleVersionDetailedResponse getScheduleVersion(Integer scheduleVersionId) {
+        DbLogger.info(String.format("Searching for ScheduleVersion with ID: %s", scheduleVersionId));
+        Optional<ScheduleVersionEntity> scheduleVersion = repository.findById(scheduleVersionId);
+        if (scheduleVersion.isEmpty())
+            throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+        DbLogger.info(String.format("Found ScheduleVersion with ID %s: %s", scheduleVersionId, scheduleVersion.get().toString()));
+        return scheduleVersionMapper.toDetailedResponse(scheduleVersion.get());
     }
 }

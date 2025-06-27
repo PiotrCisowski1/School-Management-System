@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
 import jakarta.validation.Valid;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -71,8 +73,22 @@ public class ScheduleController {
 
     @PostMapping("/version/{scheduleVersionId}/clone")
     public ResponseEntity<ScheduleVersionDetailedResponse> cloneScheduleVersion(@PathVariable Integer scheduleVersionId){
-        DbLogger.info(String.format("Received GET (clone) ScheduleVersion request for ScheduleVersion with ID %s", scheduleVersionId));
+        DbLogger.info(String.format("Received POST (clone) ScheduleVersion request for ScheduleVersion with ID %s", scheduleVersionId));
         ScheduleVersionDetailedResponse response = scheduleVersionService.cloneScheduleVersion(scheduleVersionId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/version/yearbook/{yearbookId}")
+    public ResponseEntity<Collection<ScheduleVersionSummaryResponse>> getScheduleVersionsForYearbook(@PathVariable Integer yearbookId){
+        DbLogger.info(String.format("Received GET all ScheduleVersions for Yearbook with ID: %s", yearbookId));
+        Collection<ScheduleVersionSummaryResponse> response = scheduleVersionService.getScheduleVersionsForYearbook(yearbookId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/version/{scheduleVersionId}")
+    public ResponseEntity<ScheduleVersionDetailedResponse> getScheduleVersionsForId(@PathVariable Integer scheduleVersionId){
+        DbLogger.info(String.format("Received GET ScheduleVersions for ID: %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.getScheduleVersion(scheduleVersionId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

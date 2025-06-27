@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.util.CollectionUtils;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public abstract class ScheduleVersionMapper {
 
@@ -25,6 +27,8 @@ public abstract class ScheduleVersionMapper {
     @Mapping(target = "yearbook", ignore = true)
     @Mapping(target = "schedules", ignore = true)
     public abstract ScheduleVersionDetailedResponse toDetailedResponse(ScheduleVersionEntity entity);
+
+    public abstract List<ScheduleVersionSummaryResponse> toSummaryResponseList(List<ScheduleVersionEntity> entities);
 
     @AfterMapping
     protected void mapYearbook(ScheduleVersionEntity entity, @MappingTarget ScheduleVersionDetailedResponse response){

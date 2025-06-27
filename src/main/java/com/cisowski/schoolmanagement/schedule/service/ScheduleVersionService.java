@@ -8,6 +8,7 @@ import java.util.Collection;
 
 public interface ScheduleVersionService {
     Collection<ScheduleVersionSummaryResponse> getScheduleVersionsForYearbook(Integer yearbookId);
+    ScheduleVersionDetailedResponse getScheduleVersion(Integer scheduleVersionId);
     ScheduleVersionDetailedResponse createScheduleVersion(Integer yearbookId, String scheduleName, boolean isActive);
     ScheduleVersionDetailedResponse cloneScheduleVersion(Integer scheduleVersionId);
 
