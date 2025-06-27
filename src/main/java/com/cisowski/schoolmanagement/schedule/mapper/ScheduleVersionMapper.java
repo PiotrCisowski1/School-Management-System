@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.schedule.mapper;
 
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
@@ -44,5 +45,8 @@ public abstract class ScheduleVersionMapper {
         }
     }
 
+    public abstract ScheduleVersionEntity toEntity(PatchScheduleVersionRequest request);
+
+    public abstract void patchEntity(ScheduleVersionEntity patchingEntity, @MappingTarget ScheduleVersionEntity entityToPatch);
 
 }

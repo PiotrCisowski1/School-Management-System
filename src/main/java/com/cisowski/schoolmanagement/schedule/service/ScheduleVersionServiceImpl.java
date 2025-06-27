@@ -4,10 +4,12 @@ import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundExcepti
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -139,5 +141,19 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
                 .filter(entity -> !entity.getId().equals(scheduleVersionId))
                 .max(Comparator.comparing(ScheduleVersionEntity::getCreateDate));
         return newestScheduleVersion.orElse(null);
+    }
+
+    @Override
+    public ScheduleVersionDetailedResponse patchScheduleVersion(Integer scheduleVersionId, PatchScheduleVersionRequest request) {
+        DbLogger.info(String.format("Patching ScheduleVersion with ID %s for request: %s", scheduleVersionId, request.toString()));
+        ScheduleVersionEntity scheduleVersion = fetchScheduleVersion(scheduleVersionId);
+        YearbookEntity yearbook = yearbookService.fetchYearbookEntity(request.getYearbookId());
+        ScheduleVersionEntity requestEntity = scheduleVersionMapper.toEntity(request);
+        scheduleVersionMapper.patchEntity(requestEntity, scheduleVersion);
+        scheduleVersion.setYearbook(yearbook);
+
+        ScheduleVersionEntity saved = repository.save(scheduleVersion);
+        DbLogger.info(String.format("ScheduleVersion with ID %s was patched successfully: %s", scheduleVersionId, saved.toString()));
+        return scheduleVersionMapper.toDetailedResponse(saved);
     }
 }

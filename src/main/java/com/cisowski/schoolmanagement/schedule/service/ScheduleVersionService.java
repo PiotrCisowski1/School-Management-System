@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.schedule.service;
 
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
@@ -13,4 +14,5 @@ public interface ScheduleVersionService {
     ScheduleVersionDetailedResponse cloneScheduleVersion(Integer scheduleVersionId);
     ScheduleVersionEntity fetchScheduleVersion(Integer scheduleVersionId);
     void deleteScheduleVersion(Integer scheduleVersionId);
+    ScheduleVersionDetailedResponse patchScheduleVersion(Integer scheduleVersionId, PatchScheduleVersionRequest request);
 }

@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
@@ -97,5 +98,12 @@ public class ScheduleController {
         DbLogger.info(String.format("Received DELETE ScheduleVersion request for ID: %s", scheduleVersionId));
         scheduleVersionService.deleteScheduleVersion(scheduleVersionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PatchMapping("/version/{scheduleVersionId}")
+    public ResponseEntity<ScheduleVersionDetailedResponse> patchScheduleVersion(@PathVariable Integer scheduleVersionId, @Valid @RequestBody PatchScheduleVersionRequest request){
+        DbLogger.info(String.format("Received PATCH ScheduleVersion request for ID: %s", scheduleVersionId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.patchScheduleVersion(scheduleVersionId, request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
