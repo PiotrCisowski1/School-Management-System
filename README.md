@@ -20,7 +20,7 @@ This project serves both as an educational journey and a professional showcase o
 
 ---
 
-## ✅ Features
+## Features ✅
 
 - 🔐 **User Management**
   - Roles: `STUDENT`, `TEACHER`, `PARENT`, `ADMINISTRATOR`
@@ -41,7 +41,7 @@ This project serves both as an educational journey and a professional showcase o
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack 🧰
 
 | Layer         | Technology                                  |
 |--------------|----------------------------------------------|
@@ -57,37 +57,49 @@ This project serves both as an educational journey and a professional showcase o
 
 ---
 Update database credentials in src/main/resources/application.properties as needed.
+
 🔧 Docker support will be added in an upcoming release.
 
 
-## 🔐 Authentication & Authorization
+## Authentication & Authorization 🔐
 
 Login via POST /login
+
 Authentication uses JWT
 
 Authorization is role-based (STUDENT, TEACHER, PARENT, ADMINISTRATOR)
+
 Access to endpoints is restricted based on authority levels
 
 
-## 🧪 Testing
+## Testing 🧪
 Unit tests for core logic using:
+
 JUnit 5
+
 Mockito
+
 Instancio for test data generation
 
 🧠 JaCoCo integration for code coverage reports is planned.
 
 
-## 📓 Changelog
+## Changelog 📓
+
 All changes and version history are documented in CHANGELOG.md.
 
 
-## 🪪 License
+## License 🪪
+
 This project is licensed under the MIT License.
+
 It is currently intended for educational and demonstration purposes.
 
 
-## 👤 Author
+## Author 👤
+
 Created by  **Piotr Cisowski**
+
 📧 **piotr.cisowski@hotmail.com**
+
 This project is part of a personal portfolio and not affiliated with any institution.
