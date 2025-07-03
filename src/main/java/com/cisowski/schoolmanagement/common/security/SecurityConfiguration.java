@@ -65,27 +65,23 @@ public class SecurityConfiguration {
         return security.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(authEntryPoint))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/login").permitAll())
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/students/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/teachers/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/yearbooks/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR"))
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(request ->
+                        request
+                                .requestMatchers("/login").permitAll()
+                                .requestMatchers("/students/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/teachers/**").hasAnyAuthority("ADMINISTRATOR")
+                                .requestMatchers("/yearbooks/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .build();
     }
+
     @Bean
     public RoleHierarchy roleHierarchy(){
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();

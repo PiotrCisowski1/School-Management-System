@@ -27,6 +27,10 @@ public class UserDetailsEntity implements org.springframework.security.core.user
         return authorities;
     }
 
+    public Integer getId(){
+        return user.getId();
+    }
+
     @Override
     public String getPassword() {
         return user.getPassword();
