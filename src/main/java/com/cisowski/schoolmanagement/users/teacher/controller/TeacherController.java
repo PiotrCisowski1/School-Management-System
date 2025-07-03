@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -55,6 +56,7 @@ public class TeacherController {
         return new ResponseEntity(HttpStatusCode.valueOf(204));
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @GetMapping("/{teacherId}")
     public ResponseEntity<TeacherDetailedResponse> getTeacher(@PathVariable Integer teacherId){
         String message = String.format("Received Teacher GET request for ID: %s", teacherId);
@@ -73,6 +75,7 @@ public class TeacherController {
         return new ResponseEntity<>(teacherResponses, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @PostMapping("/{teacherId}/teacher-availability")
     public ResponseEntity<TeacherAvailabilityResponse> addTeacherAvailability(
             @RequestBody @Valid TeacherAvailabilityRequest request,
@@ -85,20 +88,24 @@ public class TeacherController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/teacher-availability/{teacherAvailabilityId}")
-    public ResponseEntity deleteTeacherAvailability(@PathVariable Integer teacherAvailabilityId){
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
+    @DeleteMapping("/{teacherId}/teacher-availability/{teacherAvailabilityId}")
+    public ResponseEntity deleteTeacherAvailability(@PathVariable Integer teacherAvailabilityId, @PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability DELETE request for ID: " + teacherAvailabilityId);
         teacherAvailabilityService.deleteTeacherAvailability(teacherAvailabilityId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/teacher-availability/id/{teacherAvailabilityId}")
-    public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityById(@PathVariable Integer teacherAvailabilityId){
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
+    @GetMapping("/{teacherId}/teacher-availability/{teacherAvailabilityId}")
+    public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityById(
+            @PathVariable Integer teacherAvailabilityId, @PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability GET request for ID: " + teacherAvailabilityId);
         TeacherAvailabilityResponse response = teacherAvailabilityService.getTeacherAvailabilityById(teacherAvailabilityId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @GetMapping("/{teacherId}/teacher-availability")
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByTeacherId(@PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability GET request for Teacher ID: " + teacherId);
