@@ -1,4 +1,4 @@
-### 🏫 School Management System
+# 🏫 School Management System
 
 A modular and extensible backend system for managing a school's daily operations – built with Java 17 and Spring Boot.  
 This project serves both as an educational journey and a professional showcase of clean code, domain modeling and security in Java applications.
