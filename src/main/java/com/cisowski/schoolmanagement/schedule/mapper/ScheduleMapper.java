@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.schedule.mapper;
 
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
 import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
@@ -10,7 +11,7 @@ import org.mapstruct.*;
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+@Mapper(config = BaseMapperConfig.class,
         uses = {SubjectMapper.class, TeacherMapper.class, ClassroomMapper.class, ScheduleVersionMapper.class,
                 DateMapper.class})
 public interface ScheduleMapper {

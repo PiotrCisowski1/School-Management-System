@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.subject.mapper;
 
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeRequest;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeResponse;
@@ -9,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = BaseMapperConfig.class)
 public interface SubjectTypeMapper {
 
     SubjectTypeEntity toSubjectTypeEntity(SubjectTypeRequest request);

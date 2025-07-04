@@ -1,12 +1,13 @@
 package com.cisowski.schoolmanagement.classroom.mapper;
 
 import com.cisowski.schoolmanagement.classroom.model.*;
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import org.mapstruct.*;
 
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = BaseMapperConfig.class)
 public interface ClassroomMapper {
 
     @Mapping(target = "classroomEquipments", ignore = true)
