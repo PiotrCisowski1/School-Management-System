@@ -133,11 +133,11 @@ public class GradeTypeServiceImplTest {
         GradeTypeEntity entity = createEntity();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(gradeRepository.findByGradeType(entity)).thenReturn(false);
+        when(gradeRepository.existsByGradeType(entity)).thenReturn(false);
 
         gradeTypeService.deleteGradeType(id);
 
-        verify(gradeRepository).findByGradeType(entity);
+        verify(gradeRepository).existsByGradeType(entity);
         verify(gradeTypeRepository).delete(entity);
     }
 
@@ -147,7 +147,7 @@ public class GradeTypeServiceImplTest {
         GradeTypeEntity entity = createEntity();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(gradeRepository.findByGradeType(entity)).thenReturn(true);
+        when(gradeRepository.existsByGradeType(entity)).thenReturn(true);
 
         assertThatThrownBy(() -> gradeTypeService.deleteGradeType(id))
                 .isInstanceOf(SpecificationBrokenException.class)
