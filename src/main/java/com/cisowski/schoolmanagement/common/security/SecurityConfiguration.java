@@ -78,6 +78,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .build();
     }
