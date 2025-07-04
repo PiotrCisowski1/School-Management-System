@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.student.mapper;
 
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapper;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
@@ -13,7 +14,7 @@ import org.mapstruct.*;
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+@Mapper(config = BaseMapperConfig.class,
         uses = {YearbookMapper.class, ParentMapper.class})
 public interface StudentMapper {
 

@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.parent.mapper;
 
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentPatchRequest;
 import com.cisowski.schoolmanagement.users.parent.model.AddParentResponse;
@@ -15,7 +16,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = BaseMapperConfig.class)
 public abstract class ParentMapper {
 
     @Autowired

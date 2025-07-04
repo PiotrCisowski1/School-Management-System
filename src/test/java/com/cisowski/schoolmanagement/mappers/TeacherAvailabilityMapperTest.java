@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.mappers;
 
+import com.cisowski.schoolmanagement.common.mapper.DateMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
@@ -23,6 +24,8 @@ public class TeacherAvailabilityMapperTest {
     public void setUp(){
         TeacherMapper teacherMapper = Mappers.getMapper(TeacherMapper.class);
         ReflectionTestUtils.setField(mapper, "teacherMapper", teacherMapper);
+        DateMapper dateMapper = Mappers.getMapper(DateMapper.class);
+        ReflectionTestUtils.setField(mapper, "dateMapper", dateMapper);
     }
 
     @Test
