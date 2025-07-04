@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.1] - 2025-07-04
+
+### Changed
+
+- Base (centralized) configuration for Mapstruct mappers
+
+
 ## [1.0.0] - 2025-07-03
 
 ### Added
