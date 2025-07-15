@@ -31,7 +31,7 @@ public class GradeTypeMapperTest {
         assertThat(entity)
                 .isNotNull()
                 .satisfies(e -> {
-                    assertThat(e.getName()).isEqualTo(request.getName());
+                    assertThat(e.getGradeScope()).isEqualTo(request.getGradeScope());
                     assertThat(e.getWeight()).isEqualTo(request.getWeight());
                     assertThat(e.getId()).isNull();
                 });
@@ -49,7 +49,7 @@ public class GradeTypeMapperTest {
                 .isNotNull()
                 .satisfies(r -> {
                     assertThat(r.getId()).isEqualTo(entity.getId());
-                    assertThat(r.getName()).isEqualTo(entity.getName());
+                    assertThat(r.getGradeScope()).isEqualTo(entity.getGradeScope());
                     assertThat(r.getWeight()).isEqualTo(entity.getWeight());
                 });
     }
@@ -65,7 +65,7 @@ public class GradeTypeMapperTest {
         assertThat(entity)
                 .isNotNull()
                 .satisfies(e -> {
-                    assertThat(e.getName()).isEqualTo(request.getName());
+                    assertThat(e.getGradeScope()).isEqualTo(request.getGradeScope());
                     assertThat(e.getWeight()).isEqualTo(request.getWeight());
                     assertThat(e.getId()).isNull();
                 });
@@ -75,12 +75,12 @@ public class GradeTypeMapperTest {
     void patchEntity_partialUpdate() {
         GradeTypeEntity existing = Instancio.of(GradeTypeEntity.class)
                 .set(field(GradeTypeEntity::getId), BigInteger.valueOf(100))
-                .set(field(GradeTypeEntity::getName), "Original Name")
+                .set(field(GradeTypeEntity::getGradeScope), "Original Name")
                 .set(field(GradeTypeEntity::getWeight), 0.5)
                 .create();
 
         GradeTypeEntity patchData = Instancio.of(GradeTypeEntity.class)
-                .set(field(GradeTypeEntity::getName), "Updated Name")
+                .set(field(GradeTypeEntity::getGradeScope), "Updated Name")
                 .ignore(field(GradeTypeEntity::getId))
                 .ignore(field(GradeTypeEntity::getWeight))
                 .create();
@@ -90,7 +90,7 @@ public class GradeTypeMapperTest {
         assertThat(existing)
                 .satisfies(e -> {
                     assertThat(e.getId()).isEqualTo(BigInteger.valueOf(100));
-                    assertThat(e.getName()).isEqualTo("Updated Name");
+                    assertThat(e.getGradeScope()).isEqualTo("Updated Name");
                     assertThat(e.getWeight()).isEqualTo(0.5);
                 });
     }
@@ -107,7 +107,7 @@ public class GradeTypeMapperTest {
                 .hasSameSizeAs(entities)
                 .zipSatisfy(entities, (response, entity) -> {
                     assertThat(response.getId()).isEqualTo(entity.getId());
-                    assertThat(response.getName()).isEqualTo(entity.getName());
+                    assertThat(response.getGradeScope()).isEqualTo(entity.getGradeScope());
                     assertThat(response.getWeight()).isEqualTo(entity.getWeight());
                 });
     }

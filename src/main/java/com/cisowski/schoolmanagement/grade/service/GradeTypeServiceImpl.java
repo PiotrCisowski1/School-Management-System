@@ -31,11 +31,11 @@ public class GradeTypeServiceImpl implements GradeTypeService {
     @Transactional
     public GradeTypeResponse addGradeType(AddGradeTypeRequest request) {
         DbLogger.info("Creating GradeType for request: " + request.toString());
-        Optional<GradeTypeEntity> gradeType = repository.findByName(request.getName());
+        Optional<GradeTypeEntity> gradeType = repository.findByGradeScope(request.getGradeScope());
         if(gradeType.isPresent())
             throw new SpecificationBrokenException(String.format(
                     "GradeType with name %s, already exists with ID: %s",
-                    request.getName(),
+                    request.getGradeScope(),
                     gradeType.get().getId()));
         GradeTypeEntity entity = mapper.toEntity(request);
         GradeTypeEntity saved = repository.save(entity);

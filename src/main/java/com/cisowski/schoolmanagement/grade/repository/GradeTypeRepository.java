@@ -9,5 +9,5 @@ import java.util.Optional;
 
 @Repository
 public interface GradeTypeRepository extends JpaRepository<GradeTypeEntity, BigInteger> {
-    Optional<GradeTypeEntity> findByName(String name);
+    Optional<GradeTypeEntity> findByGradeScope(String gradeScope);
 }

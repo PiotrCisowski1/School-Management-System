@@ -7,14 +7,14 @@ import java.math.BigInteger;
 @Data
 public class GradeTypeResponse {
     private BigInteger id;
-    private String name;
+    private String gradeScope;
     private Double weight;
 
     @Override
     public String toString() {
         return "GradeTypeResponse{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", gradeScope='" + gradeScope + '\'' +
                 ", weight=" + weight +
                 '}';
     }

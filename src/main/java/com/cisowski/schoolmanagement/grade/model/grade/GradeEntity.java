@@ -1,7 +1,7 @@
 package com.cisowski.schoolmanagement.grade.model.grade;
 
+import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeValueEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeEntity;
-import com.cisowski.schoolmanagement.grade.model.gradeValue.GradeValueEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
@@ -43,9 +43,9 @@ public class GradeEntity {
     private GradeTypeEntity gradeType;
 
     @ManyToOne
-    @JoinColumn(name = "value_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "grade_value_id", referencedColumnName = "id", nullable = false)
     @OnDelete(action = OnDeleteAction.NO_ACTION)
-    private GradeValueEntity value;
+    private GradeValueEntity gradeValue;
 
     @CreationTimestamp
     private LocalDate createdAt;

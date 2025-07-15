@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - Base (centralized) configuration for Mapstruct mappers
 - CRUD operations for GradeType (Administrator only)
+- CRUD endpoints for GradeScale and GradeValues
 
 
 ## [1.0.0] - 2025-07-03

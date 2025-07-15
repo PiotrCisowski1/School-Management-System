@@ -8,14 +8,14 @@ import lombok.Data;
 public class AddGradeTypeRequest {
     @NotNull
     @Size(min = 1, max = 50)
-    private String name;
+    private String gradeScope;
     @NotNull
     private Double weight;
 
     @Override
     public String toString() {
         return "AddGradeTypeRequest{" +
-                "name='" + name + '\'' +
+                "gradeScope='" + gradeScope + '\'' +
                 ", weight=" + weight +
                 '}';
     }
