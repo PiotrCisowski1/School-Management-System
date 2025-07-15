@@ -13,7 +13,7 @@ public class GradeTypeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private BigInteger id;
     @Column(nullable = false)
-    private String name;
+    private String gradeScope;
     @Column(nullable = false)
     private Double weight;
 
@@ -21,7 +21,7 @@ public class GradeTypeEntity {
     public String toString() {
         return "GradeTypeEntity{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", gradeScope='" + gradeScope + '\'' +
                 ", weight=" + weight +
                 '}';
     }

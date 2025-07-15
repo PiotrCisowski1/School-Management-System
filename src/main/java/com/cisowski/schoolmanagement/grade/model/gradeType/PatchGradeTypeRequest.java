@@ -4,13 +4,13 @@ import lombok.Data;
 
 @Data
 public class PatchGradeTypeRequest {
-    private String name;
+    private String gradeScope;
     private Double weight;
 
     @Override
     public String toString() {
         return "PatchGradeTypeRequest{" +
-                "name='" + name + '\'' +
+                "gradeScope='" + gradeScope + '\'' +
                 ", weight=" + weight +
                 '}';
     }

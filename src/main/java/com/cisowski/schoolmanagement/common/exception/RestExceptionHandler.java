@@ -27,12 +27,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.nio.file.AccessDeniedException;
 import java.security.SignatureException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -164,7 +162,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(SpecificationBrokenException.class)
     protected ResponseEntity<Object> handleSpecificationBrokenException(SpecificationBrokenException exception){
-        ApiError apiError = new ApiError(CONFLICT);
+        ApiError apiError = new ApiError(NOT_ACCEPTABLE);
         String exMessage = exception.getMessage();
         apiError.setMessage(exMessage);
         return buildResponseEntity(apiError);
@@ -175,14 +173,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError(CONFLICT);
         String exMessage = exception.getMessage();
         apiError.setMessage(exMessage);
-        return buildResponseEntity(apiError);
-    }
-
-    @ExceptionHandler(Exception.class)
-    protected ResponseEntity<Object> handleGenericException(Exception ex) {
-        ex.printStackTrace(); // 👈 kluczowe do testu
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
-        apiError.setMessage("Unexpected error occurred: " + ex.getClass().getSimpleName() + Arrays.toString(ex.getStackTrace()));
         return buildResponseEntity(apiError);
     }
 }

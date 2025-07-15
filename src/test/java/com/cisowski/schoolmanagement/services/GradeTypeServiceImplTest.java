@@ -45,7 +45,7 @@ public class GradeTypeServiceImplTest {
 
     private AddGradeTypeRequest createAddRequest() {
         return Instancio.of(AddGradeTypeRequest.class)
-                .set(Select.field(AddGradeTypeRequest::getName), "Homework")
+                .set(Select.field(AddGradeTypeRequest::getGradeScope), "Homework")
                 .set(Select.field(AddGradeTypeRequest::getWeight), 0.3)
                 .create();
     }
@@ -53,7 +53,7 @@ public class GradeTypeServiceImplTest {
     private GradeTypeEntity createEntity() {
         return Instancio.of(GradeTypeEntity.class)
                 .set(Select.field(GradeTypeEntity::getId), BigInteger.valueOf(1))
-                .set(Select.field(GradeTypeEntity::getName), "Homework")
+                .set(Select.field(GradeTypeEntity::getGradeScope), "Homework")
                 .set(Select.field(GradeTypeEntity::getWeight), 0.3)
                 .create();
     }
@@ -64,7 +64,7 @@ public class GradeTypeServiceImplTest {
         GradeTypeEntity entity = createEntity();
         GradeTypeResponse response = new GradeTypeResponse();
 
-        when(gradeTypeRepository.findByName(request.getName())).thenReturn(Optional.empty());
+        when(gradeTypeRepository.findByGradeScope(request.getGradeScope())).thenReturn(Optional.empty());
         when(gradeTypeMapper.toEntity(request)).thenReturn(entity);
         when(gradeTypeRepository.save(entity)).thenReturn(entity);
         when(gradeTypeMapper.toResponse(entity)).thenReturn(response);
@@ -72,7 +72,7 @@ public class GradeTypeServiceImplTest {
         GradeTypeResponse result = gradeTypeService.addGradeType(request);
 
         assertThat(result).isSameAs(response);
-        verify(gradeTypeRepository).findByName(request.getName());
+        verify(gradeTypeRepository).findByGradeScope(request.getGradeScope());
         verify(gradeTypeMapper).toEntity(request);
         verify(gradeTypeRepository).save(entity);
         verify(gradeTypeMapper).toResponse(entity);
@@ -83,7 +83,7 @@ public class GradeTypeServiceImplTest {
         AddGradeTypeRequest request = createAddRequest();
         GradeTypeEntity existing = createEntity();
 
-        when(gradeTypeRepository.findByName(request.getName())).thenReturn(Optional.of(existing));
+        when(gradeTypeRepository.findByGradeScope(request.getGradeScope())).thenReturn(Optional.of(existing));
 
         assertThatThrownBy(() -> gradeTypeService.addGradeType(request))
                 .isInstanceOf(SpecificationBrokenException.class);
@@ -95,13 +95,13 @@ public class GradeTypeServiceImplTest {
     void patchGradeType_Success() {
         BigInteger id = BigInteger.ONE;
         PatchGradeTypeRequest request = new PatchGradeTypeRequest();
-        request.setName("Updated Homework");
+        request.setGradeScope("Updated Homework");
 
         GradeTypeEntity existing = createEntity();
         GradeTypeEntity patchingEntity = new GradeTypeEntity();
-        patchingEntity.setName("Updated Homework");
+        patchingEntity.setGradeScope("Updated Homework");
         GradeTypeEntity updatedEntity = createEntity();
-        updatedEntity.setName("Updated Homework");
+        updatedEntity.setGradeScope("Updated Homework");
         GradeTypeResponse response = new GradeTypeResponse();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(existing));
