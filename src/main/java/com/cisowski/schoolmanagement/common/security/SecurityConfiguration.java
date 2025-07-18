@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -73,12 +74,17 @@ public class SecurityConfiguration {
                                 .requestMatchers("/login").permitAll()
                                 .requestMatchers("/students/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/teachers/**").hasAnyAuthority("ADMINISTRATOR")
+                                .requestMatchers(HttpMethod.GET, "/teachers/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.POST, "/teachers/*/teacher-availability").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.DELETE, "/teachers/*/teacher-availability/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.GET, "/teachers/*/teacher-availability/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.GET, "/teachers/*/teacher-availability").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers("/teachers/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/yearbooks/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
+                               .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .build();
     }
