@@ -43,6 +43,8 @@ public class GradeTypeServiceImplTest {
     @InjectMocks
     private GradeTypeServiceImpl gradeTypeService;
 
+    private final Long id = 1L;
+
     private AddGradeTypeRequest createAddRequest() {
         return Instancio.of(AddGradeTypeRequest.class)
                 .set(Select.field(AddGradeTypeRequest::getGradeScope), "Homework")
@@ -52,7 +54,7 @@ public class GradeTypeServiceImplTest {
 
     private GradeTypeEntity createEntity() {
         return Instancio.of(GradeTypeEntity.class)
-                .set(Select.field(GradeTypeEntity::getId), BigInteger.valueOf(1))
+                .set(Select.field(GradeTypeEntity::getId), 1L)
                 .set(Select.field(GradeTypeEntity::getGradeScope), "Homework")
                 .set(Select.field(GradeTypeEntity::getWeight), 0.3)
                 .create();
@@ -93,7 +95,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void patchGradeType_Success() {
-        BigInteger id = BigInteger.ONE;
         PatchGradeTypeRequest request = new PatchGradeTypeRequest();
         request.setGradeScope("Updated Homework");
 
@@ -118,7 +119,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void patchGradeType_NotFound_ThrowsException() {
-        BigInteger id = BigInteger.ONE;
         PatchGradeTypeRequest request = new PatchGradeTypeRequest();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.empty());
@@ -129,7 +129,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void deleteGradeType_Success() {
-        BigInteger id = BigInteger.ONE;
         GradeTypeEntity entity = createEntity();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(entity));
@@ -143,7 +142,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void deleteGradeType_InUse_ThrowsException() {
-        BigInteger id = BigInteger.ONE;
         GradeTypeEntity entity = createEntity();
 
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(entity));
@@ -158,7 +156,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void getGradeType_Success() {
-        BigInteger id = BigInteger.ONE;
         GradeTypeEntity entity = createEntity();
         GradeTypeResponse response = new GradeTypeResponse();
 
@@ -172,7 +169,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void getGradeType_NotFound_ThrowsException() {
-        BigInteger id = BigInteger.ONE;
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> gradeTypeService.getGradeType(id))
@@ -183,7 +179,7 @@ public class GradeTypeServiceImplTest {
     void getGradeTypes_Success() {
         GradeTypeEntity entity1 = createEntity();
         GradeTypeEntity entity2 = createEntity();
-        entity2.setId(BigInteger.valueOf(2));
+        entity2.setId(id);
 
         GradeTypeResponse response1 = new GradeTypeResponse();
         GradeTypeResponse response2 = new GradeTypeResponse();
@@ -210,7 +206,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void fetchGradeType_Success() {
-        BigInteger id = BigInteger.ONE;
         GradeTypeEntity entity = createEntity();
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.of(entity));
 
@@ -221,7 +216,6 @@ public class GradeTypeServiceImplTest {
 
     @Test
     void fetchGradeType_NotFound_ThrowsException() {
-        BigInteger id = BigInteger.ONE;
         when(gradeTypeRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> gradeTypeService.fetchGradeType(id))

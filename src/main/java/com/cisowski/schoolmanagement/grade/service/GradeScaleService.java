@@ -14,4 +14,5 @@ public interface GradeScaleService {
     GradeScaleResponse getGradeScaleById(Long gradeScale);
     List<GradeScaleSummaryResponse> getAllGradeScales();
     GradeScaleResponse getActiveGradeScale();
+    GradeValueEntity fetchGradeValue(Long gradeValueId);
 }

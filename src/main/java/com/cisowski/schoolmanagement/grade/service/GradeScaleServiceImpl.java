@@ -143,6 +143,15 @@ public class GradeScaleServiceImpl implements GradeScaleService {
         return gradeScaleMapper.toResponse(activeGradeScale.get());
     }
 
+    @Override
+    public GradeValueEntity fetchGradeValue(Long gradeValueId) {
+        DbLogger.info("Searching for GradeValue with ID: " + gradeValueId);
+        Optional<GradeValueEntity> gradeValue = gradeValueRepository.findById(gradeValueId);
+        if(gradeValue.isEmpty())
+            throw new EntityNotFoundException(GradeValueEntity.class, "ID", gradeValueId.toString());
+        return gradeValue.get();
+    }
+
     private void changeGradeScaleActivity(GradeScaleEntity gradeScale, boolean targetActivity){
         if(gradeScale == null)
             return;

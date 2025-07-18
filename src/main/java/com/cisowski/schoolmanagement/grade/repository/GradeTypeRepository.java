@@ -8,6 +8,6 @@ import java.math.BigInteger;
 import java.util.Optional;
 
 @Repository
-public interface GradeTypeRepository extends JpaRepository<GradeTypeEntity, BigInteger> {
+public interface GradeTypeRepository extends JpaRepository<GradeTypeEntity, Long> {
     Optional<GradeTypeEntity> findByGradeScope(String gradeScope);
 }

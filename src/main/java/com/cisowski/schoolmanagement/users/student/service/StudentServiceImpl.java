@@ -63,16 +63,13 @@ public class StudentServiceImpl implements StudentService {
         String message = String.format("Update Student with ID: %s, with given data: %s", studentDto.toString(), studentId);
         DbLogger.info(message);
 
-        Optional<StudentEntity> existingStudent = repository.findById(studentId);
-        if (existingStudent.isEmpty())
-            throw new EntityNotFoundException(StudentEntity.class, "Email", studentDto.getEmail());
+        StudentEntity existingStudentEntity = fetchStudent(studentId);
 
-        StudentEntity existingStudentEntity = existingStudent.get();
         StudentEntity requestStudent = studentMapper.toStudentEntity(studentDto);
 
         checkAndUpdateParentEntities(existingStudentEntity, studentDto);
         requestStudent.setYearbook(yearbookService.fetchYearbookEntity(studentDto.getYearbookId()));
-        studentMapper.patchStudent(requestStudent, existingStudent.get());
+        studentMapper.patchStudent(requestStudent, existingStudentEntity);
         StudentEntity updatedStudent = repository.save(existingStudentEntity);
 
         message = "Student updated successfully: " + updatedStudent.toString();
@@ -111,11 +108,9 @@ public class StudentServiceImpl implements StudentService {
         String message = String.format("Deleting Student with ID %s", studentId);
         DbLogger.info(message);
 
-        Optional<StudentEntity> existingStudent = repository.findById(studentId);
-        if (existingStudent.isEmpty())
-            throw new EntityNotFoundException(StudentEntity.class, "Student ID", studentId.toString());
+        StudentEntity existingStudent = fetchStudent(studentId);
 
-        repository.delete(existingStudent.get());
+        repository.delete(existingStudent);
 
         message = String.format("Student with ID %s, was successfully removed", studentId);
         DbLogger.info(message);
@@ -134,17 +129,19 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentDetailedResponse findById(Integer studentId) {
-        String message = String.format("Searching for Student with ID %s", studentId);
-        DbLogger.info(message);
+        StudentEntity existingStudent = fetchStudent(studentId);
 
-        Optional<StudentEntity> existingStudent = repository.findById(studentId);
-        if (existingStudent.isEmpty())
-            throw new EntityNotFoundException(StudentEntity.class, "ID", studentId.toString());
+        DbLogger.info(String.format("Found Student with ID %s", studentId));
 
-        message = String.format("Found Student with ID %s", studentId);
-        DbLogger.info(message);
-
-        return studentMapper.toStudentResponse(existingStudent.get());
+        return studentMapper.toStudentResponse(existingStudent);
     }
 
+    @Override
+    public StudentEntity fetchStudent(Integer studentId) {
+        DbLogger.info("Searching for Student with ID: " + studentId);
+        Optional<StudentEntity> existingStudent = repository.findById(studentId);
+        if (existingStudent.isEmpty())
+            throw new EntityNotFoundException(StudentEntity.class, "ID", String.valueOf(studentId));
+        return existingStudent.get();
+    }
 }

@@ -7,11 +7,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.2] - 2025-07-18
+
+### New
+
+-CRUD operations on Grade with Teacher permission validation (partial - to be add)
+
+
 ## [1.0.1] - 2025-07-04
 
 ### Changed
-
 - Base (centralized) configuration for Mapstruct mappers
+
+### New
 - CRUD operations for GradeType (Administrator only)
 - CRUD endpoints for GradeScale and GradeValues
 
@@ -19,7 +27,6 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2025-07-03
 
 ### Added
-
 - Authentication using JWT (email/password login)
 - Role-based access control using Spring Security
 - CRUD operations for all user types (`STUDENT`, `TEACHER`, `PARENT`, `ADMINISTRATOR`)
@@ -31,7 +38,6 @@ All notable changes to this project will be documented in this file.
 - Unit testing using JUnit 5, Mockito, and Instancio
 
 ### In Progress
-
 - Swagger UI for API testing/documentation
 - Liquibase database migration setup
 - Dockerfile and Docker Compose support

@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeResponse;
 import com.cisowski.schoolmanagement.grade.model.gradeType.PatchGradeTypeRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public interface GradeTypeMapper {
 
     GradeTypeEntity toEntity(AddGradeTypeRequest request);
 
+    @Named("toGradeTypeResponse")
     GradeTypeResponse toResponse(GradeTypeEntity entity);
 
     GradeTypeEntity toEntity(PatchGradeTypeRequest request);

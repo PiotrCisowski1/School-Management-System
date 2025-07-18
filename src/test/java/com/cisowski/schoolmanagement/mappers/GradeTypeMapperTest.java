@@ -40,7 +40,7 @@ public class GradeTypeMapperTest {
     @Test
     void toResponse_fromEntity() {
         GradeTypeEntity entity = Instancio.of(GradeTypeEntity.class)
-                .set(field(GradeTypeEntity::getId), BigInteger.valueOf(123))
+                .set(field(GradeTypeEntity::getId), 123L)
                 .create();
 
         GradeTypeResponse response = mapper.toResponse(entity);
@@ -74,7 +74,7 @@ public class GradeTypeMapperTest {
     @Test
     void patchEntity_partialUpdate() {
         GradeTypeEntity existing = Instancio.of(GradeTypeEntity.class)
-                .set(field(GradeTypeEntity::getId), BigInteger.valueOf(100))
+                .set(field(GradeTypeEntity::getId), 100L)
                 .set(field(GradeTypeEntity::getGradeScope), "Original Name")
                 .set(field(GradeTypeEntity::getWeight), 0.5)
                 .create();
@@ -89,7 +89,7 @@ public class GradeTypeMapperTest {
 
         assertThat(existing)
                 .satisfies(e -> {
-                    assertThat(e.getId()).isEqualTo(BigInteger.valueOf(100));
+                    assertThat(e.getId()).isEqualTo(100L);
                     assertThat(e.getGradeScope()).isEqualTo("Updated Name");
                     assertThat(e.getWeight()).isEqualTo(0.5);
                 });

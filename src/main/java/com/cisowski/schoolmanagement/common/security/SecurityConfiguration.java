@@ -84,7 +84,12 @@ public class SecurityConfiguration {
                                 .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
-                               .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
+                                .requestMatchers(HttpMethod.POST, "/grades").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.PATCH, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.DELETE, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.GET, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers(HttpMethod.GET, "/grades/student/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
+                                .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
                                 .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
                 .build();
     }

@@ -1,21 +1,29 @@
 package com.cisowski.schoolmanagement.grade.controller;
 
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.grade.model.grade.*;
 import com.cisowski.schoolmanagement.grade.model.gradeScale.*;
 import com.cisowski.schoolmanagement.grade.model.gradeType.AddGradeTypeRequest;
 import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeResponse;
 import com.cisowski.schoolmanagement.grade.model.gradeType.PatchGradeTypeRequest;
 import com.cisowski.schoolmanagement.grade.service.GradeScaleService;
+import com.cisowski.schoolmanagement.grade.service.GradeService;
 import com.cisowski.schoolmanagement.grade.service.GradeTypeService;
+import com.cisowski.schoolmanagement.users.common.AuthenticationController;
+import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/grades")
@@ -24,6 +32,7 @@ public class GradeController {
 
     private final GradeTypeService gradeTypeService;
     private final GradeScaleService gradeScaleService;
+    private final GradeService gradeService;
 
     @PostMapping("/types")
     public ResponseEntity<GradeTypeResponse> addGradeType(@Valid @RequestBody AddGradeTypeRequest request){
@@ -35,21 +44,21 @@ public class GradeController {
     @PatchMapping("/types/{gradeTypeId}")
     public ResponseEntity<GradeTypeResponse> patchGradeType(
             @Valid @RequestBody PatchGradeTypeRequest request,
-            @PathVariable BigInteger gradeTypeId){
+            @PathVariable Long gradeTypeId){
         DbLogger.info(String.format("Received PATCH request for GradeType ID %s with request: %s", gradeTypeId, request.toString()));
         GradeTypeResponse response = gradeTypeService.patchGradeType(request, gradeTypeId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/types/{gradeTypeId}")
-    public ResponseEntity deleteGradeType(@PathVariable BigInteger gradeTypeId){
+    public ResponseEntity deleteGradeType(@PathVariable Long gradeTypeId){
         DbLogger.info("Received DELETE request for GradeType with ID: " + gradeTypeId);
         gradeTypeService.deleteGradeType(gradeTypeId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/types/{gradeTypeId}")
-    public ResponseEntity<GradeTypeResponse> getGradeType(@PathVariable BigInteger gradeTypeId){
+    public ResponseEntity<GradeTypeResponse> getGradeType(@PathVariable Long gradeTypeId){
         DbLogger.info("Received GET request for GradeType with ID: " + gradeTypeId);
         GradeTypeResponse response = gradeTypeService.getGradeType(gradeTypeId);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -118,5 +127,66 @@ public class GradeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or "
+            + "(hasAuthority('TEACHER') and #request.teacherId != null and #request.teacherId == principal.id)")
+    @PostMapping()
+    public ResponseEntity<GradeDetailedResponse> addGrade(@Valid @RequestBody AddGradeRequest request){
+        DbLogger.info("Received POST request for Grade with request: " + request.toString());
+        GradeDetailedResponse response = gradeService.addGrade(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or "
+            + "(hasAuthority('TEACHER') and @gradeValidator.isGradeOwner(principal.id, #gradeId))")
+    @PatchMapping("/{gradeId}")
+    public ResponseEntity<GradeDetailedResponse> patchGrade(@Valid @RequestBody PatchGradeRequest request, @PathVariable Long gradeId){
+        DbLogger.info(String.format("Received PATCH request for Grade with ID: %s, with request: %s", gradeId, request.toString()));
+        GradeDetailedResponse response = gradeService.patchGrade(request, gradeId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or "
+            + "(hasAuthority('TEACHER') and @gradeValidator.isGradeOwner(principal.id, #gradeId))")
+    @DeleteMapping("/{gradeId}")
+    public ResponseEntity deleteGrade(@PathVariable Long gradeId){
+        DbLogger.info("Received DELETE request for Grade with ID: " + gradeId);
+        gradeService.deleteGrade(gradeId);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @PreAuthorize("hasAuthority('ADMINISTRATOR') or "
+            + "(hasAuthority('TEACHER') and @gradeValidator.isGradeOwner(principal.id, #gradeId))")
+    @GetMapping("/{gradeId}")
+    public ResponseEntity<GradeDetailedResponse> getGradeById(@PathVariable Long gradeId){
+        DbLogger.info("Received GET request for Grade with ID: " + gradeId);
+        GradeDetailedResponse response = gradeService.getGradeById(gradeId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<List<GradeSummaryResponse>> getGradeByStudentId(@PathVariable Integer studentId){
+        DbLogger.info("Received GET request for Grades for Student with ID: " + studentId);
+        List<GradeSummaryResponse> response = gradeService.getGradesByStudentId(studentId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/student/{studentId}/subject/{subjectId}")
+    public ResponseEntity<List<GradeSummaryResponse>> getGradeByStudentIdAndSubjectId(@PathVariable Integer studentId, @PathVariable Integer subjectId){
+        DbLogger.info(String.format("Received GET request for Grades for Student with ID: %s and Subject with ID: %s", studentId, subjectId));
+        List<GradeSummaryResponse> response = gradeService.getGradesByStudentIdAndSubject(studentId, subjectId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/subject/{subjectId}")
+    public ResponseEntity<List<GradeSummaryResponse>> getGradeBySubjectId(@PathVariable Integer subjectId){
+        DbLogger.info("Received GET request for Grades for Subject with ID: " + subjectId);
+        List<GradeSummaryResponse> response = gradeService.getGradesBySubjectId(subjectId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/type/{gradeTypeId}")
+    public ResponseEntity<List<GradeSummaryResponse>> getGradeByGradeType(@PathVariable Long gradeTypeId){
+        DbLogger.info("Received GET request for Grades for GradeType with ID: " + gradeTypeId);
+        List<GradeSummaryResponse> response = gradeService.getGradesByGradeType(gradeTypeId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }

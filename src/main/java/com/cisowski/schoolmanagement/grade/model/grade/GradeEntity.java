@@ -6,12 +6,10 @@ import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.*;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 
 @Data
@@ -20,7 +18,7 @@ import java.time.LocalDate;
 public class GradeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private BigInteger id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "student_id", referencedColumnName = "id", nullable = false)
@@ -51,4 +49,18 @@ public class GradeEntity {
     private LocalDate createdAt;
 
     private String comments;
+
+    @Override
+    public String toString() {
+        return "GradeEntity{" +
+                "id=" + id +
+                ", student=" + student.getId() +
+                ", teacher=" + teacher.getId() +
+                ", subject=" + subject.getId() +
+                ", gradeType=" + gradeType.getId() +
+                ", gradeValue=" + gradeValue.getId() +
+                ", createdAt=" + createdAt +
+                ", comments='" + comments + '\'' +
+                '}';
+    }
 }
