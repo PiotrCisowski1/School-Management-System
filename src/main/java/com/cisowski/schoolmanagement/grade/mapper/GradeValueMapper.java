@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeValueEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeValueResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import java.util.List;
 
@@ -25,5 +26,6 @@ public interface GradeValueMapper {
 
     List<GradeValueResponse> toResponseList(List<GradeValueEntity> entities);
 
+    @Named("toGradeValueResponse")
     GradeValueResponse toResponse(GradeValueEntity entity);
 }

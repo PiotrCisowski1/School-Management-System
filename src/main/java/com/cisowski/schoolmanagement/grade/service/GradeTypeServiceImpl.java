@@ -45,7 +45,7 @@ public class GradeTypeServiceImpl implements GradeTypeService {
 
     @Override
     @Transactional
-    public GradeTypeResponse patchGradeType(PatchGradeTypeRequest request, BigInteger gradeTypeId) {
+    public GradeTypeResponse patchGradeType(PatchGradeTypeRequest request, Long gradeTypeId) {
         DbLogger.info(String.format("Updating GradeType with ID %s for request: %s", gradeTypeId, request.toString()));
         GradeTypeEntity existingEntity = fetchGradeType(gradeTypeId);
         GradeTypeEntity patchingEntity = mapper.toEntity(request);
@@ -57,7 +57,7 @@ public class GradeTypeServiceImpl implements GradeTypeService {
 
     @Override
     @Transactional
-    public void deleteGradeType(BigInteger gradeTypeId) {
+    public void deleteGradeType(Long gradeTypeId) {
         DbLogger.info("Deleting GradeType with ID: " + gradeTypeId);
         GradeTypeEntity existing = fetchGradeType(gradeTypeId);
         checkGradeTypeIsInUse(existing);
@@ -66,7 +66,7 @@ public class GradeTypeServiceImpl implements GradeTypeService {
     }
 
     @Override
-    public GradeTypeResponse getGradeType(BigInteger gradeTypeId) {
+    public GradeTypeResponse getGradeType(Long gradeTypeId) {
         DbLogger.info("Searching for GradeType with ID: " + gradeTypeId);
         GradeTypeEntity entity = fetchGradeType(gradeTypeId);
         return mapper.toResponse(entity);
@@ -81,7 +81,7 @@ public class GradeTypeServiceImpl implements GradeTypeService {
     }
 
     @Override
-    public GradeTypeEntity fetchGradeType(BigInteger gradeTypeId) {
+    public GradeTypeEntity fetchGradeType(Long gradeTypeId) {
         DbLogger.info("Fetching GradeType with ID: " + gradeTypeId);
         Optional<GradeTypeEntity> existingEntity = repository.findById(gradeTypeId);
         if (existingEntity.isEmpty())

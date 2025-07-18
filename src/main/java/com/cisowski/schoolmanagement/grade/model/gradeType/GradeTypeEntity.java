@@ -3,7 +3,6 @@ package com.cisowski.schoolmanagement.grade.model.gradeType;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.math.BigInteger;
 
 @Data
 @Entity
@@ -11,7 +10,7 @@ import java.math.BigInteger;
 public class GradeTypeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private BigInteger id;
+    private Long id;
     @Column(nullable = false)
     private String gradeScope;
     @Column(nullable = false)
