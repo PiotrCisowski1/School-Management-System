@@ -192,4 +192,13 @@ public class ParentServiceImpl implements ParentService {
 
         return parents;
     }
+
+    @Override
+    public ParentEntity fetchParentEntity(Integer parentId) {
+        DbLogger.info("Searching for ParentEntity with ID: " + parentId);
+        ParentEntity parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new EntityNotFoundException(ParentEntity.class, "ID", parentId.toString()));
+        DbLogger.info("Found ParentEntity: " + parent.toString());
+        return parent;
+    }
 }

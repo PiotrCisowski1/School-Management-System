@@ -13,4 +13,5 @@ public interface ParentService extends BaseUserService {
     List<ParentSummaryResponse> findAll();
     ParentDetailedResponse findById(Integer parentId);
     List<ParentEntity> fetchParentEntities(Collection<Integer> parentIds);
+    ParentEntity fetchParentEntity(Integer parentId);
 }

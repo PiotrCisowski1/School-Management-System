@@ -64,33 +64,14 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         return security.csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(authEntryPoint))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(request ->
-                        request
-                                .requestMatchers("/login").permitAll()
-                                .requestMatchers("/students/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers(HttpMethod.GET, "/teachers/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.POST, "/teachers/*/teacher-availability").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.DELETE, "/teachers/*/teacher-availability/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.GET, "/teachers/*/teacher-availability/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.GET, "/teachers/*/teacher-availability").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers("/teachers/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/yearbooks/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers(HttpMethod.POST, "/grades").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.PATCH, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.DELETE, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.GET, "/grades/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers(HttpMethod.GET, "/grades/student/*").hasAnyAuthority("ADMINISTRATOR", "TEACHER")
-                                .requestMatchers("/grades/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .build();
     }
 

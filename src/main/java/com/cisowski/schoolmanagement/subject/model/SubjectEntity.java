@@ -7,6 +7,7 @@ import lombok.Data;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -22,11 +23,11 @@ public class SubjectEntity {
     @Column(nullable = false)
     private String code;
     @ManyToMany(mappedBy = "teachingSubjects", fetch = FetchType.LAZY)
-    private Collection<TeacherEntity> teachers;
+    private Collection<TeacherEntity> teachers = new ArrayList<>();
     @Column
     private String description;
     @ManyToMany(mappedBy = "mainCourseSubjects", fetch = FetchType.LAZY)
-    private Collection<YearbookEntity> yearbooksTakingSubject = new HashSet<>();
+    private Collection<YearbookEntity> yearbooksTakingSubject = new ArrayList<>();
     @ManyToOne
     @JoinColumn(name = "type_id", referencedColumnName = "id", nullable = false)
     @OnDelete(action = OnDeleteAction.NO_ACTION)

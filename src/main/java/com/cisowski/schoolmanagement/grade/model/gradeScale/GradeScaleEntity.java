@@ -27,7 +27,7 @@ public class GradeScaleEntity {
     @Column(nullable = false)
     private Boolean isActive = true;
 
-    @OneToMany(mappedBy = "gradeScale", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "gradeScale", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<GradeValueEntity> gradeValues = new ArrayList<>();
 
     @CreationTimestamp
@@ -44,7 +44,7 @@ public class GradeScaleEntity {
                 "name='" + name + '\'' +
                 ", createdAt=" + createdAt +
                 ", description='" + description + '\'' +
-                ", gradeValues=" + gradeValues.toString() +
+                ", gradeValuesCount=" + (gradeValues != null ? gradeValues.size() : 0) +
                 ", id=" + id +
                 ", isActive=" + isActive +
                 ", updatedAt=" + updatedAt +

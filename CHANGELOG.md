@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.1.0] - 2025-10-31
+
+### New
+- Permission based authorization, securing endpoint based on user role and permission to perform particular REST action 
+- Integration tests to check authorization policies for every endpoint and every user type
+
+### Changed
+- Secure every endpoint for particular users
+
 
 ## [1.0.2] - 2025-07-18
 
