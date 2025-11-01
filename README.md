@@ -75,11 +75,17 @@ Access to endpoints is restricted based on authority levels
 ## Testing 
 Unit tests for core logic using:
 
-JUnit 5
+-JUnit 5
 
-Mockito
+-Mockito
 
-Instancio for test data generation
+-Instancio for test data generation
+
+Integration tests:
+
+-Testcontainers
+
+-Rest Assured
 
 🧠 JaCoCo integration for code coverage reports is planned.
 

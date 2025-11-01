@@ -150,7 +150,8 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         YearbookEntity yearbook = yearbookService.fetchYearbookEntity(request.getYearbookId());
         ScheduleVersionEntity requestEntity = scheduleVersionMapper.toEntity(request);
         scheduleVersionMapper.patchEntity(requestEntity, scheduleVersion);
-        scheduleVersion.setYearbook(yearbook);
+        if(yearbook != null)
+            scheduleVersion.setYearbook(yearbook);
 
         ScheduleVersionEntity saved = repository.save(scheduleVersion);
         DbLogger.info(String.format("ScheduleVersion with ID %s was patched successfully: %s", scheduleVersionId, saved.toString()));

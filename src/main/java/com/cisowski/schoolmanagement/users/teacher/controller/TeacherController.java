@@ -1,5 +1,8 @@
 package com.cisowski.schoolmanagement.users.teacher.controller;
 
+import com.cisowski.schoolmanagement.common.security.authorization.annotation.RequiresPermission;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.AddTeacherResponse;
@@ -30,6 +33,7 @@ public class TeacherController {
     private final TeacherAvailabilityService teacherAvailabilityService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<AddTeacherResponse> addTeacher(@Valid @RequestBody TeacherCreateRequest dto){
         String message = "Received Teacher POST request for object: " + dto.toString();
         DbLogger.info(message);
@@ -39,6 +43,7 @@ public class TeacherController {
     }
 
     @PatchMapping("/{teacherId}")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<TeacherDetailedResponse> updateTeacher(@Valid @RequestBody TeacherPatchRequest dto, @PathVariable Integer teacherId){
         String message = String.format("Received Teacher PUT request for object: %s", dto.toString());
         DbLogger.info(message);
@@ -48,6 +53,7 @@ public class TeacherController {
     }
 
     @DeleteMapping("/{teacherId}")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity deleteTeacher(@PathVariable Integer teacherId){
         String message = String.format("Received Teacher DELETE request for ID: %s", teacherId);
         DbLogger.info(message);
@@ -56,8 +62,8 @@ public class TeacherController {
         return new ResponseEntity(HttpStatusCode.valueOf(204));
     }
 
-    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @GetMapping("/{teacherId}")
+    @RequiresPermission(resource = ResourceType.TEACHER, action = ResourceActionType.READ)
     public ResponseEntity<TeacherDetailedResponse> getTeacher(@PathVariable Integer teacherId){
         String message = String.format("Received Teacher GET request for ID: %s", teacherId);
         DbLogger.info(message);
@@ -67,6 +73,7 @@ public class TeacherController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<Collection<TeacherSummaryResponse>> getTeachers(){
         String message = "Received Teachers GET request";
         DbLogger.info(message);
@@ -75,8 +82,8 @@ public class TeacherController {
         return new ResponseEntity<>(teacherResponses, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @PostMapping("/{teacherId}/teacher-availability")
+    @RequiresPermission(resource = ResourceType.TEACHER_AVAILABILITY, action = ResourceActionType.CREATE)
     public ResponseEntity<TeacherAvailabilityResponse> addTeacherAvailability(
             @RequestBody @Valid TeacherAvailabilityRequest request,
             @PathVariable Integer teacherId){
@@ -88,16 +95,16 @@ public class TeacherController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @DeleteMapping("/{teacherId}/teacher-availability/{teacherAvailabilityId}")
+    @RequiresPermission(resource = ResourceType.TEACHER_AVAILABILITY, action = ResourceActionType.DELETE)
     public ResponseEntity deleteTeacherAvailability(@PathVariable Integer teacherAvailabilityId, @PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability DELETE request for ID: " + teacherAvailabilityId);
         teacherAvailabilityService.deleteTeacherAvailability(teacherAvailabilityId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @GetMapping("/{teacherId}/teacher-availability/{teacherAvailabilityId}")
+    @RequiresPermission(resource = ResourceType.TEACHER_AVAILABILITY, action = ResourceActionType.READ)
     public ResponseEntity<TeacherAvailabilityResponse> getTeacherAvailabilityById(
             @PathVariable Integer teacherAvailabilityId, @PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability GET request for ID: " + teacherAvailabilityId);
@@ -105,8 +112,8 @@ public class TeacherController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PreAuthorize("hasAuthority('ADMINISTRATOR') or (hasAuthority('TEACHER') and #teacherId == principal.id)")
     @GetMapping("/{teacherId}/teacher-availability")
+    @RequiresPermission(resource = ResourceType.TEACHER_AVAILABILITY, action = ResourceActionType.READ)
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByTeacherId(@PathVariable Integer teacherId){
         DbLogger.info("Received TeacherAvailability GET request for Teacher ID: " + teacherId);
         Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(teacherId);
@@ -114,6 +121,7 @@ public class TeacherController {
     }
 
     @GetMapping("/teacher-availability/day/{dayOfWeek}")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityByDayOfWeek(@PathVariable Integer dayOfWeek){
         DbLogger.info("Received TeacherAvailability GET request for DayOfWeek: " + dayOfWeek);
         Collection<TeacherAvailabilityResponse> response = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(dayOfWeek);
@@ -121,6 +129,7 @@ public class TeacherController {
     }
 
     @GetMapping("/subject/{subjectId}/teacher-availability")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<Collection<TeacherAvailabilityResponse>> getTeacherAvailabilityBySubjectAndTimeRange(
             @Valid @RequestBody TimeRange timeRange, @PathVariable Integer subjectId){
         DbLogger.info(String.format("Received TeacherAvailability GET request for Subject ID: %s and TimeRange: %s", subjectId, timeRange.toString()));

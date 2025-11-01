@@ -156,4 +156,12 @@ public class TeacherServiceImpl implements TeacherService {
             throw new EntityNotFoundException(TeacherEntity.class, "ID", teacherId.toString());
         return teacher.get();
     }
+
+    @Override
+    public List<SubjectEntity> fetchTeacherSubjects(Integer teacherId) {
+        DbLogger.info("Searching for Subjects of Teacher with ID: " + teacherId);
+        List<SubjectEntity> subjects = repository.findByTeacherId(teacherId);
+        DbLogger.info(String.format("Found %s Subjects for Teacher with ID %s", subjects.size(), teacherId));
+        return subjects;
+    }
 }

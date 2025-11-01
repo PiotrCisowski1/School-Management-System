@@ -27,4 +27,7 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Intege
             LocalTime endTime);
 
     List<ScheduleEntity> findByScheduleVersionIdAndDayOfWeek(Integer scheduleVersionId, DayOfWeek dayOfWeek);
+
+    @Query("SELECT s from ScheduleEntity s JOIN s.classroom c WHERE c.id = :classroomId")
+    List<ScheduleEntity> findByClassroomId(Integer classroomId);
 }

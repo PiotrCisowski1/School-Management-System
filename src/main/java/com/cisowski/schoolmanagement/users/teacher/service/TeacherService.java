@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.teacher.service;
 
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.common.service.BaseUserService;
 import com.cisowski.schoolmanagement.users.teacher.model.*;
 
@@ -11,4 +12,5 @@ public interface TeacherService extends BaseUserService {
     List<TeacherSummaryResponse> findAll();
     TeacherDetailedResponse findById(Integer teacherId);
     TeacherEntity fetchTeacher(Integer teacherId);
+    List<SubjectEntity> fetchTeacherSubjects(Integer teacherId);
 }

@@ -1,9 +1,6 @@
 package com.cisowski.schoolmanagement.schedule.service;
 
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
+import com.cisowski.schoolmanagement.schedule.model.*;
 
 import java.util.List;
 
@@ -12,5 +9,6 @@ public interface ScheduleService {
     void deleteSchedule(Integer scheduleId);
     ScheduleDetailedResponse patchSchedule(Integer scheduleId, PatchScheduleRequest request);
     ScheduleDetailedResponse getSchedule(Integer scheduleId);
-    List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek);
+    List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek, boolean needsFiltering, Integer userId);
+    List<ScheduleEntity> fetchSchedulesByClassroomId(Integer classroomId);
 }

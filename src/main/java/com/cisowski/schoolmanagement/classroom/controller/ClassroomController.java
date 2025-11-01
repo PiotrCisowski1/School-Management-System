@@ -3,11 +3,15 @@ package com.cisowski.schoolmanagement.classroom.controller;
 import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
+import com.cisowski.schoolmanagement.common.security.authorization.annotation.RequiresPermission;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -20,6 +24,7 @@ public class ClassroomController {
     private final EquipmentService equipmentService;
     private final ClassroomService classroomService;
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @PostMapping("/equipments")
     public ResponseEntity<EquipmentResponse> addEquipment(@Valid @RequestBody EquipmentRequest request){
         DbLogger.info("Received POST Equipment request for: " + request.toString());
@@ -27,6 +32,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @DeleteMapping("/equipments/{equipmentId}")
     public ResponseEntity deleteEquipment(@PathVariable Integer equipmentId){
         DbLogger.info("Received DELETE Equipment request for ID: " + equipmentId);
@@ -34,6 +40,7 @@ public class ClassroomController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @GetMapping("/equipments")
     public ResponseEntity<Collection<EquipmentResponse>> findAllEqs(){
         DbLogger.info("Received GET all Equipments request");
@@ -41,6 +48,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @GetMapping("/equipments/{equipmentId}")
     public ResponseEntity<EquipmentResponse> getEqById(@PathVariable Integer equipmentId){
         DbLogger.info("Received GET Equipment request for ID: " + equipmentId);
@@ -48,6 +56,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @PostMapping
     public ResponseEntity<ClassroomDetailedResponse> addClassroom(@RequestBody @Valid ClassroomRequest request){
         DbLogger.info("Received Classroom POST request: " + request.toString());
@@ -55,6 +64,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @DeleteMapping("/{classroomId}")
     public ResponseEntity deleteClassroom(@PathVariable Integer classroomId){
         DbLogger.info("Received Classroom DELETE request for ID: " + classroomId);
@@ -62,6 +72,7 @@ public class ClassroomController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
+    @RequiresPermission(resource = ResourceType.CLASSROOM, action = ResourceActionType.READ)
     @GetMapping("/{classroomId}")
     public ResponseEntity<ClassroomDetailedResponse> getClassroom(@PathVariable Integer classroomId){
         DbLogger.info("Received Classroom GET request for ID: " + classroomId);
@@ -69,6 +80,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @GetMapping()
     public ResponseEntity<Collection<ClassroomSummaryResponse>> getClassrooms(){
         DbLogger.info("Received Classroom GET all request");
@@ -76,6 +88,7 @@ public class ClassroomController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     @PatchMapping("/{classroomId}")
     public ResponseEntity<ClassroomDetailedResponse> patchClassroom(@Valid @RequestBody PatchClassroomRequest request, @PathVariable Integer classroomId){
         DbLogger.info("Received Classroom PATCH request: " + request.toString());

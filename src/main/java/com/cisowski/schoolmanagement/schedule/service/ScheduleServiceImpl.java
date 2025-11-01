@@ -15,6 +15,7 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.users.teacher.utils.TeacherAvailabilityUtils;
+import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -189,13 +188,36 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek) {
+    public List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek, boolean needsFiltering, Integer userId) {
         DbLogger.info(String.format("Searching for Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", dayOfWeek, scheduleVersionId));
         DayOfWeek day = DayOfWeek.of(dayOfWeek);
 
         List<ScheduleEntity> schedules = scheduleRepository.findByScheduleVersionIdAndDayOfWeek(scheduleVersionId, day);
+        List<ScheduleEntity> filteredSchedules = schedules;
+        if(needsFiltering)
+            filteredSchedules = filterTeacherSchedules(schedules, userId);
 
-        DbLogger.info(String.format("Found %s Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", schedules.size(), dayOfWeek, scheduleVersionId));
-        return scheduleMapper.toSummaryResponseList(schedules);
+        DbLogger.info(String.format("Found %s Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", filteredSchedules.size(), dayOfWeek, scheduleVersionId));
+        return scheduleMapper.toSummaryResponseList(filteredSchedules);
+    }
+
+    @Override
+    public List<ScheduleEntity> fetchSchedulesByClassroomId(Integer classroomId) {
+        DbLogger.info("Searching for Schedules for Classroom with ID: " + classroomId);
+        List<ScheduleEntity> schedules = scheduleRepository.findByClassroomId(classroomId);
+        DbLogger.info(String.format("Found %s Schedules for Classroom with ID: %s", schedules.size(), classroomId));
+        return schedules;
+    }
+
+    private List<ScheduleEntity> filterTeacherSchedules(List<ScheduleEntity> schedules, Integer authenticatedTeacherId) {
+        if (!Collections.isEmpty(schedules)){
+            DbLogger.info("Restricting list of Schedules for authenticated Teacher");
+            return schedules.stream()
+                    .filter(Objects::nonNull)
+                    .filter(schedule -> schedule.getTeacher().getId().equals(authenticatedTeacherId))
+                    .collect(Collectors.toList());
+        }
+
+        return schedules;
     }
 }

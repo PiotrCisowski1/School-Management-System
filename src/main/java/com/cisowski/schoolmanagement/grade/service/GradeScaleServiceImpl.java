@@ -13,6 +13,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,7 +109,7 @@ public class GradeScaleServiceImpl implements GradeScaleService {
         DbLogger.info("Deleting GradeScale with ID: " + gradeScaleId);
         GradeScaleEntity gradeScale = fetchGradeScale(gradeScaleId);
         checkScaleActivityBeforeDelete(gradeScale);
-        if(isGradeScaleUsed(gradeScale)) {
+        if (isGradeScaleUsed(gradeScale)) {
             DbLogger.info(String.format(
                     "Hiding GradeScale with ID: %s instead of deleting, because it is still used in historical records",
                     gradeScale.getId()));
@@ -167,6 +169,8 @@ public class GradeScaleServiceImpl implements GradeScaleService {
         else {
             if(activeGradeScale.isPresent() && !activeGradeScale.get().getId().equals(gradeScaleId))
                 changeGradeScaleActivity(activeGradeScale.get(), !targetGradeScaleActivity);
+            else if (targetGradeScaleActivity)
+                return;
             else
                 throw new SpecificationBrokenException("Given grade scale must be set to active, because there is no active scale at the moment");
         }

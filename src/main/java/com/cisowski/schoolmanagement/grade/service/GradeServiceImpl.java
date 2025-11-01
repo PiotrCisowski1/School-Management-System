@@ -18,6 +18,7 @@ import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -150,6 +151,7 @@ public class GradeServiceImpl implements GradeService {
         GradeValueEntity gradeValue = gradeScaleService.fetchGradeValue(request.getGradeValueId());
 
         grade.setStudent(student);
+        teacher = (TeacherEntity) Hibernate.unproxy(teacher);
         grade.setTeacher(teacher);
         grade.setSubject(subject);
         grade.setGradeType(gradeType);

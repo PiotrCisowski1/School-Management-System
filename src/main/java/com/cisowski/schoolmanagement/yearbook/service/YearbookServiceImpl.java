@@ -58,7 +58,8 @@ public class YearbookServiceImpl implements YearbookService {
             throw new EntityNotFoundException(YearbookEntity.class, "ID", yearbookId.toString());
         YearbookEntity existingYearbookEntity = existingYearbook.get();
         YearbookEntity requestYearbook = mapper.toYearbookEntity(request);
-        existingYearbookEntity.setHeadTeacher(teacherService.fetchTeacher(request.getHeadTeacherId()));
+        if(request.getHeadTeacherId() != null)
+            existingYearbookEntity.setHeadTeacher(teacherService.fetchTeacher(request.getHeadTeacherId()));
         updateSubjects(request.getMainCourseSubjectsIdsToAdd(), request.getMainCourseSubjectsIdsToRemove(), existingYearbookEntity);
         mapper.patchYearbook(existingYearbookEntity, requestYearbook);
         YearbookEntity updatedYearbook = yearbookRepository.save(existingYearbookEntity);

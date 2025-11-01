@@ -49,8 +49,4 @@ public class GradeValueEntity {
                 '}';
     }
 
-    @PreRemove
-    private void removeRelationshipWithGradeScale(){
-        this.gradeScale.getGradeValues().remove(this);
-    }
 }

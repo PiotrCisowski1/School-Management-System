@@ -175,4 +175,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setMessage(exMessage);
         return buildResponseEntity(apiError);
     }
+
+    @ExceptionHandler(com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException.class)
+    protected ResponseEntity<Object> handleAccessDeniedException(com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException exception){
+        ApiError apiError = new ApiError(FORBIDDEN);
+        String exMessage = exception.getMessage();
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(UnsupportedOperationException.class)
+    protected ResponseEntity<Object> handleUnsupportedOperationException(UnsupportedOperationException exception) {
+        ApiError apiError = new ApiError(HttpStatus.valueOf(501));
+        String exMessage = exception.getMessage();
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
 }
