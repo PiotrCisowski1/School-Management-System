@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.integration.auth;
+package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.grade.model.grade.AddGradeRequest;
 import com.cisowski.schoolmanagement.grade.model.grade.GradeEntity;
@@ -14,6 +14,7 @@ import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import io.restassured.http.Headers;
+import jakarta.transaction.Transactional;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -273,7 +274,7 @@ public class GradeAuthTest extends BaseIntegrationTest {
     void shouldAllowAdminToDeleteGradeValue() {
         Headers headers = createHeadersWithRandomAdminUser();
         GradeScaleEntity gradeScale = dataHelper.createGradeScale(true);
-        GradeValueEntity gradeValue = gradeScale.getGradeValues().get(0);
+        GradeValueEntity gradeValue = dataHelper.createGradeValue(gradeScale);
 
         given()
                 .headers(headers)
@@ -419,7 +420,7 @@ public class GradeAuthTest extends BaseIntegrationTest {
     @Test
     void shouldAllowAdminToCreateGrade() {
         Headers headers = createHeadersWithRandomAdminUser();
-        AddGradeRequest gradeRequest = dataHelper.createAddGradeRequest(null, null);
+        AddGradeRequest gradeRequest = dataHelper.createAddGradeRequest(null, null, null, null);
 
         given()
                 .headers(headers)
@@ -437,7 +438,7 @@ public class GradeAuthTest extends BaseIntegrationTest {
         SubjectEntity subject = dataHelper.createSubject();
         TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
         Headers headers = buildBasicHeaders(teacher.getEmail());
-        AddGradeRequest request = dataHelper.createAddGradeRequest(teacher, subject);
+        AddGradeRequest request = dataHelper.createAddGradeRequest(teacher, subject, null, null);
 
         given()
                 .headers(headers)
@@ -454,7 +455,7 @@ public class GradeAuthTest extends BaseIntegrationTest {
     void shouldNotAllowParentStudentToCreateGrade() {
         List<String> userTypes = List.of("PARENT", "STUDENT");
         Headers headers = createHeadersForRandomUserNotAdmin(userTypes);
-        AddGradeRequest request = dataHelper.createAddGradeRequest(null, null);
+        AddGradeRequest request = dataHelper.createAddGradeRequest(null, null, null, null);
 
         given()
                 .headers(headers)

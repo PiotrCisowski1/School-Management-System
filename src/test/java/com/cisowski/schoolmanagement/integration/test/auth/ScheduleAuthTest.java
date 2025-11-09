@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.integration.auth;
+package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
@@ -26,7 +27,7 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
     @Test
     void shouldAllowAdminToCreateSchedule() {
         Headers headers = createHeadersWithRandomAdminUser();
-        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest(null ,null ,null);
+        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest((SubjectEntity) null ,null ,null);
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
 
         given()
@@ -42,7 +43,7 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
     @Test
     void shouldNotAllowOtherUsersToCreateSchedule() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
-        AddScheduleRequest request = dataHelper.createAddScheduleRequest(null ,null ,null);
+        AddScheduleRequest request = dataHelper.createAddScheduleRequest((SubjectEntity) null ,null ,null);
 
         given()
                 .headers(headers)

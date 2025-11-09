@@ -37,5 +37,6 @@ public interface StudentMapper {
     StudentSummaryResponse toSummaryResponse(StudentEntity student);
     @Mapping(target = "parents", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "yearbook", ignore = true)
     void patchStudent(StudentEntity request, @MappingTarget StudentEntity existingEntity);
 }

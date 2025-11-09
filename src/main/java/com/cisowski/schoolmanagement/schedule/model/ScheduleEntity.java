@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 @Entity
@@ -56,6 +57,18 @@ public class ScheduleEntity {
          this.recurrenceType = entity.getRecurrenceType();
     }
 
+    public LocalTime getEndTime() {
+        if(endTime != null)
+            return endTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
+    public LocalTime getStartTime() {
+        if(startTime != null)
+            return startTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
     @Override
     public String toString() {
         return "ScheduleEntity{" +
@@ -65,8 +78,8 @@ public class ScheduleEntity {
                 ", teacher=" + teacher.getId() +
                 ", classroom=" + classroom.getId() +
                 ", dayOfWeek=" + dayOfWeek +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
+                ", startTime=" + startTime.toString() +
+                ", endTime=" + endTime.toString() +
                 ", recurrenceType=" + recurrenceType +
                 '}';
     }

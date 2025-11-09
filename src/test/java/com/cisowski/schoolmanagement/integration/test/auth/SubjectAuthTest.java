@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.integration.auth;
+package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.subject.model.*;

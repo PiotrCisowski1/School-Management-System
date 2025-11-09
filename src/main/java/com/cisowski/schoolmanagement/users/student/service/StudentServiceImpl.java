@@ -14,6 +14,7 @@ import com.cisowski.schoolmanagement.users.student.model.StudentDetailedResponse
 import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -68,8 +69,10 @@ public class StudentServiceImpl implements StudentService {
         StudentEntity requestStudent = studentMapper.toStudentEntity(studentDto);
 
         checkAndUpdateParentEntities(existingStudentEntity, studentDto);
-        requestStudent.setYearbook(yearbookService.fetchYearbookEntity(studentDto.getYearbookId()));
+        YearbookEntity yearbookUpdate = yearbookService.fetchYearbookEntity(studentDto.getYearbookId());
         studentMapper.patchStudent(requestStudent, existingStudentEntity);
+        if(yearbookUpdate != null)
+            existingStudentEntity.setYearbook(yearbookUpdate);
         StudentEntity updatedStudent = repository.save(existingStudentEntity);
 
         message = "Student updated successfully: " + updatedStudent.toString();

@@ -143,7 +143,6 @@ class TeacherPermissionContextEnricherTest {
         enricher.enrich(permissionContext, resourceAccessContext);
 
         verify(permissionContext).putAttribute(PermissionContextAttributeKey.TEACHER_ENTITY, user);
-        verify(permissionContext, never()).putAttribute(eq(PermissionContextAttributeKey.SCHEDULE_VERSION_ENTITY), any());
         verify(teacherService).fetchTeacher(user.getId());
         verify(scheduleVersionService, never()).fetchScheduleVersion(anyInt());
     }

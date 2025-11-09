@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.sql.Time;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 public class AddScheduleRequest {
@@ -45,6 +46,18 @@ public class AddScheduleRequest {
         return startTime != null && endTime != null && startTime.compareTo(endTime) < 0;
     }
 
+    public LocalTime getEndTime() {
+        if(endTime != null)
+            return endTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
+    public LocalTime getStartTime() {
+        if(startTime != null)
+            return startTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
     @Override
     public String toString() {
         return "AddScheduleRequest{" +
@@ -52,8 +65,8 @@ public class AddScheduleRequest {
                 ", teacherId=" + teacherId +
                 ", classroomId=" + classroomId +
                 ", dayOfWeek=" + dayOfWeek +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
+                ", startTime=" + startTime.toString() +
+                ", endTime=" + endTime.toString() +
                 ", recurrenceType=" + recurrenceType +
                 '}';
     }

@@ -2,7 +2,7 @@ package com.cisowski.schoolmanagement.integration;
 
 import org.testcontainers.containers.PostgreSQLContainer;
 
-public class TestPostgresContainer {
+public class PostgresTestContainer {
     public static final PostgreSQLContainer<?> POSTGRES_CONTAINER;
 
     static {
