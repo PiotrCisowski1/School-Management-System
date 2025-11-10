@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 public class ScheduleSummaryResponse {
@@ -15,4 +16,16 @@ public class ScheduleSummaryResponse {
     private String teacherName;
     private String subjectName;
     private Integer scheduleVersionId;
+
+    public LocalTime getEndTime() {
+        if(endTime != null)
+            return endTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
+    public LocalTime getStartTime() {
+        if(startTime != null)
+            return startTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
 }

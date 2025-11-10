@@ -1,11 +1,12 @@
-package com.cisowski.schoolmanagement.integration.auth.users;
+package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
-import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
-import com.cisowski.schoolmanagement.users.parent.model.ParentPatchRequest;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.yearbook.model.AddYearbookRequest;
+import com.cisowski.schoolmanagement.yearbook.model.PatchYearbookRequest;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import io.restassured.http.Headers;
 import org.junit.jupiter.api.Test;
@@ -16,223 +17,239 @@ import java.util.Collections;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 
-public class ParentAuthTest extends BaseIntegrationTest {
+public class YearbookAuthTest extends BaseIntegrationTest {
 
     @Test
-    void shouldAllowAdminToCreateParent() {
+    void shouldAllowAdminToCreateYearbook() {
         Headers headers = createHeadersWithRandomAdminUser();
-        StudentEntity student = dataHelper.createStudent(null,null);
-        ParentCreateRequest request = dataHelper.createParentCreateRequest(Collections.singletonList(student.getId()));
+        AddYearbookRequest request = dataHelper.createAddYearbookRequest(null, null);
 
         given()
                 .headers(headers)
                 .body(request)
         .when()
-                .post("parents")
+                .post("yearbooks")
         .then()
                 .assertThat()
-                .statusCode(HttpStatus.CREATED.value());
+                .statusCode(HttpStatus.CREATED.value())
+                .body("symbol", equalTo(request.getSymbol()));
     }
 
     @Test
-    void shouldNotAllowOtherUsersToCreateParent() {
+    void shouldNotAllowOtherUsersToCreateYearbook() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
-        StudentEntity student = dataHelper.createStudent(null,null);
-        ParentCreateRequest request = dataHelper.createParentCreateRequest(Collections.singletonList(student.getId()));
+        AddYearbookRequest request = dataHelper.createAddYearbookRequest(null, null);
 
         given()
                 .headers(headers)
                 .body(request)
         .when()
-                .post("parents")
+                .post("yearbooks")
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    void shouldAllowAdminToPatchParent() {
+    void shouldAllowAdminToPatchYearbook() {
         Headers headers = createHeadersWithRandomAdminUser();
-        ParentEntity parent = dataHelper.createRandomParent();
-        ParentPatchRequest request = new ParentPatchRequest();
-        request.setFirstName("test123");
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,null);
+        PatchYearbookRequest request = new PatchYearbookRequest();
+        request.setSymbol("test123");
 
         given()
                 .headers(headers)
                 .body(request)
         .when()
-                .patch("parents/" + parent.getId())
+                .patch("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .body("firstName", equalTo(request.getFirstName()));
+                .body("symbol", equalTo(request.getSymbol()));
     }
 
     @Test
-    void shouldNotAllowOtherUsersToPatchParent() {
+    void shouldNotAllowOtherUsersToPatchYearbook() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
-        ParentEntity parent = dataHelper.createRandomParent();
-        ParentPatchRequest request = new ParentPatchRequest();
-        request.setFirstName("test123");
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,null);
+        PatchYearbookRequest request = new PatchYearbookRequest();
+        request.setSymbol("test123");
 
         given()
                 .headers(headers)
                 .body(request)
         .when()
-                .patch("parents/" + parent.getId())
+                .patch("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    void shouldAllowAdminToDeleteParent() {
+    void shouldAllowAdminToDeleteYearbook() {
         Headers headers = createHeadersWithRandomAdminUser();
-        ParentEntity parent = dataHelper.createRandomParent();
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,null);
 
         given()
                 .headers(headers)
         .when()
-                .delete("parents/" + parent.getId())
+                .delete("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     @Test
-    void shouldNotAllowOtherUsersToDeleteParent() {
+    void shouldNotAllowOtherUsersToDeleteYearbook() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
-        ParentEntity parent = dataHelper.createRandomParent();
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,null);
 
         given()
                 .headers(headers)
         .when()
-                .delete("parents/" + parent.getId())
+                .delete("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
     @Test
-    void shouldAllowAdminToGetParentById() {
+    void shouldAllowAdminToGetYearbookById() {
         Headers headers = createHeadersWithRandomAdminUser();
-        ParentEntity parent = dataHelper.createRandomParent();
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,null);
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .body("id", equalTo(parent.getId()));
+                .body("id", equalTo(yearbook.getId()));
     }
 
     @Test
-    void shouldAllowTeacherToGetParentByIdIfChildsHeadTeacher() {
+    void shouldAllowTeacherToGetYearbookByIdIfYearbooksHeadTeacher() {
         TeacherEntity teacher = dataHelper.createTeacher(null);
+        YearbookEntity yearbook = dataHelper.createYearbook(null ,teacher);
         Headers headers = buildBasicHeaders(teacher.getEmail());
-        ParentEntity parent = dataHelper.createRandomParent();
-        YearbookEntity yearbook = dataHelper.createYearbook(null, teacher);
-        StudentEntity student = dataHelper.createStudent(yearbook, Collections.singletonList(parent));
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .body("id", equalTo(parent.getId()));
+                .body("id", equalTo(yearbook.getId()));
     }
 
     @Test
-    void shouldNotAllowRandomTeacherToGetParentById() {
-        TeacherEntity teacher = dataHelper.createTeacher(null);
+    void shouldAllowTeacherToGetYearbookByIdIfSubjectAssociatedWithTeacherAndYearbook() {
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        TeacherEntity randomYearbookHeadTeacher = dataHelper.createTeacher(null);
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), randomYearbookHeadTeacher);
         Headers headers = buildBasicHeaders(teacher.getEmail());
-        ParentEntity parent = dataHelper.createRandomParent();
-        YearbookEntity yearbook = dataHelper.createYearbook(null, null);
-        StudentEntity student = dataHelper.createStudent(yearbook, Collections.singletonList(parent));
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", equalTo(yearbook.getId()));
+    }
+
+    @Test
+    void shouldNotAllowRandomTeacherToGetYearbookById() {
+        TeacherEntity yearbookHeadTeacher = dataHelper.createTeacher(null);
+        Headers randomTeacherHeaders = createHeadersWithRandomTeacherUser();
+        YearbookEntity yearbook = dataHelper.createYearbook(null,yearbookHeadTeacher);
+
+        given()
+                .headers(randomTeacherHeaders)
+        .when()
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void shouldAllowStudentToGetParentByIdIfActualParent() {
-        ParentEntity parent = dataHelper.createRandomParent();
-        StudentEntity student = dataHelper.createStudent(null, Collections.singletonList(parent));
+    void shouldAllowStudentToGetYearbookByIdIfSelfRead() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
         Headers headers = buildBasicHeaders(student.getEmail());
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .body("id", equalTo(parent.getId()));
+                .body("id", equalTo(yearbook.getId()));
     }
 
     @Test
-    void shouldNotAllowRandomStudentToGetParentById() {
+    void shouldNotAllowRandomStudentToGetYearbookById() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
         StudentEntity student = dataHelper.createStudent(null, null);
         Headers headers = buildBasicHeaders(student.getEmail());
-        ParentEntity parent = dataHelper.createRandomParent();
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void shouldAllowParentToGetParentByIdIfSelfRead() {
+    void shouldAllowParentToGetYearbookByIdIfChildsYearbook() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
         ParentEntity parent = dataHelper.createRandomParent();
+        StudentEntity student = dataHelper.createStudent(yearbook, Collections.singletonList(parent));
         Headers headers = buildBasicHeaders(parent.getEmail());
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + parent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
-                .body("id", equalTo(parent.getId()));
+                .body("id", equalTo(yearbook.getId()));
     }
 
     @Test
-    void shouldNotAllowRandomParentToGetParentById() {
+    void shouldNotAllowRandomParentToGetYearbookById() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
         ParentEntity parent = dataHelper.createRandomParent();
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
         Headers headers = buildBasicHeaders(parent.getEmail());
-        ParentEntity anotherParent = dataHelper.createRandomParent();
 
         given()
                 .headers(headers)
         .when()
-                .get("parents/" + anotherParent.getId())
+                .get("yearbooks/" + yearbook.getId())
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.FORBIDDEN.value());
     }
 
     @Test
-    void shouldAllowAdminToGetAllParents() {
+    void shouldAllowAdminToGetAllYearbooks() {
         Headers headers = createHeadersWithRandomAdminUser();
-        ParentEntity parent = dataHelper.createRandomParent();
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
 
         given()
                 .headers(headers)
         .when()
-                .get("parents")
+                .get("yearbooks")
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.OK.value())
@@ -240,14 +257,14 @@ public class ParentAuthTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldNotAllowOtherUsersToGetAllParents() {
+    void shouldNotAllowOtherUsersToGetAllYearbooks() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
-        ParentEntity parent = dataHelper.createRandomParent();
+        YearbookEntity yearbook = dataHelper.createYearbook(null,null);
 
         given()
                 .headers(headers)
         .when()
-                .get("parents")
+                .get("yearbooks")
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());

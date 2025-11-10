@@ -85,6 +85,5 @@ public class YearbookMapperTest {
         assertEquals(requestEntity.getStartingYear(), targetEntity.getStartingYear());
         assertEquals(requestEntity.getGraduationYear(), targetEntity.getGraduationYear());
         assertIterableEquals(requestEntity.getStudentsInYearbook(), targetEntity.getStudentsInYearbook());
-        assertIterableEquals(requestEntity.getMainCourseSubjects(), targetEntity.getMainCourseSubjects());
     }
 }

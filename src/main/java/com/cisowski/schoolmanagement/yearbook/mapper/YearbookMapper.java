@@ -66,6 +66,7 @@ public abstract class YearbookMapper {
         }
     }
 
+    @Mapping(target = "mainCourseSubjects", ignore = true)
     public abstract void patchYearbook(@MappingTarget YearbookEntity targetEntity, YearbookEntity requestEntity);
 
     String toStringSubjectType(SubjectTypeEntity subjectType){

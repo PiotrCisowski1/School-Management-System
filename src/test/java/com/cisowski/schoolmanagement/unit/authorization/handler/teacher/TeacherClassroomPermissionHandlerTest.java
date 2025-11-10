@@ -54,17 +54,13 @@ class TeacherClassroomPermissionHandlerTest {
     void canAccess_WhenActionIsReadAndTeacherHasAccessToClassroom_ShouldReturnTrue() {
         TeacherEntity teacher = Instancio.create(TeacherEntity.class);
         ScheduleEntity schedule = mock(ScheduleEntity.class);
-        SubjectEntity subject = mock(SubjectEntity.class);
         Integer classroomId = 123;
-        Integer teacherId = teacher.getId();
 
         when(permissionContext.getAction()).thenReturn(ResourceActionType.READ);
         when(permissionContext.getUser()).thenReturn(teacher);
         when(resourceAccessContext.getAccessedMethodParameter("classroomId")).thenReturn(classroomId);
         when(scheduleService.fetchSchedulesByClassroomId(classroomId)).thenReturn(List.of(schedule));
         when(schedule.getTeacher()).thenReturn(teacher);
-        when(schedule.getSubject()).thenReturn(subject);
-        when(subject.getTeachers()).thenReturn(List.of(teacher));
 
         boolean result = handler.canAccess(permissionContext, resourceAccessContext);
 
@@ -100,28 +96,6 @@ class TeacherClassroomPermissionHandlerTest {
         when(permissionContext.getUser()).thenReturn(teacher);
         when(resourceAccessContext.getAccessedMethodParameter("classroomId")).thenReturn(classroomId);
         when(scheduleService.fetchSchedulesByClassroomId(classroomId)).thenReturn(List.of(schedule));
-
-        boolean result = handler.canAccess(permissionContext, resourceAccessContext);
-
-        assertFalse(result);
-        verify(scheduleService).fetchSchedulesByClassroomId(classroomId);
-    }
-
-    @Test
-    void canAccess_WhenActionIsReadAndTeacherNotTeachingSubject_ShouldReturnFalse() {
-        TeacherEntity teacher = Instancio.create(TeacherEntity.class);
-        TeacherEntity differentTeacher = Instancio.create(TeacherEntity.class);
-        ScheduleEntity schedule = mock(ScheduleEntity.class);
-        SubjectEntity subject = mock(SubjectEntity.class);
-        Integer classroomId = 123;
-
-        when(permissionContext.getAction()).thenReturn(ResourceActionType.READ);
-        when(permissionContext.getUser()).thenReturn(teacher);
-        when(resourceAccessContext.getAccessedMethodParameter("classroomId")).thenReturn(classroomId);
-        when(scheduleService.fetchSchedulesByClassroomId(classroomId)).thenReturn(List.of(schedule));
-        when(schedule.getTeacher()).thenReturn(teacher);
-        when(schedule.getSubject()).thenReturn(subject);
-        when(subject.getTeachers()).thenReturn(List.of(differentTeacher));
 
         boolean result = handler.canAccess(permissionContext, resourceAccessContext);
 

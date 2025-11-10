@@ -11,6 +11,7 @@ import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.users.student.service.StudentService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +22,10 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/students")
+@RequiredArgsConstructor
 public class StudentController {
 
     private final StudentService studentService;
-
-    public StudentController(StudentService service) {
-        this.studentService = service;
-    }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMINISTRATOR')")

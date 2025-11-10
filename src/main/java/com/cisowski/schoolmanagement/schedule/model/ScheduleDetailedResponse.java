@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 public class ScheduleDetailedResponse {
@@ -20,6 +21,18 @@ public class ScheduleDetailedResponse {
     private LocalTime endTime;
     private ScheduleRecurrenceType recurrenceType;
     private ScheduleVersionSummaryResponse scheduleVersion;
+
+    public LocalTime getEndTime() {
+        if(endTime != null)
+            return endTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
+    public LocalTime getStartTime() {
+        if(startTime != null)
+            return startTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
 
     @Override
     public String toString() {

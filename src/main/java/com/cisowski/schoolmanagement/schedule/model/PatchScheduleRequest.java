@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 @Data
 public class PatchScheduleRequest {
@@ -20,6 +21,18 @@ public class PatchScheduleRequest {
     private LocalTime endTime;
     @Valid
     private ScheduleRecurrenceType recurrenceType;
+
+    public LocalTime getEndTime() {
+        if(endTime != null)
+            return endTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
+
+    public LocalTime getStartTime() {
+        if(startTime != null)
+            return startTime.truncatedTo(ChronoUnit.SECONDS);
+        return null;
+    }
 
     @Override
     public String toString() {

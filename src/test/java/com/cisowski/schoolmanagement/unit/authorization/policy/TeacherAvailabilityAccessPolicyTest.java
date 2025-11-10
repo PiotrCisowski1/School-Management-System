@@ -1,12 +1,15 @@
 package com.cisowski.schoolmanagement.unit.authorization.policy;
 
+import com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException;
 import com.cisowski.schoolmanagement.common.security.authorization.context.PermissionContext;
 import com.cisowski.schoolmanagement.common.security.authorization.model.PermissionHandlerKey;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
 import com.cisowski.schoolmanagement.common.security.authorization.policy.TeacherAvailabilityAccessPolicy;
 import com.cisowski.schoolmanagement.common.security.authorization.handler.ResourcePermissionHandler;
 import com.cisowski.schoolmanagement.common.security.authorization.context.ResourceAccessContext;
+import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -55,36 +58,42 @@ class TeacherAvailabilityAccessPolicyTest {
         TeacherAvailabilityAccessPolicy policy = new TeacherAvailabilityAccessPolicy(handlers);
         UserType userType = UserType.TEACHER;
         PermissionHandlerKey key = new PermissionHandlerKey(userType, ResourceType.TEACHER_AVAILABILITY);
+        ResourceType resourceType = Instancio.create(ResourceType.class);
+        ResourceActionType resourceActionType = Instancio.create(ResourceActionType.class);
 
+        when(permissionContext.getResourceType()).thenReturn(resourceType);
+        when(permissionContext.getAction()).thenReturn(resourceActionType);
         when(permissionContext.isUser(UserType.ADMINISTRATOR)).thenReturn(false);
         when(permissionContext.getPrimaryUserType()).thenReturn(userType);
         when(handlers.get(key)).thenReturn(null);
 
-        UnsupportedOperationException thrown = assertThrows(
-                UnsupportedOperationException.class,
+        AccessDeniedException thrown = assertThrows(
+                AccessDeniedException.class,
                 () -> policy.canAccess(permissionContext, resourceAccessContext)
         );
 
-        assertTrue(thrown.getMessage().contains("No permission handler found"));
-        assertTrue(thrown.getMessage().contains(userType.name()));
-        assertTrue(thrown.getMessage().contains(ResourceType.TEACHER_AVAILABILITY.name()));
+        assertTrue(thrown.getMessage().contains(resourceType.name()));
+        assertTrue(thrown.getMessage().contains(resourceActionType.name()));
         verify(handlers).get(key);
     }
 
     @Test
     void canAccess_WhenUserPrimaryTypeIsNull_ShouldThrowException() {
         TeacherAvailabilityAccessPolicy policy = new TeacherAvailabilityAccessPolicy(handlers);
+        ResourceType resourceType = Instancio.create(ResourceType.class);
+        ResourceActionType resourceActionType = Instancio.create(ResourceActionType.class);
 
+        when(permissionContext.getResourceType()).thenReturn(resourceType);
+        when(permissionContext.getAction()).thenReturn(resourceActionType);
         when(permissionContext.isUser(UserType.ADMINISTRATOR)).thenReturn(false);
         when(permissionContext.getPrimaryUserType()).thenReturn(null);
 
-        UnsupportedOperationException thrown = assertThrows(
-                UnsupportedOperationException.class,
+        AccessDeniedException thrown = assertThrows(
+                AccessDeniedException.class,
                 () -> policy.canAccess(permissionContext, resourceAccessContext)
         );
 
-        assertTrue(thrown.getMessage().contains("No permission handler found"));
-        assertTrue(thrown.getMessage().contains("null"));
-        assertTrue(thrown.getMessage().contains(ResourceType.TEACHER_AVAILABILITY.name()));
+        assertTrue(thrown.getMessage().contains(resourceType.name()));
+        assertTrue(thrown.getMessage().contains(resourceActionType.name()));
     }
 }

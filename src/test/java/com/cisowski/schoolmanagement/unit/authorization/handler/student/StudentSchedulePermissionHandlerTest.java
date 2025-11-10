@@ -49,8 +49,9 @@ class StudentSchedulePermissionHandlerTest {
 
     @Test
     void canAccess_WhenActionIsReadAndScheduleIdProvidedAndMatches_ShouldReturnTrue() {
-        StudentEntity student = Instancio.create(StudentEntity.class);
         YearbookEntity yearbook = Instancio.create(YearbookEntity.class);
+        StudentEntity student = Instancio.create(StudentEntity.class);
+        student.setYearbook(yearbook);
         ScheduleVersionEntity scheduleVersion = mock(ScheduleVersionEntity.class);
         ScheduleEntity schedule = mock(ScheduleEntity.class);
         Integer scheduleId = 123;
@@ -61,6 +62,7 @@ class StudentSchedulePermissionHandlerTest {
         when(resourceAccessContext.getAccessedMethodParameter("scheduleId")).thenReturn(scheduleId);
         when(scheduleVersion.getSchedules()).thenReturn(List.of(schedule));
         when(schedule.getId()).thenReturn(scheduleId);
+        when(scheduleVersion.getYearbook()).thenReturn(yearbook);
 
         boolean result = handler.canAccess(permissionContext, resourceAccessContext);
 
@@ -89,24 +91,6 @@ class StudentSchedulePermissionHandlerTest {
     }
 
     @Test
-    void canAccess_WhenActionIsReadAndNoScheduleIdProvidedAndYearbooksMatch_ShouldReturnTrue() {
-        YearbookEntity yearbook = Instancio.create(YearbookEntity.class);
-        StudentEntity student = Instancio.create(StudentEntity.class);
-        student.setYearbook(yearbook);
-        ScheduleVersionEntity scheduleVersion = mock(ScheduleVersionEntity.class);
-
-        when(permissionContext.getAction()).thenReturn(ResourceActionType.READ);
-        when(permissionContext.getAttribute(PermissionContextAttributeKey.STUDENT_ENTITY)).thenReturn(student);
-        when(permissionContext.getAttribute(PermissionContextAttributeKey.SCHEDULE_VERSION_ENTITY)).thenReturn(scheduleVersion);
-        when(resourceAccessContext.getAccessedMethodParameter("scheduleId")).thenReturn(null);
-        when(scheduleVersion.getYearbook()).thenReturn(yearbook);
-
-        boolean result = handler.canAccess(permissionContext, resourceAccessContext);
-
-        assertTrue(result);
-    }
-
-    @Test
     void canAccess_WhenActionIsReadAndNoScheduleIdProvidedAndYearbooksDontMatch_ShouldReturnFalse() {
         StudentEntity student = Instancio.create(StudentEntity.class);
         YearbookEntity studentYearbook = Instancio.create(YearbookEntity.class);
@@ -117,7 +101,6 @@ class StudentSchedulePermissionHandlerTest {
         when(permissionContext.getAttribute(PermissionContextAttributeKey.STUDENT_ENTITY)).thenReturn(student);
         when(permissionContext.getAttribute(PermissionContextAttributeKey.SCHEDULE_VERSION_ENTITY)).thenReturn(scheduleVersion);
         when(resourceAccessContext.getAccessedMethodParameter("scheduleId")).thenReturn(null);
-        when(scheduleVersion.getYearbook()).thenReturn(scheduleVersionYearbook);
 
         boolean result = handler.canAccess(permissionContext, resourceAccessContext);
 

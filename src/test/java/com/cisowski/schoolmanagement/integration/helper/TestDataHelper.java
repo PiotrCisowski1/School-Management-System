@@ -1,11 +1,11 @@
 package com.cisowski.schoolmanagement.integration.helper;
 
-import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
-import com.cisowski.schoolmanagement.classroom.model.Equipment;
+import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.repository.EquipmentRepository;
 import com.cisowski.schoolmanagement.grade.model.grade.AddGradeRequest;
 import com.cisowski.schoolmanagement.grade.model.grade.GradeEntity;
+import com.cisowski.schoolmanagement.grade.model.grade.PatchGradeRequest;
 import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeScaleEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeValueEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeEntity;
@@ -14,7 +14,10 @@ import com.cisowski.schoolmanagement.grade.repository.GradeScaleRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeTypeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeValueRepository;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
+import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
@@ -25,22 +28,25 @@ import com.cisowski.schoolmanagement.subject.repository.SubjectRepository;
 import com.cisowski.schoolmanagement.subject.repository.SubjectTypeRepository;
 import com.cisowski.schoolmanagement.users.common.model.AddressEntity;
 import com.cisowski.schoolmanagement.users.common.model.AuthorityEntity;
-import com.cisowski.schoolmanagement.users.common.model.BaseCreateUserRequest;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.common.repository.UserDetailsRepository;
 import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
+import com.cisowski.schoolmanagement.users.parent.model.ParentPatchRequest;
 import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.users.student.model.StudentPatchRequest;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherCreateRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherPatchRequest;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherAvailabilityRepository;
 import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
 import com.cisowski.schoolmanagement.yearbook.model.AddYearbookRequest;
+import com.cisowski.schoolmanagement.yearbook.model.PatchYearbookRequest;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.yearbook.repository.YearbookRepository;
 import lombok.RequiredArgsConstructor;
@@ -217,6 +223,8 @@ public class TestDataHelper {
     }
 
     public GradeValueEntity createGradeValue(GradeScaleEntity gradeScale) {
+        if(gradeScale == null)
+            gradeScale = createGradeScale(true);
         GradeValueEntity gradeValue = Instancio.of(GradeValueEntity.class)
                 .set(field(GradeValueEntity::getId), null)
                 .set(field(GradeValueEntity::getGradeScale), gradeScale)
@@ -235,13 +243,15 @@ public class TestDataHelper {
         return parentRepository.save(parent);
     }
 
-    public AddGradeRequest createAddGradeRequest(TeacherEntity teacher, SubjectEntity subject) {
+    public AddGradeRequest createAddGradeRequest(TeacherEntity teacher, SubjectEntity subject, StudentEntity student, GradeTypeEntity gradeType) {
         if(subject == null)
             subject = createSubject();
         if(teacher == null)
             teacher = createTeacher(Collections.singletonList(subject));
-        StudentEntity student = createStudent(null, null);
-        GradeTypeEntity gradeType = createGradeType();
+        if(student == null)
+            student = createStudent(null, null);
+        if(gradeType == null)
+            gradeType = createGradeType();
         GradeScaleEntity gradeScale = createGradeScale(true);
         GradeValueEntity gradeValue = createGradeValue(gradeScale);
         return Instancio.of(AddGradeRequest.class)
@@ -490,5 +500,183 @@ public class TestDataHelper {
                         .as(localTime -> localTime.withNano(0)))
                 .create();
         return teacherAvailabilityRepository.save(availabilityEntity);
+    }
+
+    public PatchClassroomRequest createClassroomPatchRequest(List<EquipmentQuantity> eqToAdd, List<EquipmentQuantity> eqToRemove) {
+        if(eqToAdd == null)
+            eqToAdd = new ArrayList<>();
+        if(eqToRemove == null)
+            eqToRemove = new ArrayList<>();
+
+        return Instancio.of(PatchClassroomRequest.class)
+                .set(field(PatchClassroomRequest::getEquipmentIdsToAdd), eqToAdd)
+                .set(field(PatchClassroomRequest::getEquipmentIdsToRemove), eqToRemove)
+                .create();
+    }
+
+    public ClassroomRequest createClassroomRequest(List<EquipmentQuantity> eqs) {
+        return Instancio.of(ClassroomRequest.class)
+                .set(field(ClassroomRequest::getEquipments), eqs)
+                .create();
+    }
+
+    public PatchGradeRequest createPatchGradeRequest(SubjectEntity subject) {
+        StudentEntity student = createStudent(null, null);
+        if(subject == null)
+            subject = createSubject();
+        GradeTypeEntity gradeType = createGradeType();
+        GradeValueEntity gradeValue = createGradeValue(null);
+
+        return Instancio.of(PatchGradeRequest.class)
+                .set(field(PatchGradeRequest::getStudentId), student.getId())
+                .set(field(PatchGradeRequest::getSubjectId), subject.getId())
+                .set(field(PatchGradeRequest::getGradeTypeId), gradeType.getId())
+                .set(field(PatchGradeRequest::getGradeValueId), gradeValue.getId())
+                .create();
+    }
+
+    public AddScheduleRequest createAddScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+        if(dayOfWeek == null)
+            dayOfWeek = Instancio.create(DayOfWeek.class);
+        if(startTime == null)
+            startTime = Instancio.gen().temporal().localTime()
+                .range(LocalTime.of(1, 0), LocalTime.of(22, 0))
+                .get();
+        if(endTime == null)
+            endTime = startTime.plusHours(1);
+
+        SubjectEntity subject = createSubject();
+        TeacherEntity teacher = createTeacher(Collections.singletonList(subject));
+        ClassroomEntity classroom = createClassroom();
+
+        return Instancio.of(AddScheduleRequest.class)
+                .set(field(AddScheduleRequest::getSubjectId), subject.getId())
+                .set(field(AddScheduleRequest::getTeacherId), teacher.getId())
+                .set(field(AddScheduleRequest::getClassroomId), classroom.getId())
+                .set(field(AddScheduleRequest::getStartTime), startTime)
+                .set(field(AddScheduleRequest::getEndTime), endTime)
+                .set(field(AddScheduleRequest::getDayOfWeek), dayOfWeek.getValue())
+                .create();
+    }
+
+    public PatchScheduleRequest createPatchScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+        if(dayOfWeek == null)
+            dayOfWeek = Instancio.create(DayOfWeek.class);
+        if(startTime == null)
+            startTime = Instancio.gen().temporal().localTime()
+                    .range(LocalTime.of(1, 0), LocalTime.of(22, 0))
+                    .get();
+        if(endTime == null)
+            endTime = startTime.plusHours(1);
+
+        SubjectEntity subject = createSubject();
+        TeacherEntity teacher = createTeacher(Collections.singletonList(subject));
+        ClassroomEntity classroom = createClassroom();
+        YearbookEntity yearbook = createYearbook(Collections.singletonList(subject), teacher);
+
+        return Instancio.of(PatchScheduleRequest.class)
+                .set(field(PatchScheduleRequest::getSubjectId), subject.getId())
+                .set(field(PatchScheduleRequest::getTeacherId), teacher.getId())
+                .set(field(PatchScheduleRequest::getClassroomId), classroom.getId())
+                .set(field(PatchScheduleRequest::getYearbookId), yearbook.getId())
+                .set(field(PatchScheduleRequest::getStartTime), startTime)
+                .set(field(PatchScheduleRequest::getEndTime), endTime)
+                .set(field(PatchScheduleRequest::getDayOfWeek), dayOfWeek.getValue())
+                .create();
+    }
+
+    public AddScheduleVersionRequest createAddScheduleVersionRequest(YearbookEntity yearbook, boolean isActive) {
+        if(yearbook == null)
+            yearbook = createYearbook(null, null);
+
+        return Instancio.of(AddScheduleVersionRequest.class)
+                .set(field(AddScheduleVersionRequest::getYearbookId), yearbook.getId())
+                .set(field(AddScheduleVersionRequest::isActive), isActive)
+                .create();
+    }
+
+    public PatchScheduleVersionRequest createPatchScheduleVersionRequest(YearbookEntity yearbook, boolean isActive) {
+        if(yearbook == null)
+            yearbook = createYearbook(null, null);
+
+        return Instancio.of(PatchScheduleVersionRequest.class)
+                .set(field(PatchScheduleVersionRequest::isActive), isActive)
+                .set(field(PatchScheduleVersionRequest::getYearbookId), yearbook.getId())
+                .create();
+    }
+
+    public PatchYearbookRequest createPatchYearbookRequest(TeacherEntity teacher, List<SubjectEntity> subjectEntitiesToAdd, List<SubjectEntity> subjectEntitiesToRemove) {
+        if(teacher == null)
+            teacher = createTeacher(null);
+        if(subjectEntitiesToAdd == null) {
+            subjectEntitiesToAdd = new ArrayList<>();
+            subjectEntitiesToAdd.add(createSubject());
+        }
+        if(subjectEntitiesToRemove == null) {
+            subjectEntitiesToRemove = new ArrayList<>();
+        }
+        List<Integer> subjectIdsToAdd = subjectEntitiesToAdd.stream().map(SubjectEntity::getId).toList();
+        List<Integer> subjectIdsToRemove = subjectEntitiesToRemove.stream().map(SubjectEntity::getId).toList();
+
+        return Instancio.of(PatchYearbookRequest.class)
+                .set(field(PatchYearbookRequest::getHeadTeacherId), teacher.getId())
+                .set(field(PatchYearbookRequest::getMainCourseSubjectsIdsToAdd), subjectIdsToAdd)
+                .set(field(PatchYearbookRequest::getMainCourseSubjectsIdsToRemove), subjectIdsToRemove)
+                .create();
+    }
+
+    public ParentPatchRequest createParentPatchRequest(List<StudentEntity> childrenToAdd, List<StudentEntity> childrenToRemove) {
+        if(childrenToAdd == null)
+            childrenToAdd = new ArrayList<>();
+        if(childrenToRemove == null)
+            childrenToRemove = new ArrayList<>();
+        List<Integer> childrenToAddIds = childrenToAdd.stream().map(StudentEntity::getId).toList();
+        List<Integer> childrenToRemoveIds = childrenToRemove.stream().map(StudentEntity::getId).toList();
+
+        return Instancio.of(ParentPatchRequest.class)
+                .set(field(ParentPatchRequest::getChildrenIdsToAdd), childrenToAddIds)
+                .set(field(ParentPatchRequest::getChildrenIdsToRemove), childrenToRemoveIds)
+                .set(field(ParentPatchRequest::getAddress), null)
+                .set(field(ParentPatchRequest::getAuthority), null)
+                .generate(field(ParentPatchRequest::getEmail), gen -> gen.net().email())
+                .generate(field(ParentPatchRequest::getPhoneNumber), gen -> gen.ints().range(100000000, 999999999).asString())
+                .generate(field(ParentPatchRequest::getBirthDate), gen -> gen.temporal().date().past())
+                .create();
+    }
+
+    public StudentPatchRequest createStudentPatchRequest(YearbookEntity yearbook) {
+        if(yearbook == null)
+            yearbook = createYearbook(null, null);
+        return Instancio.of(StudentPatchRequest.class)
+                .set(field(StudentPatchRequest::getYearbookId), yearbook.getId())
+                .set(field(StudentPatchRequest::getParentIdsToAdd), null)
+                .set(field(StudentPatchRequest::getParentIdsToRemove), null)
+                .set(field(StudentPatchRequest::getAddress), null)
+                .set(field(StudentPatchRequest::getAuthority), null)
+                .generate(field(StudentPatchRequest::getEmail), gen -> gen.net().email())
+                .generate(field(StudentPatchRequest::getPhoneNumber), gen -> gen.ints().range(100000000, 999999999).asString())
+                .generate(field(StudentPatchRequest::getBirthDate), gen -> gen.temporal().date().past())
+                .create();
+    }
+
+    public TeacherPatchRequest createTeacherPatchRequest(List<SubjectEntity> subjectsToAdd, List<SubjectEntity> subjectsToRemove) {
+        if(subjectsToAdd.isEmpty()){
+            subjectsToAdd = new ArrayList<>();
+            subjectsToAdd.add(createSubject());
+        }
+        if(subjectsToRemove == null)
+            subjectsToRemove = new ArrayList<>();
+        List<Integer> subjectToAddIds = subjectsToAdd.stream().map(SubjectEntity::getId).toList();
+        List<Integer> subjectToRemoveIds = subjectsToRemove.stream().map(SubjectEntity::getId).toList();
+
+        return Instancio.of(TeacherPatchRequest.class)
+                .set(field(TeacherPatchRequest::getTeachingSubjectsIdsToAdd), subjectToAddIds)
+                .set(field(TeacherPatchRequest::getTeachingSubjectsIdsToRemove), subjectToRemoveIds)
+                .set(field(TeacherPatchRequest::getAddress), null)
+                .set(field(TeacherPatchRequest::getAuthority), null)
+                .generate(field(TeacherPatchRequest::getEmail), gen -> gen.net().email())
+                .generate(field(TeacherPatchRequest::getPhoneNumber), gen -> gen.ints().range(100000000, 999999999).asString())
+                .generate(field(TeacherPatchRequest::getBirthDate), gen -> gen.temporal().date().past())
+                .create();
     }
 }

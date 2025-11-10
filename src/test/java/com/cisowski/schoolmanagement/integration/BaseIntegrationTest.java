@@ -17,13 +17,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.util.CollectionUtils;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
@@ -31,12 +29,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static io.restassured.RestAssured.given;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
     protected final List<String> userTypesOtherThanAdmin = List.of("PARENT", "STUDENT", "TEACHER");
+    protected Headers fullAdminHeaders;
 
     @Autowired
     private SchoolUserDetailsServiceImpl userDetailsService;
@@ -45,7 +46,7 @@ public abstract class BaseIntegrationTest {
     protected TestDataHelper dataHelper;
 
     static {
-        TestPostgresContainer.POSTGRES_CONTAINER.start();
+        PostgresTestContainer.POSTGRES_CONTAINER.start();
     }
 
     @LocalServerPort
@@ -60,9 +61,9 @@ public abstract class BaseIntegrationTest {
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", TestPostgresContainer.POSTGRES_CONTAINER::getJdbcUrl);
-        registry.add("spring.datasource.username", TestPostgresContainer.POSTGRES_CONTAINER::getUsername);
-        registry.add("spring.datasource.password", TestPostgresContainer.POSTGRES_CONTAINER::getPassword);
+        registry.add("spring.datasource.url", PostgresTestContainer.POSTGRES_CONTAINER::getJdbcUrl);
+        registry.add("spring.datasource.username", PostgresTestContainer.POSTGRES_CONTAINER::getUsername);
+        registry.add("spring.datasource.password", PostgresTestContainer.POSTGRES_CONTAINER::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.jpa.show-sql", () -> "false");
     }
@@ -76,6 +77,8 @@ public abstract class BaseIntegrationTest {
 
         dbHelper.clearData();
         dbHelper.fillBasicAuthorities();
+
+        fullAdminHeaders = createHeadersWithRandomAdminUser();
     }
 
     @AfterEach
@@ -121,5 +124,17 @@ public abstract class BaseIntegrationTest {
             default -> null;
         };
         return buildBasicHeaders(userEmail);
+    }
+
+    protected Integer postEntity(Headers headers, String endpointPath, Object request) {
+        return given()
+                .headers(headers)
+                .body(request)
+            .when()
+                .post(endpointPath)
+            .then()
+                .assertThat()
+                .statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
     }
 }

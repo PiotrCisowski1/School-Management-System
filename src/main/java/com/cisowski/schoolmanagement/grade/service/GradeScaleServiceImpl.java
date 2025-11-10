@@ -77,6 +77,7 @@ public class GradeScaleServiceImpl implements GradeScaleService {
             gradeValueRepository.save(gradeValue);
         }
         else {
+            gradeScale.getGradeValues().removeIf(gv -> gv.getId().equals(gradeValueId));
             gradeValueRepository.delete(gradeValue);
             DbLogger.info(String.format("GradeValue with ID %s was removed successfully", gradeValue.getId()));
         }
