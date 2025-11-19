@@ -11,9 +11,12 @@ import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
+import com.cisowski.schoolmanagement.schedule.service.ScheduleChangelogService;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleServiceImpl;
+import com.cisowski.schoolmanagement.schedule.service.ScheduleStatusService;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
@@ -22,6 +25,7 @@ import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +39,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +67,10 @@ public class ScheduleServiceTest {
     private ScheduleMapper scheduleMapper;
     @Mock
     private ScheduleVersionService scheduleVersionService;
+    @Mock
+    private ScheduleChangelogService scheduleChangelogService;
+    @Mock
+    private ScheduleStatusService scheduleStatusService;
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
 
@@ -195,10 +204,12 @@ public class ScheduleServiceTest {
         schedule.setDayOfWeek(DayOfWeek.FRIDAY);
         ScheduleVersionEntity scheduleVersion = Instancio.of(ScheduleVersionEntity.class)
                 .set(field(ScheduleVersionEntity::getId), scheduleVersionId)
+                .set(field(ScheduleVersionEntity::getSchedules), new ArrayList<>())
                 .create();
         scheduleVersion.getSchedules().add(schedule);
         SubjectEntity subject = Instancio.create(SubjectEntity.class);
         TeacherEntity teacher = Instancio.create(TeacherEntity.class);
+        teacher.setAvailability(Collections.emptyList());
         ScheduleEntity mappedSchedule = scheduleMapper.toEntity(request);
 
         when(scheduleVersionService.fetchScheduleVersion(scheduleVersionId)).thenReturn(scheduleVersion);
@@ -226,8 +237,10 @@ public class ScheduleServiceTest {
                 .create();
 
         Integer scheduleVersionId = 123;
-        ScheduleVersionEntity scheduleVersion = Instancio.create(ScheduleVersionEntity.class);
+        ScheduleVersionEntity scheduleVersion = new ScheduleVersionEntity();
         scheduleVersion.setId(scheduleVersionId);
+        scheduleVersion.setYearbook(Instancio.create(YearbookEntity.class));
+        scheduleVersion.setStatus(ScheduleStatus.SCHEDULED);
         ScheduleEntity schedule = scheduleMapper.toEntity(request);
         SubjectEntity subject = Instancio.create(SubjectEntity.class);
         TeacherEntity teacher = Instancio.create(TeacherEntity.class);
@@ -249,6 +262,11 @@ public class ScheduleServiceTest {
                 SpecificationBrokenException.class,
                 () -> scheduleService.addSchedule(request, scheduleVersionId)
         );
+        System.out.println(result.getMessage());
+        System.out.println("Classroom ID:" + classroom.getId());
+        System.out.println("day:" + schedule.getDayOfWeek());
+        System.out.println("start:" + schedule.getStartTime());
+        System.out.println("end:" + schedule.getEndTime());
         assertTrue(result.getMessage().contains(
                 String.format(
                         "Classroom with ID: %s is already booked on %s between %s and %s",
@@ -262,14 +280,16 @@ public class ScheduleServiceTest {
     @Test
     void deleteSchedule_successful(){
        Integer scheduleId = 1;
-       ScheduleEntity schedule = new ScheduleEntity();
+       ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+       schedule.setStatus(ScheduleStatus.SCHEDULED);
 
        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
 
        scheduleService.deleteSchedule(scheduleId);
 
        verify(scheduleRepository).findById(scheduleId);
-       verify(scheduleRepository).delete(schedule);
+       verify(scheduleRepository).save(schedule);
+       verify(scheduleStatusService).changeStatusToDeleted(any());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.unit.services;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionServiceImpl;
@@ -30,6 +31,7 @@ public class ScheduleVersionServiceTest {
     public void fetchScheduleVersion_success(){
         Integer scheduleVersionId = 1;
         ScheduleVersionEntity scheduleVersion = Instancio.create(ScheduleVersionEntity.class);
+        scheduleVersion.setStatus(ScheduleStatus.SCHEDULED);
         scheduleVersion.setId(scheduleVersionId);
 
         when(scheduleVersionRepository.findById(scheduleVersionId)).thenReturn(Optional.of(scheduleVersion));

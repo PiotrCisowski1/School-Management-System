@@ -4,6 +4,7 @@ import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundExcepti
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
@@ -14,8 +15,10 @@ import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +27,15 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
     private final ScheduleVersionRepository repository;
     private final YearbookService yearbookService;
     private final ScheduleVersionMapper scheduleVersionMapper;
+    private final ScheduleStatusService scheduleStatusService;
 
     @Override
     public Collection<ScheduleVersionSummaryResponse> getScheduleVersionsForYearbook(Integer yearbookId) {
         DbLogger.info(String.format("Searching for all ScheduleVersions for Yearbook with ID: %s", yearbookId));
         List<ScheduleVersionEntity> scheduleVersions = repository.findByYearbookId(yearbookId);
-        DbLogger.info(String.format("Found %s ScheduleVersions for Yearbook with ID: %s", scheduleVersions.size(), yearbookId));
-        return scheduleVersionMapper.toSummaryResponseList(scheduleVersions);
+        List<ScheduleVersionEntity> filteredScheduleVersions = filterNotDeletedScheduleVersions(scheduleVersions);
+        DbLogger.info(String.format("Found %s ScheduleVersions for Yearbook with ID: %s", filteredScheduleVersions.size(), yearbookId));
+        return scheduleVersionMapper.toSummaryResponseList(filteredScheduleVersions);
     }
 
     @Override
@@ -42,6 +47,7 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         scheduleVersion.setYearbook(yearbookService.fetchYearbookEntity(yearbookId));
         scheduleVersion.setName(scheduleName);
         scheduleVersion.setActive(isActive);
+        scheduleVersion.setStatus(ScheduleStatus.SCHEDULED);
 
         Optional<ScheduleVersionEntity> activeSchedule = repository.findByIsActiveTrueAndYearbookId(yearbookId);
         if(activeSchedule.isPresent()){
@@ -63,6 +69,8 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         Optional<ScheduleVersionEntity> foundScheduleVersion = repository.findById(scheduleVersionId);
         if(foundScheduleVersion.isEmpty())
             throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+        if(isAlreadyDeleted(foundScheduleVersion.get()))
+            throw new SpecificationBrokenException(String.format("ScheduleVersion with ID %s is marked as deleted - cannot be cloned", scheduleVersionId));
 
         ScheduleVersionEntity cloned = new ScheduleVersionEntity(foundScheduleVersion.get());
         ScheduleVersionEntity saved = repository.save(cloned);
@@ -82,6 +90,8 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         Optional<ScheduleVersionEntity> scheduleVersion = repository.findById(scheduleVersionId);
         if(scheduleVersion.isEmpty())
             throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+        if(isAlreadyDeleted(scheduleVersion.get()))
+            throw new SpecificationBrokenException(String.format("ScheduleVersion with ID %s is marked as deleted", scheduleVersionId));
         return scheduleVersion.get();
     }
 
@@ -97,6 +107,8 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         Optional<ScheduleVersionEntity> scheduleVersion = repository.findById(scheduleVersionId);
         if (scheduleVersion.isEmpty())
             throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+        if(isAlreadyDeleted(scheduleVersion.get()))
+            throw new SpecificationBrokenException(String.format("ScheduleVersion with ID %s is marked as deleted", scheduleVersionId));
         DbLogger.info(String.format("Found ScheduleVersion with ID %s: %s", scheduleVersionId, scheduleVersion.get().toString()));
         return scheduleVersionMapper.toDetailedResponse(scheduleVersion.get());
     }
@@ -104,10 +116,12 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
     @Override
     @Transactional
     public void deleteScheduleVersion(Integer scheduleVersionId) {
-        DbLogger.info(String.format("Deleting ScheduleVersion with ID %s and all it's Schedules", scheduleVersionId));
+        DbLogger.info(String.format("Marking ScheduleVersion with ID %s as deleted and all it's Schedules", scheduleVersionId));
         Optional<ScheduleVersionEntity> scheduleVersion = repository.findById(scheduleVersionId);
         if(scheduleVersion.isEmpty())
             throw new EntityNotFoundException(ScheduleVersionEntity.class, "ID", scheduleVersionId.toString());
+        if(isAlreadyDeleted(scheduleVersion.get()))
+            throw new SpecificationBrokenException(String.format("ScheduleVersion with ID %s is marked as deleted", scheduleVersionId));
 
         Optional<ScheduleVersionEntity> activeSchedule = repository.findByIsActiveTrueAndYearbookId(scheduleVersion.get().getYearbook().getId());
         if(activeSchedule.isEmpty() || Objects.equals(activeSchedule.get().getId(), scheduleVersionId)){
@@ -115,8 +129,10 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
             DbLogger.info("No active ScheduleVersion found, trying to activate existing ScheduleVersion for Yearbook: " + yearbookId);
             activateExistingScheduleVersionForYearbook(yearbookId, scheduleVersionId);
         }
-        repository.delete(scheduleVersion.get());
-        DbLogger.info(String.format("ScheduleVersion with ID %s was deleted successfully", scheduleVersionId));
+        scheduleVersion.get().setStatus(ScheduleStatus.DELETED);
+        scheduleStatusService.markSchedulesAsDeleted(scheduleVersion.get().getSchedules());
+        repository.save(scheduleVersion.get());
+        DbLogger.info(String.format("ScheduleVersion with ID %s was marked as deleted successfully", scheduleVersionId));
     }
 
     private void activateExistingScheduleVersionForYearbook(Integer yearbookId, Integer scheduleVersionId){
@@ -156,5 +172,18 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
         ScheduleVersionEntity saved = repository.save(scheduleVersion);
         DbLogger.info(String.format("ScheduleVersion with ID %s was patched successfully: %s", scheduleVersionId, saved.toString()));
         return scheduleVersionMapper.toDetailedResponse(saved);
+    }
+
+    private boolean isAlreadyDeleted(ScheduleVersionEntity scheduleVersion) {
+        return scheduleVersion != null && scheduleVersion.getStatus().equals(ScheduleStatus.DELETED);
+    }
+
+    private List<ScheduleVersionEntity> filterNotDeletedScheduleVersions(List<ScheduleVersionEntity> scheduleVersions) {
+        if(CollectionUtils.isEmpty(scheduleVersions))
+            return scheduleVersions;
+        return scheduleVersions.stream()
+                .filter(Objects::nonNull)
+                .filter(version -> !isAlreadyDeleted(version))
+                .collect(Collectors.toList());
     }
 }

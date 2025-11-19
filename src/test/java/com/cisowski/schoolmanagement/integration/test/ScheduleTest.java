@@ -2,25 +2,26 @@ package com.cisowski.schoolmanagement.integration.test;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleSummaryResponse;
+import com.cisowski.schoolmanagement.schedule.model.*;
+import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeLogEntity;
+import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeType;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
-import org.instancio.Instancio;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.CollectionUtils;
 
 import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyPathTests {
 
@@ -28,7 +29,12 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
     @Override
     public void shouldCreateAndFetchEntity() {
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
-        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest((SubjectEntity) null, null, null);
+        TeacherEntity teacher = dataHelper.createTeacher(null);
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest(null, teacher, null);
+        postScheduleRequest.setDayOfWeek(availabilityEntity.getDayOfWeek().getValue());
+        postScheduleRequest.setStartTime(availabilityEntity.getStartTime());
+        postScheduleRequest.setEndTime(availabilityEntity.getEndTime());
         String postSchedulePath = "schedules/version/" + scheduleVersion.getId();
         Integer createdScheduleId = postEntity(fullAdminHeaders, postSchedulePath, postScheduleRequest);
 
@@ -57,27 +63,20 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
     public void shouldFetchAllEntities() {
         //As there is no getAll endpoint test is covering getSchedulesByDayOfWeek
 
-        List<Integer> scheduleIds = new ArrayList<>();
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
-        DayOfWeek dayOfWeek = DayOfWeek.FRIDAY;
-        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest(dayOfWeek, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        DayOfWeek day = DayOfWeek.MONDAY;
+        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest(day, availabilityEntity.getStartTime(), availabilityEntity.getEndTime(), teacher);
         String postSchedulePath = "schedules/version/" + scheduleVersion.getId();
         postEntity(fullAdminHeaders, postSchedulePath, scheduleRequest);
 
-        DayOfWeek anotherDay = DayOfWeek.MONDAY;
-        LocalTime startTime = Instancio.gen().temporal().localTime()
-                .range(LocalTime.of(1, 0), LocalTime.of(5, 0))
-                .get();
-        LocalTime endTime = startTime.plusHours(1);
-        for(int i = 0; i < 5; i++){
-            AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest(anotherDay, startTime, endTime);
-            Integer createdScheduleId = postEntity(fullAdminHeaders, postSchedulePath, postScheduleRequest);
-            scheduleIds.add(createdScheduleId);
-            startTime = startTime.plusHours(1);
-            endTime = endTime.plusHours(1);
-        }
+        TeacherAvailabilityEntity anotherAvailability = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest request = dataHelper.createAddScheduleRequest(DayOfWeek.FRIDAY, anotherAvailability.getStartTime(), anotherAvailability.getEndTime(), teacher);
+        postEntity(fullAdminHeaders, postSchedulePath, request);
 
-        String getSchedulesByDayOfWeekPath = String.format("schedules/version/%d/day/%d", scheduleVersion.getId(), anotherDay.getValue());
+        String getSchedulesByDayOfWeekPath = String.format("schedules/version/%d/day/%d", scheduleVersion.getId(), day.getValue());
         List<ScheduleSummaryResponse> response = given()
                 .headers(fullAdminHeaders)
         .when()
@@ -87,26 +86,28 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
                 .extract()
                 .jsonPath().getList("", ScheduleSummaryResponse.class);
 
-        assertEquals(scheduleIds.size(), response.size());
-        List<ScheduleSummaryResponse> noMatchSchedules = response.stream()
-                .filter(schedule -> !scheduleIds.contains(schedule.getId()))
-                .toList();
-        assertTrue(noMatchSchedules.isEmpty());
+        assertEquals(1, response.size());
     }
 
     @Test
     @Override
     public void shouldCreateUpdateAndFetchEntity() {
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
-        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest((SubjectEntity) null, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest(availabilityEntity.getDayOfWeek(), availabilityEntity.getStartTime(), availabilityEntity.getEndTime(), teacher);
         String postSchedulePath = "schedules/version/" + scheduleVersion.getId();
         Integer createdScheduleId = postEntity(fullAdminHeaders, postSchedulePath, postScheduleRequest);
 
-        DayOfWeek day = DayOfWeek.of(postScheduleRequest.getDayOfWeek() + 1);
-        if(postScheduleRequest.getDayOfWeek() == 6)
+        DayOfWeek day;
+        if(postScheduleRequest.getDayOfWeek() < 6)
+            day = DayOfWeek.of(postScheduleRequest.getDayOfWeek() + 1);
+        else
             day = DayOfWeek.MONDAY;
 
-        PatchScheduleRequest patchScheduleRequest = dataHelper.createPatchScheduleRequest(day, null, null);
+        TeacherAvailabilityEntity teacherAvailabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher, day);
+        PatchScheduleRequest patchScheduleRequest = dataHelper.createPatchScheduleRequest(day, teacherAvailabilityEntity.getStartTime(), teacherAvailabilityEntity.getEndTime(), teacher);
         ScheduleDetailedResponse patchResponse = given()
                 .headers(fullAdminHeaders)
                 .body(patchScheduleRequest)
@@ -149,7 +150,10 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
     @Override
     public void shouldCreateDeleteAndNotFetchEntity() {
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
-        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest((SubjectEntity) null, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest(availabilityEntity.getDayOfWeek(), availabilityEntity.getStartTime(), availabilityEntity.getEndTime(), teacher);
         String postSchedulePath = "schedules/version/" + scheduleVersion.getId();
         Integer createdScheduleId = postEntity(fullAdminHeaders, postSchedulePath, postScheduleRequest);
 
@@ -165,6 +169,78 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
         .when()
                 .get("schedules/" + scheduleVersion.getId() + "/" + createdScheduleId)
         .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
+
+        ScheduleEntity schedule = dataHelper.fetchSchedule(createdScheduleId);
+        List<ScheduleChangeLogEntity> changelogs = dataHelper.fetchChangelogs(schedule);
+
+        assertFalse(CollectionUtils.isEmpty(changelogs));
+        Optional<ScheduleChangeLogEntity> deleteLog = changelogs.stream()
+                .filter(changelog -> changelog.getChangeType().equals(ScheduleChangeType.DELETED))
+                .findFirst();
+        assertTrue(deleteLog.isPresent());
+        assertEquals(createdScheduleId, deleteLog.get().getSchedule().getId());
+    }
+
+    @Test
+    void shouldCreateScheduleAndCheckLogExists() {
+        ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest postScheduleRequest = dataHelper.createAddScheduleRequest(availabilityEntity.getDayOfWeek(), availabilityEntity.getStartTime(), availabilityEntity.getEndTime(), teacher);
+        String postSchedulePath = "schedules/version/" + scheduleVersion.getId();
+        Integer createdScheduleId = postEntity(fullAdminHeaders, postSchedulePath, postScheduleRequest);
+
+        ScheduleEntity schedule = dataHelper.fetchSchedule(createdScheduleId);
+        List<ScheduleChangeLogEntity> changelogs = dataHelper.fetchChangelogs(schedule);
+
+        assertFalse(CollectionUtils.isEmpty(changelogs));
+        Optional<ScheduleChangeLogEntity> createLog = changelogs.stream()
+                .filter(changelog -> changelog.getChangeType().equals(ScheduleChangeType.CREATED))
+                .findFirst();
+        assertTrue(createLog.isPresent());
+        assertTrue(createLog.get().isAutomaticChange());
+        assertTrue(createLog.get().getAffectedUsers().stream().anyMatch(user -> user.getId().equals(teacher.getId())));
+    }
+
+    @Test
+    void shouldThrowWhenTryingToDeleteAlreadyDeletedSchedule() {
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null, null);
+
+        given()
+                .headers(fullAdminHeaders)
+        .when()
+                .delete("schedules/" + schedule.getId())
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        given()
+                .headers(fullAdminHeaders)
+        .when()
+                .delete("schedules/" + schedule.getId())
+        .then()
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
+    }
+
+    @Test
+    void shouldNotAllowToUpdateIfStatusAlreadyDeleted() {
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null ,null);
+        PatchScheduleRequest patchScheduleRequest = new PatchScheduleRequest();
+
+        given()
+                .headers(fullAdminHeaders)
+        .when()
+                .delete("schedules/" + schedule.getId())
+        .then()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(patchScheduleRequest)
+        .when()
+                .patch("schedules/" + schedule.getId())
+        .then()
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
     }
 }

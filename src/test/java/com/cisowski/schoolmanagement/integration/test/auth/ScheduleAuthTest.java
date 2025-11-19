@@ -11,12 +11,15 @@ import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import io.restassured.http.Headers;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.Collections;
 
 import static io.restassured.RestAssured.given;
@@ -27,7 +30,12 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
     @Test
     void shouldAllowAdminToCreateSchedule() {
         Headers headers = createHeadersWithRandomAdminUser();
-        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest((SubjectEntity) null ,null ,null);
+        TeacherEntity teacher = dataHelper.createTeacher(null);
+        TeacherAvailabilityEntity availabilityEntity = dataHelper.createTeacherAvailabilityEntity(teacher);
+        AddScheduleRequest scheduleRequest = dataHelper.createAddScheduleRequest(null  ,teacher,null);
+        scheduleRequest.setDayOfWeek(availabilityEntity.getDayOfWeek().getValue());
+        scheduleRequest.setStartTime(availabilityEntity.getStartTime());
+        scheduleRequest.setEndTime(availabilityEntity.getEndTime());
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(null);
 
         given()

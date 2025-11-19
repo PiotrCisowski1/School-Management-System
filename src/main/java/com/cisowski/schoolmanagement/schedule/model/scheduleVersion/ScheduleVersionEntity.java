@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.schedule.model.scheduleVersion;
 
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -35,7 +36,12 @@ public class ScheduleVersionEntity {
     @OneToMany(mappedBy = "scheduleVersion", cascade = CascadeType.ALL)
     private Collection<ScheduleEntity> schedules = Collections.emptyList();
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ScheduleStatus status;
+
     public ScheduleVersionEntity(ScheduleVersionEntity entity) {
+        // Constructor for cloning purposes
         List<ScheduleEntity> copiedSchedules = new ArrayList<>();
         entity.schedules.forEach(schedule ->
             copiedSchedules.add(new ScheduleEntity(schedule, this)));
@@ -45,6 +51,7 @@ public class ScheduleVersionEntity {
         this.isActive = false;
         this.yearbook = entity.yearbook;
         this.schedules = copiedSchedules;
+        this.status = ScheduleStatus.SCHEDULED;
     }
 
     @Override

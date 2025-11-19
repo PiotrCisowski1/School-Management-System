@@ -46,6 +46,10 @@ public class ScheduleEntity {
 
     private ScheduleRecurrenceType recurrenceType = ScheduleRecurrenceType.NONE;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ScheduleStatus status = ScheduleStatus.SCHEDULED;
+
     public ScheduleEntity(ScheduleEntity entity, ScheduleVersionEntity scheduleVersion) {
          this.scheduleVersion = scheduleVersion;
          this.subject = entity.getSubject();
