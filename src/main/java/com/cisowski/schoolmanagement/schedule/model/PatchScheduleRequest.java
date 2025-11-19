@@ -21,6 +21,7 @@ public class PatchScheduleRequest {
     private LocalTime endTime;
     @Valid
     private ScheduleRecurrenceType recurrenceType;
+    private String updateReason;
 
     public LocalTime getEndTime() {
         if(endTime != null)

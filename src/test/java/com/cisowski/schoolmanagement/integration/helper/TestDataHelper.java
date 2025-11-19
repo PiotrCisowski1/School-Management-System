@@ -16,9 +16,12 @@ import com.cisowski.schoolmanagement.grade.repository.GradeValueRepository;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeLogEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.schedule.repository.ScheduleChangelogRepository;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
 import com.cisowski.schoolmanagement.subject.model.AddSubjectRequest;
@@ -60,6 +63,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.instancio.Select.field;
@@ -85,6 +89,7 @@ public class TestDataHelper {
     private final ParentRepository parentRepository;
     private final GradeRepository gradeRepository;
     private final TeacherAvailabilityRepository teacherAvailabilityRepository;
+    private final ScheduleChangelogRepository scheduleChangelogRepository;
 
     public UserEntity createRandomAdminUser() {
         AuthorityEntity authority = dbHelper.fetchAuthorityByName("ADMINISTRATOR").orElse(null);
@@ -143,6 +148,7 @@ public class TestDataHelper {
                 .set(field(ScheduleVersionEntity::getId), null)
                 .set(field(ScheduleVersionEntity::getYearbook), yearbook)
                 .set(field(ScheduleVersionEntity::getSchedules), null)
+                .set(field(ScheduleVersionEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
         return scheduleVersionRepository.save(scheduleVersion);
     }
@@ -380,6 +386,7 @@ public class TestDataHelper {
                         .as(localTime -> localTime.withNano(0)))
                 .generate(field(ScheduleEntity::getEndTime), gen -> gen.temporal().localTime().future()
                         .as(localTime -> localTime.withNano(0)))
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 
         return scheduleRepository.save(schedule);
@@ -502,6 +509,18 @@ public class TestDataHelper {
         return teacherAvailabilityRepository.save(availabilityEntity);
     }
 
+    public TeacherAvailabilityEntity createTeacherAvailabilityEntity(TeacherEntity teacher, DayOfWeek day) {
+        TeacherAvailabilityEntity availabilityEntity = Instancio.of(TeacherAvailabilityEntity.class)
+                .set(field(TeacherAvailabilityEntity::getTeacher), teacher)
+                .set(field(TeacherAvailabilityEntity::getDayOfWeek), day)
+                .generate(field(TeacherAvailabilityEntity::getStartTime), gen -> gen.temporal().localTime().past()
+                        .as(localTime -> localTime.withNano(0)))
+                .generate(field(TeacherAvailabilityEntity::getEndTime), gen -> gen.temporal().localTime().future()
+                        .as(localTime -> localTime.withNano(0)))
+                .create();
+        return teacherAvailabilityRepository.save(availabilityEntity);
+    }
+
     public PatchClassroomRequest createClassroomPatchRequest(List<EquipmentQuantity> eqToAdd, List<EquipmentQuantity> eqToRemove) {
         if(eqToAdd == null)
             eqToAdd = new ArrayList<>();
@@ -535,7 +554,7 @@ public class TestDataHelper {
                 .create();
     }
 
-    public AddScheduleRequest createAddScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+    public AddScheduleRequest createAddScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime, TeacherEntity teacher) {
         if(dayOfWeek == null)
             dayOfWeek = Instancio.create(DayOfWeek.class);
         if(startTime == null)
@@ -546,11 +565,12 @@ public class TestDataHelper {
             endTime = startTime.plusHours(1);
 
         SubjectEntity subject = createSubject();
-        TeacherEntity teacher = createTeacher(Collections.singletonList(subject));
+        if(teacher == null)
+            teacher = createTeacher(Collections.singletonList(subject));
         ClassroomEntity classroom = createClassroom();
 
         return Instancio.of(AddScheduleRequest.class)
-                .set(field(AddScheduleRequest::getSubjectId), subject.getId())
+                .set(field(AddScheduleRequest::getSubjectId), teacher.getTeachingSubjects().iterator().next().getId())
                 .set(field(AddScheduleRequest::getTeacherId), teacher.getId())
                 .set(field(AddScheduleRequest::getClassroomId), classroom.getId())
                 .set(field(AddScheduleRequest::getStartTime), startTime)
@@ -559,7 +579,7 @@ public class TestDataHelper {
                 .create();
     }
 
-    public PatchScheduleRequest createPatchScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
+    public PatchScheduleRequest createPatchScheduleRequest(DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime, TeacherEntity teacher) {
         if(dayOfWeek == null)
             dayOfWeek = Instancio.create(DayOfWeek.class);
         if(startTime == null)
@@ -570,7 +590,8 @@ public class TestDataHelper {
             endTime = startTime.plusHours(1);
 
         SubjectEntity subject = createSubject();
-        TeacherEntity teacher = createTeacher(Collections.singletonList(subject));
+        if(teacher == null)
+            teacher = createTeacher(Collections.singletonList(subject));
         ClassroomEntity classroom = createClassroom();
         YearbookEntity yearbook = createYearbook(Collections.singletonList(subject), teacher);
 
@@ -677,6 +698,18 @@ public class TestDataHelper {
                 .generate(field(TeacherPatchRequest::getEmail), gen -> gen.net().email())
                 .generate(field(TeacherPatchRequest::getPhoneNumber), gen -> gen.ints().range(100000000, 999999999).asString())
                 .generate(field(TeacherPatchRequest::getBirthDate), gen -> gen.temporal().date().past())
+                .generate(field(TeacherPatchRequest::getEmploymentEndDate), gen -> gen.temporal().date().future())
                 .create();
+    }
+
+    public ScheduleEntity fetchSchedule(Integer scheduleId) {
+        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+        return schedule.orElseGet(ScheduleEntity::new);
+    }
+
+    public List<ScheduleChangeLogEntity> fetchChangelogs(ScheduleEntity schedule) {
+        if(schedule == null)
+            return Collections.emptyList();
+        return scheduleChangelogRepository.findAllBySchedule(schedule);
     }
 }

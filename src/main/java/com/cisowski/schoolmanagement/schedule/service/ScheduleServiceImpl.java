@@ -7,10 +7,13 @@ import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenEx
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
 import com.cisowski.schoolmanagement.schedule.model.*;
+import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeType;
+import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangelogDto;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
@@ -36,6 +39,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ClassroomService classroomService;
     private final ScheduleMapper scheduleMapper;
     private final ScheduleVersionService scheduleVersionService;
+    private final ScheduleChangelogService scheduleChangelogService;
+    private final ScheduleStatusService scheduleStatusService;
 
     @Override
     @Transactional
@@ -60,6 +65,18 @@ public class ScheduleServiceImpl implements ScheduleService {
         ScheduleEntity saved = scheduleRepository.save(schedule);
         DbLogger.info(String.format("Schedule was saved successfully in ScheduleVersion with ID %s: %s", scheduleVersionId, saved.toString()));
 
+        List<UserEntity> usersAffectedBySchedule = scheduleStatusService.createListWithUsersAffectedByChange(saved);
+        ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                schedule,
+                ScheduleChangeType.CREATED,
+                "entity",
+                null,
+                "entity",
+                "New Schedule created",
+                true,
+                usersAffectedBySchedule);
+        scheduleChangelogService.logChange(changelogDto);
+
         return scheduleMapper.toDetailedResponse(saved);
     }
 
@@ -83,20 +100,21 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private void checkTeacherAvailability(TeacherEntity teacher, DayOfWeek day, LocalTime startTime, LocalTime endTime){
-        if(!CollectionUtils.isEmpty(teacher.getAvailability())){
+        if(!CollectionUtils.isEmpty(teacher.getAvailability())) {
             Collection<TeacherAvailabilityEntity> availabilities = teacher.getAvailability().stream()
                     .filter(Objects::nonNull)
                     .filter(availability -> TeacherAvailabilityUtils.isAvailable(availability, day, startTime, endTime))
                     .toList();
-            if(availabilities.isEmpty())
-                throw new SpecificationBrokenException(String.format(
-                        "Teacher with ID: %s, is not available on %s at %s to %s",
-                        teacher.getId(),
-                        day,
-                        startTime,
-                        endTime));
+            if (!availabilities.isEmpty())
+                return;
         }
 
+        throw new SpecificationBrokenException(String.format(
+                "Teacher with ID: %s, is not available on %s at %s to %s",
+                teacher.getId(),
+                day,
+                startTime,
+                endTime));
     }
 
     private void checkClassroomAvailability(ClassroomEntity classroom, DayOfWeek dayOfWeek, LocalTime startTime, LocalTime endTime) {
@@ -117,24 +135,33 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Transactional
     public void deleteSchedule(Integer scheduleId) {
-        DbLogger.info(String.format("Deleting Schedule with ID %s", scheduleId));
+        DbLogger.info(String.format("Marking Schedule with ID %s as deleted", scheduleId));
 
-        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
-        if(schedule.isEmpty())
+        Optional<ScheduleEntity> existingSchedule = scheduleRepository.findById(scheduleId);
+        if(existingSchedule.isEmpty())
             throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
 
-        scheduleRepository.delete(schedule.get());
-        DbLogger.info(String.format("Schedule with ID %s was deleted successfully", scheduleId));
+        ScheduleEntity schedule = existingSchedule.get();
+        if(scheduleStatusService.isAlreadyDeleted(schedule))
+            throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.getId()));
+
+        scheduleStatusService.changeStatusToDeleted(schedule);
+        scheduleRepository.save(schedule);
+        DbLogger.info(String.format("Schedule with ID %s was marked as deleted successfully", scheduleId));
     }
 
     @Override
+    @Transactional
     public ScheduleDetailedResponse patchSchedule(Integer scheduleId, PatchScheduleRequest request) {
         DbLogger.info(String.format("Updating Schedule with ID %s, with given request: %s", scheduleId, request));
 
         Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
         if(schedule.isEmpty())
             throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+        if(scheduleStatusService.isAlreadyDeleted(schedule.get()))
+            throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.get().getId()));
 
         ScheduleEntity requestSchedule = scheduleMapper.toEntity(request);
         SubjectEntity subject = fetchSubject(request.getSubjectId());
@@ -149,6 +176,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         requestSchedule.setClassroom(classroom);
 
         ScheduleEntity existingSchedule = schedule.get();
+        logPatchChanges(requestSchedule, existingSchedule, request.getUpdateReason());
         scheduleMapper.patchEntities(requestSchedule, existingSchedule);
 
         ScheduleEntity savedSchedule = scheduleRepository.save(existingSchedule);
@@ -182,6 +210,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
         if(schedule.isEmpty())
             throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+        if(scheduleStatusService.isAlreadyDeleted(schedule.get()))
+            throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.get().getId()));
 
         DbLogger.info(String.format("Found Schedule with ID: %s", scheduleId));
         return scheduleMapper.toDetailedResponse(schedule.get());
@@ -193,9 +223,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         DayOfWeek day = DayOfWeek.of(dayOfWeek);
 
         List<ScheduleEntity> schedules = scheduleRepository.findByScheduleVersionIdAndDayOfWeek(scheduleVersionId, day);
-        List<ScheduleEntity> filteredSchedules = schedules;
+        List<ScheduleEntity> notDeletedSchedules = scheduleStatusService.filterDeletedSchedules(schedules);
+        List<ScheduleEntity> filteredSchedules = notDeletedSchedules;
         if(needsFiltering)
-            filteredSchedules = filterTeacherSchedules(schedules, userId);
+            filteredSchedules = filterTeacherSchedules(notDeletedSchedules, userId);
 
         DbLogger.info(String.format("Found %s Schedules for DayOfWeek: %s in ScheduleVersion with ID: %s", filteredSchedules.size(), dayOfWeek, scheduleVersionId));
         return scheduleMapper.toSummaryResponseList(filteredSchedules);
@@ -206,7 +237,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         DbLogger.info("Searching for Schedules for Classroom with ID: " + classroomId);
         List<ScheduleEntity> schedules = scheduleRepository.findByClassroomId(classroomId);
         DbLogger.info(String.format("Found %s Schedules for Classroom with ID: %s", schedules.size(), classroomId));
-        return schedules;
+        return scheduleStatusService.filterDeletedSchedules(schedules);
     }
 
     private List<ScheduleEntity> filterTeacherSchedules(List<ScheduleEntity> schedules, Integer authenticatedTeacherId) {
@@ -219,5 +250,105 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
 
         return schedules;
+    }
+
+    private void logPatchChanges(ScheduleEntity requestSchedule, ScheduleEntity existingSchedule, String changeReason) {
+        if(requestSchedule == null || existingSchedule == null)
+            return;
+        List<UserEntity> affectedUsers = scheduleStatusService.createListWithUsersAffectedByChange(existingSchedule);
+        boolean anyChanges = false;
+        if(requestSchedule.getSubject() != null && !requestSchedule.getSubject().getId().equals(existingSchedule.getSubject().getId())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.SUBJECT_CHANGED,
+                    "subject.id",
+                    existingSchedule.getSubject().getId().toString(),
+                    requestSchedule.getSubject().getId().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getTeacher() != null && !requestSchedule.getTeacher().getId().equals(existingSchedule.getTeacher().getId())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.TEACHER_CHANGED,
+                    "teacher.id",
+                    existingSchedule.getTeacher().getId().toString(),
+                    requestSchedule.getTeacher().getId().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getClassroom() != null && !requestSchedule.getClassroom().getId().equals(existingSchedule.getClassroom().getId())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.CLASSROOM_CHANGED,
+                    "classroom.id",
+                    existingSchedule.getClassroom().getId().toString(),
+                    requestSchedule.getClassroom().getId().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getDayOfWeek() != null && !requestSchedule.getDayOfWeek().equals(existingSchedule.getDayOfWeek())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.RESCHEDULED,
+                    "dayOfWeek",
+                    existingSchedule.getDayOfWeek().toString(),
+                    requestSchedule.getDayOfWeek().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getStartTime() != null && !requestSchedule.getStartTime().equals(existingSchedule.getStartTime())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.RESCHEDULED,
+                    "startTime",
+                    existingSchedule.getStartTime().toString(),
+                    requestSchedule.getStartTime().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getEndTime() != null && !requestSchedule.getEndTime().equals(existingSchedule.getEndTime())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.RESCHEDULED,
+                    "endTime",
+                    existingSchedule.getEndTime().toString(),
+                    requestSchedule.getEndTime().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(requestSchedule.getRecurrenceType() != null && !requestSchedule.getRecurrenceType().equals(existingSchedule.getRecurrenceType())) {
+            ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                    existingSchedule,
+                    ScheduleChangeType.RESCHEDULED,
+                    "recurrence",
+                    existingSchedule.getRecurrenceType().toString(),
+                    requestSchedule.getRecurrenceType().toString(),
+                    changeReason,
+                    false,
+                    affectedUsers);
+            scheduleChangelogService.logChange(changelogDto);
+            anyChanges = true;
+        }
+        if(anyChanges)
+            existingSchedule.setStatus(ScheduleStatus.UPDATED);
     }
 }

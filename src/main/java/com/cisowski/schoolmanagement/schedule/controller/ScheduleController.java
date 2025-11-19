@@ -1,7 +1,6 @@
 package com.cisowski.schoolmanagement.schedule.controller;
 
 import com.cisowski.schoolmanagement.common.security.authorization.annotation.RequiresPermission;
-import com.cisowski.schoolmanagement.common.security.authorization.handler.BaseResourcePermissionHandler;
 import com.cisowski.schoolmanagement.common.security.authorization.handler.impl.teacher.TeacherSchedulePermissionHandler;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;

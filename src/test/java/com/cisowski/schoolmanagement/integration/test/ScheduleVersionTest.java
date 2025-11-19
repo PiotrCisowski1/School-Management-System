@@ -140,7 +140,7 @@ public class ScheduleVersionTest extends BaseIntegrationTest implements BasicCru
         .when()
                 .get("schedules/version/" + createdScheduleVersionId)
         .then()
-                .statusCode(HttpStatus.NOT_FOUND.value());
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
     }
 
     @Test
