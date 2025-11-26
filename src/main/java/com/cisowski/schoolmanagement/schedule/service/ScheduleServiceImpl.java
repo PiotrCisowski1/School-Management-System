@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.schedule.helper.ScheduleConflictValidator;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
 import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeType;
@@ -41,6 +42,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleVersionService scheduleVersionService;
     private final ScheduleChangelogService scheduleChangelogService;
     private final ScheduleStatusService scheduleStatusService;
+    private final ScheduleConflictValidator scheduleConflictValidator;
 
     @Override
     @Transactional
@@ -50,7 +52,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         ScheduleVersionEntity scheduleVersion = scheduleVersionService.fetchScheduleVersion(scheduleVersionId);
         ScheduleEntity schedule = scheduleMapper.toEntity(request);
 
-        checkIfScheduleAlreadyAppointed(scheduleVersion, schedule);
+        scheduleConflictValidator.checkIfScheduleAlreadyAppointed(scheduleVersion, schedule);
 
         SubjectEntity subject = subjectService.fetchSubject(request.getSubjectId());
         TeacherEntity teacher = teacherService.fetchTeacher(request.getTeacherId());
@@ -78,25 +80,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         scheduleChangelogService.logChange(changelogDto);
 
         return scheduleMapper.toDetailedResponse(saved);
-    }
-
-    private void checkIfScheduleAlreadyAppointed(ScheduleVersionEntity scheduleVersion, ScheduleEntity schedule){
-        if(scheduleVersion == null || schedule == null)
-            throw new SpecificationBrokenException("Given ScheduleVersion or Schedule is not a valid object");
-        if(scheduleVersion.getSchedules() != null){
-            Optional<ScheduleEntity> existingSchedule = scheduleVersion.getSchedules().stream()
-                    .filter(Objects::nonNull)
-                    .filter(scheduleEntity -> scheduleEntity.getDayOfWeek().equals(schedule.getDayOfWeek()))
-                    .filter(scheduleEntity -> scheduleEntity.getStartTime().isBefore(schedule.getEndTime()))
-                    .filter(scheduleEntity -> scheduleEntity.getEndTime().isAfter(schedule.getStartTime()))
-                    .findFirst();
-            if(existingSchedule.isPresent())
-                throw new SpecificationBrokenException(String.format(
-                        "Schedule already appointed between %s and %s on %s",
-                        existingSchedule.get().getStartTime().toString(),
-                        existingSchedule.get().getEndTime().toString(),
-                        existingSchedule.get().getDayOfWeek().toString()));
-        }
     }
 
     private void checkTeacherAvailability(TeacherEntity teacher, DayOfWeek day, LocalTime startTime, LocalTime endTime){
@@ -160,10 +143,14 @@ public class ScheduleServiceImpl implements ScheduleService {
         Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
         if(schedule.isEmpty())
             throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
-        if(scheduleStatusService.isAlreadyDeleted(schedule.get()))
-            throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.get().getId()));
+
+        //TODO: move list to AppConfig
+        List<ScheduleStatus> updateExcludedStatuses = List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED);
+        if(scheduleConflictValidator.checkScheduleStatusInList(schedule.get(), updateExcludedStatuses))
+            throw new SpecificationBrokenException(String.format("Schedule with ID %s has status %s and cannot be updated", schedule.get().getId(), schedule.get().getStatus()));
 
         ScheduleEntity requestSchedule = scheduleMapper.toEntity(request);
+        scheduleConflictValidator.checkIfScheduleAlreadyAppointed(schedule.get().getScheduleVersion(), requestSchedule);
         SubjectEntity subject = fetchSubject(request.getSubjectId());
         requestSchedule.setSubject(subject);
         TeacherEntity teacher = fetchTeacher(request.getTeacherId());
@@ -176,10 +163,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         requestSchedule.setClassroom(classroom);
 
         ScheduleEntity existingSchedule = schedule.get();
-        logPatchChanges(requestSchedule, existingSchedule, request.getUpdateReason());
         scheduleMapper.patchEntities(requestSchedule, existingSchedule);
 
         ScheduleEntity savedSchedule = scheduleRepository.save(existingSchedule);
+        logPatchChanges(requestSchedule, existingSchedule, request.getUpdateReason());
         DbLogger.info(String.format("Schedule with ID %s was updated successfully: %s", scheduleId, savedSchedule.toString()));
 
         return scheduleMapper.toDetailedResponse(savedSchedule);
@@ -297,6 +284,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             anyChanges = true;
         }
         if(requestSchedule.getDayOfWeek() != null && !requestSchedule.getDayOfWeek().equals(existingSchedule.getDayOfWeek())) {
+            requestSchedule.setStatus(ScheduleStatus.RESCHEDULED);
             ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
                     existingSchedule,
                     ScheduleChangeType.RESCHEDULED,
@@ -310,6 +298,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             anyChanges = true;
         }
         if(requestSchedule.getStartTime() != null && !requestSchedule.getStartTime().equals(existingSchedule.getStartTime())) {
+            requestSchedule.setStatus(ScheduleStatus.RESCHEDULED);
             ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
                     existingSchedule,
                     ScheduleChangeType.RESCHEDULED,
@@ -323,6 +312,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             anyChanges = true;
         }
         if(requestSchedule.getEndTime() != null && !requestSchedule.getEndTime().equals(existingSchedule.getEndTime())) {
+            requestSchedule.setStatus(ScheduleStatus.RESCHEDULED);
             ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
                     existingSchedule,
                     ScheduleChangeType.RESCHEDULED,
@@ -336,6 +326,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             anyChanges = true;
         }
         if(requestSchedule.getRecurrenceType() != null && !requestSchedule.getRecurrenceType().equals(existingSchedule.getRecurrenceType())) {
+            requestSchedule.setStatus(ScheduleStatus.RESCHEDULED);
             ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
                     existingSchedule,
                     ScheduleChangeType.RESCHEDULED,
@@ -350,5 +341,25 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
         if(anyChanges)
             existingSchedule.setStatus(ScheduleStatus.UPDATED);
+    }
+
+    @Override
+    @Transactional
+    public void cancelSchedule(Integer scheduleId, String reason) {
+        DbLogger.info(String.format("Canceling schedule with ID %s, with reason: %s", scheduleId, reason));
+        Optional<ScheduleEntity> schedule = scheduleRepository.findById(scheduleId);
+        if(schedule.isEmpty())
+            throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
+
+        scheduleConflictValidator.checkScheduleCancellationPossible(schedule.get());
+        if(scheduleConflictValidator.isLessonAlreadyHeld(schedule.get()))
+            throw new SpecificationBrokenException(String.format(
+                    "Schedule with ID %s cannot be canceled because it has already been held",
+                    scheduleId
+            ));
+
+        scheduleStatusService.changeStatusToCanceled(schedule.get(), reason);
+        scheduleRepository.save(schedule.get());
+        DbLogger.info(String.format("Schedule with ID %s was successfully marked as CANCELED", scheduleId));
     }
 }

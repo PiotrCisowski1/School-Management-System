@@ -16,6 +16,7 @@ public class ScheduleSummaryResponse {
     private String teacherName;
     private String subjectName;
     private Integer scheduleVersionId;
+    private ScheduleStatus status;
 
     public LocalTime getEndTime() {
         if(endTime != null)

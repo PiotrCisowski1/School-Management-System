@@ -87,4 +87,24 @@ public class ScheduleStatusService {
                 .filter(schedule -> !isAlreadyDeleted(schedule))
                 .forEach(this::changeStatusToDeleted);
     }
+
+    public void changeStatusToCanceled(ScheduleEntity schedule, String reason) {
+        if (schedule == null)
+            return;
+        String oldStatus = schedule.getStatus().name();
+        DbLogger.info(String.format("Changing Schedule with ID %s status to CANCELED", schedule.getId()));
+        schedule.setStatus(ScheduleStatus.CANCELLED);
+
+        List<UserEntity> usersAffected = createListWithUsersAffectedByChange(schedule);
+        ScheduleChangelogDto changelogDto = new ScheduleChangelogDto(
+                schedule,
+                ScheduleChangeType.CANCELLED,
+                "schedule status",
+                oldStatus,
+                ScheduleChangeType.CANCELLED.name(),
+                reason,
+                false,
+                usersAffected);
+        scheduleChangelogService.logChange(changelogDto);
+    }
 }

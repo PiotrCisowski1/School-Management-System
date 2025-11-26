@@ -6,12 +6,10 @@ import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
+import com.cisowski.schoolmanagement.schedule.helper.ScheduleConflictValidator;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
 import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleChangelogService;
@@ -31,6 +29,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -44,12 +44,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ScheduleServiceTest {
@@ -71,6 +71,8 @@ public class ScheduleServiceTest {
     private ScheduleChangelogService scheduleChangelogService;
     @Mock
     private ScheduleStatusService scheduleStatusService;
+    @Mock
+    private ScheduleConflictValidator scheduleConflictValidator;
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
 
@@ -160,37 +162,6 @@ public class ScheduleServiceTest {
         );
         verify(scheduleRepository).save(schedule);
         verify(scheduleMapperMocked).toDetailedResponse(schedule);
-    }
-
-    @Test
-    @DisplayName("addSchedule already appointed ")
-    public void addSchedule_scheduleAlreadyAppointed(){
-        AddScheduleRequest request = Instancio.of(AddScheduleRequest.class)
-                .set(field(AddScheduleRequest::getDayOfWeek), 3)
-                .set(field(AddScheduleRequest::getStartTime), LocalTime.of(10,0,0))
-                .set(field(AddScheduleRequest::getEndTime), LocalTime.of(10,45,0))
-                .create();
-
-        Integer scheduleVersionId = 123;
-        ScheduleVersionEntity scheduleVersion = new ScheduleVersionEntity();
-        scheduleVersion.setId(scheduleVersionId);
-        ScheduleEntity schedule = scheduleMapper.toEntity(request);
-        ScheduleEntity appointedSchedule = new ScheduleEntity();
-        appointedSchedule.setDayOfWeek(schedule.getDayOfWeek());
-        appointedSchedule.setStartTime(schedule.getStartTime().minusHours(1));
-        appointedSchedule.setEndTime(schedule.getEndTime().plusHours(1));
-        scheduleVersion.setSchedules(Collections.singletonList(appointedSchedule));
-
-        when(scheduleVersionService.fetchScheduleVersion(scheduleVersionId)).thenReturn(scheduleVersion);
-        when(scheduleMapperMocked.toEntity(request)).thenReturn(schedule);
-
-        SpecificationBrokenException result = assertThrows(
-                SpecificationBrokenException.class,
-                () -> scheduleService.addSchedule(request, scheduleVersionId));
-
-        assertTrue(result.getMessage().contains("Schedule already appointed"));
-        verify(scheduleVersionService).fetchScheduleVersion(scheduleVersionId);
-        verify(scheduleMapperMocked).toEntity(request);
     }
 
     @Test
@@ -303,5 +274,114 @@ public class ScheduleServiceTest {
                 .isInstanceOf(EntityNotFoundException.class);
 
         verify(scheduleRepository).findById(scheduleId);
+    }
+
+    @Test
+    void cancelSchedule_WhenScheduleExistsAndCanBeCancelled_ShouldCancelSuccessfully() {
+        Integer scheduleId = 1;
+        String reason = "Teacher illness";
+        ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+        doNothing().when(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+        when(scheduleConflictValidator.isLessonAlreadyHeld(schedule)).thenReturn(false);
+        when(scheduleRepository.save(schedule)).thenReturn(schedule);
+
+        assertThatNoException()
+                .isThrownBy(() -> scheduleService.cancelSchedule(scheduleId, reason));
+
+        verify(scheduleRepository).findById(scheduleId);
+        verify(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+        verify(scheduleConflictValidator).isLessonAlreadyHeld(schedule);
+        verify(scheduleStatusService).changeStatusToCanceled(schedule, reason);
+        verify(scheduleRepository).save(schedule);
+    }
+
+    @Test
+    void cancelSchedule_WhenScheduleNotFound_ShouldThrowEntityNotFoundException() {
+        Integer scheduleId = 999;
+        String reason = "Test reason";
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> scheduleService.cancelSchedule(scheduleId, reason))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("ScheduleEntity")
+                .hasMessageContaining("ID")
+                .hasMessageContaining("999");
+
+        verify(scheduleRepository).findById(scheduleId);
+        verifyNoInteractions(scheduleConflictValidator);
+        verifyNoInteractions(scheduleStatusService);
+        verify(scheduleRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelSchedule_WhenScheduleCannotBeCancelled_ShouldThrowSpecificationBrokenException() {
+        Integer scheduleId = 1;
+        String reason = "Test reason";
+        ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+        doThrow(new SpecificationBrokenException("Cannot cancel schedule"))
+                .when(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+
+        assertThatThrownBy(() -> scheduleService.cancelSchedule(scheduleId, reason))
+                .isInstanceOf(SpecificationBrokenException.class)
+                .hasMessageContaining("Cannot cancel schedule");
+
+        verify(scheduleRepository).findById(scheduleId);
+        verify(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+        verify(scheduleConflictValidator, never()).isLessonAlreadyHeld(any());
+        verifyNoInteractions(scheduleStatusService);
+        verify(scheduleRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelSchedule_WhenLessonAlreadyHeld_ShouldThrowSpecificationBrokenException() {
+        Integer scheduleId = 1;
+        String reason = "Test reason";
+        ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+        doNothing().when(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+        when(scheduleConflictValidator.isLessonAlreadyHeld(schedule)).thenReturn(true);
+
+        assertThatThrownBy(() -> scheduleService.cancelSchedule(scheduleId, reason))
+                .isInstanceOf(SpecificationBrokenException.class)
+                .hasMessageContaining("Schedule with ID 1 cannot be canceled because it has already been held");
+
+        verify(scheduleRepository).findById(scheduleId);
+        verify(scheduleConflictValidator).checkScheduleCancellationPossible(schedule);
+        verify(scheduleConflictValidator).isLessonAlreadyHeld(schedule);
+        verifyNoInteractions(scheduleStatusService);
+        verify(scheduleRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ScheduleStatus.class, names = {"CANCELLED", "DELETED", "COMPLETED"})
+    void patchSchedule_WhenScheduleHasForbiddenStatus_ShouldThrowSpecificationBrokenException(ScheduleStatus forbiddenStatus) {
+        Integer scheduleId = 1;
+        PatchScheduleRequest request = new PatchScheduleRequest();
+        ScheduleEntity existingSchedule = Instancio.of(ScheduleEntity.class)
+                .set(field(ScheduleEntity::getId), scheduleId)
+                .set(field(ScheduleEntity::getStatus), forbiddenStatus)
+                .create();
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(existingSchedule));
+        when(scheduleConflictValidator.checkScheduleStatusInList(existingSchedule,
+                List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED)))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> scheduleService.patchSchedule(scheduleId, request))
+                .isInstanceOf(SpecificationBrokenException.class)
+                .hasMessageContaining("Schedule with ID 1 has status " + forbiddenStatus + " and cannot be updated");
+
+        verify(scheduleRepository).findById(scheduleId);
+        verify(scheduleConflictValidator).checkScheduleStatusInList(existingSchedule,
+                List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED));
+        verifyNoMoreInteractions(scheduleConflictValidator);
+        verifyNoInteractions(scheduleMapperMocked, subjectService, teacherService, classroomService);
+        verify(scheduleRepository, never()).save(any());
     }
 }

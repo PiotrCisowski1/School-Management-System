@@ -1,13 +1,10 @@
 package com.cisowski.schoolmanagement.schedule.model;
 
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.sql.Time;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -41,9 +38,40 @@ public class AddScheduleRequest {
     @NotNull(message = "Invalid Recurrence type, expected values: WEEKLY, BIWEEKLY, MONTHLY or NONE")
     private ScheduleRecurrenceType recurrenceType;
 
+    @FutureOrPresent
+    private LocalDate effectiveDate;
+
+    private LocalDate expirationDate;
+
     @AssertTrue(message = "Start time must be before end time")
     public boolean isValidTimeRange(){
-        return startTime != null && endTime != null && startTime.compareTo(endTime) < 0;
+        return startTime != null && endTime != null && startTime.isBefore(endTime);
+    }
+
+    @AssertTrue(message = "Expiration date must be in future")
+    public boolean isValidExpirationDate() {
+        if(expirationDate == null)
+            return true;
+        return expirationDate.isAfter(LocalDate.now());
+    }
+
+    @AssertTrue(message = "Effective date must be before expiration date")
+    public boolean isEffectiveDateBeforeExpirationDate() {
+        if(effectiveDate == null || expirationDate == null)
+            return true;
+        return effectiveDate.isBefore(expirationDate);
+    }
+
+    @AssertTrue(message = "Expiration date cannot be null if schedule is not recurrent")
+    public boolean isExpirationDateIfRecurrenceNone() {
+        if(recurrenceType.equals(ScheduleRecurrenceType.NONE))
+            return expirationDate != null;
+        return true;
+    }
+
+    @AssertTrue(message = "Effective date cannot be empty")
+    public boolean isEffectiveDateNotNull() {
+        return effectiveDate != null;
     }
 
     public LocalTime getEndTime() {
@@ -68,6 +96,8 @@ public class AddScheduleRequest {
                 ", startTime=" + startTime.toString() +
                 ", endTime=" + endTime.toString() +
                 ", recurrenceType=" + recurrenceType +
+                ", effectiveDate=" + effectiveDate +
+                ", expirationDate=" + (expirationDate != null ? expirationDate : "permanent") +
                 '}';
     }
 }
