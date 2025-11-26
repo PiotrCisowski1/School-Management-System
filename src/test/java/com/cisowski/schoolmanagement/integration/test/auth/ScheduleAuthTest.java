@@ -4,6 +4,7 @@ import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
 import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
@@ -24,6 +25,7 @@ import java.util.Collections;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ScheduleAuthTest extends BaseIntegrationTest {
 
@@ -617,7 +619,7 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
     }
 
     @Test
-    void shouldNoyAllowOtherUserToPatchScheduleVersion() {
+    void shouldNotAllowOtherUserToPatchScheduleVersion() {
         Headers headers = createHeadersForRandomUserNotAdmin(userTypesOtherThanAdmin);
         PatchScheduleVersionRequest request = new PatchScheduleVersionRequest();
 
@@ -629,5 +631,23 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void shouldAllowAdminToCancelSchedule() {
+        Headers headers = createHeadersWithRandomAdminUser();
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null, null);
+        String reason = "Test reason";
+
+        assertNotEquals(ScheduleStatus.CANCELLED, schedule.getStatus());
+
+        given()
+                .headers(headers)
+                .body(reason)
+        .when()
+                .put(String.format("schedules/%d/CANCEL", schedule.getId()))
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value());
     }
 }

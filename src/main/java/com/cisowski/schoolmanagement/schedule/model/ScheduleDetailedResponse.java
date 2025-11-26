@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
 import lombok.Data;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -21,6 +22,9 @@ public class ScheduleDetailedResponse {
     private LocalTime endTime;
     private ScheduleRecurrenceType recurrenceType;
     private ScheduleVersionSummaryResponse scheduleVersion;
+    private ScheduleStatus status;
+    private LocalDate effectiveDate;
+    private LocalDate expirationDate;
 
     public LocalTime getEndTime() {
         if(endTime != null)
@@ -46,6 +50,8 @@ public class ScheduleDetailedResponse {
                 ", endTime=" + endTime +
                 ", recurrenceType=" + recurrenceType +
                 ", scheduleVersion=" + scheduleVersion.getId() +
+                ", effectiveDate=" + effectiveDate +
+                ", expirationDate=" + (expirationDate != null ? expirationDate : "permanent") +
                 '}';
     }
 }

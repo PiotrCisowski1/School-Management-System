@@ -1,10 +1,10 @@
 package com.cisowski.schoolmanagement.schedule.model;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -22,6 +22,29 @@ public class PatchScheduleRequest {
     @Valid
     private ScheduleRecurrenceType recurrenceType;
     private String updateReason;
+    private LocalDate effectiveDate;
+    private LocalDate expirationDate;
+
+    @AssertTrue(message = "Expiration date must be in future")
+    public boolean isValidExpirationDate() {
+        if(expirationDate == null)
+            return true;
+        return expirationDate.isAfter(LocalDate.now());
+    }
+
+    @AssertTrue(message = "Effective date must be in future")
+    public boolean isValidEffectiveDate() {
+        if(effectiveDate == null)
+            return true;
+        return effectiveDate.isAfter(LocalDate.now()) || effectiveDate.isEqual(LocalDate.now());
+    }
+
+    @AssertTrue(message = "Effective date must be before expiration date")
+    public boolean isEffectiveDateBeforeExpirationDate() {
+        if(effectiveDate == null || expirationDate == null)
+            return true;
+        return effectiveDate.isBefore(expirationDate);
+    }
 
     public LocalTime getEndTime() {
         if(endTime != null)
@@ -46,6 +69,8 @@ public class PatchScheduleRequest {
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", recurrenceType=" + recurrenceType +
+                ", effectiveDate=" + effectiveDate +
+                ", expirationDate=" + (expirationDate != null ? expirationDate : "permanent") +
                 '}';
     }
 }

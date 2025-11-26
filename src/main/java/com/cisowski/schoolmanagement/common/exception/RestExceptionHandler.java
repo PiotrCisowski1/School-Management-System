@@ -43,7 +43,15 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         String error = "Malformed JSON request";
-        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, error, ex));
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException invalidFormatException) {
+            String fieldName = invalidFormatException.getPath().get(0).getFieldName();
+            error = switch (fieldName) {
+                case "effectiveDate" -> "Effective date has invalid format, expected format is yyyy-mm-dd";
+                case "expirationDate" -> "Expiration date has invalid format, expected format is yyyy-mm-dd";
+                default -> "Invalid value for field: " + fieldName;
+            };
+        }
+        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, error));
     }
 
     @Override

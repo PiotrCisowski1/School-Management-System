@@ -11,10 +11,12 @@ All notable changes to this project will be documented in this file.
 ### New
 - Permission based authorization, securing endpoint based on user role and permission to perform particular REST action 
 - Integration tests to check authorization policies for every endpoint and every user type
+- Schedule changelog
+- Cancel Schedule
 
 ### Changed
 - Secure every endpoint for particular users
-
+- Changed removal of Schedule and ScheduleVersion to 'soft delete' - in order to keep changelog
 
 ## [1.0.2] - 2025-07-18
 

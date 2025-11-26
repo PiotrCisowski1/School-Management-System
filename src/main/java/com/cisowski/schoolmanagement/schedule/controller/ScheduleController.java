@@ -14,6 +14,7 @@ import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
 import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
 import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -129,5 +130,13 @@ public class ScheduleController {
         DbLogger.info(String.format("Received PATCH ScheduleVersion request for ID: %s", scheduleVersionId));
         ScheduleVersionDetailedResponse response = scheduleVersionService.patchScheduleVersion(scheduleVersionId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/{scheduleId}/CANCEL")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
+    public ResponseEntity cancelSchedule(@PathVariable Integer scheduleId, @RequestBody @Size(min = 3, max = 200) String reason) {
+        DbLogger.info("Received PUT Schedule request to CANCEL for ID: " + scheduleId);
+        scheduleService.cancelSchedule(scheduleId, reason);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

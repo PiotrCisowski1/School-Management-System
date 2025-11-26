@@ -13,10 +13,7 @@ import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeScaleRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeTypeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeValueRepository;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.schedule.model.*;
 import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeLogEntity;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
@@ -58,8 +55,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -365,6 +362,7 @@ public class TestDataHelper {
                 .set(field(AddScheduleRequest::getStartTime), startTime)
                 .set(field(AddScheduleRequest::getEndTime), endTime)
                 .generate(field(AddScheduleRequest::getDayOfWeek), gen -> gen.ints().range(1,7))
+                .generate(field(AddScheduleRequest::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
                 .create();
     }
 
@@ -375,6 +373,9 @@ public class TestDataHelper {
             scheduleVersion = createScheduleVersion(null);
         if(subject == null)
             subject = createSubject();
+
+        LocalDate effectiveDate = LocalDate.now().minusDays(1);
+        LocalDate expirationDate = LocalDate.now().plusDays(1);
 
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getTeacher), teacher)
@@ -387,6 +388,9 @@ public class TestDataHelper {
                 .generate(field(ScheduleEntity::getEndTime), gen -> gen.temporal().localTime().future()
                         .as(localTime -> localTime.withNano(0)))
                 .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
+                .set(field(ScheduleEntity::getEffectiveDate), effectiveDate)
+                .set(field(ScheduleEntity::getExpirationDate), expirationDate)
+                .generate(field(ScheduleEntity::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
                 .create();
 
         return scheduleRepository.save(schedule);
@@ -402,6 +406,9 @@ public class TestDataHelper {
         if(classroom == null)
             classroom = createClassroom();
 
+        LocalDate effectiveDate = LocalDate.now().minusDays(1);
+        LocalDate expirationDate = LocalDate.now().plusDays(1);
+
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getTeacher), teacher)
                 .set(field(ScheduleEntity::getScheduleVersion), scheduleVersion)
@@ -412,6 +419,9 @@ public class TestDataHelper {
                         .as(localTime -> localTime.withNano(0)))
                 .generate(field(ScheduleEntity::getEndTime), gen -> gen.temporal().localTime().future()
                         .as(localTime -> localTime.withNano(0)))
+                .set(field(ScheduleEntity::getEffectiveDate), effectiveDate)
+                .set(field(ScheduleEntity::getExpirationDate), expirationDate)
+                .generate(field(ScheduleEntity::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
                 .create();
 
         return scheduleRepository.save(schedule);
@@ -569,6 +579,9 @@ public class TestDataHelper {
             teacher = createTeacher(Collections.singletonList(subject));
         ClassroomEntity classroom = createClassroom();
 
+        LocalDate effectiveDate = LocalDate.now();
+        LocalDate expirationDate = effectiveDate.plusDays(2);
+
         return Instancio.of(AddScheduleRequest.class)
                 .set(field(AddScheduleRequest::getSubjectId), teacher.getTeachingSubjects().iterator().next().getId())
                 .set(field(AddScheduleRequest::getTeacherId), teacher.getId())
@@ -576,6 +589,9 @@ public class TestDataHelper {
                 .set(field(AddScheduleRequest::getStartTime), startTime)
                 .set(field(AddScheduleRequest::getEndTime), endTime)
                 .set(field(AddScheduleRequest::getDayOfWeek), dayOfWeek.getValue())
+                .set(field(AddScheduleRequest::getEffectiveDate), effectiveDate)
+                .set(field(AddScheduleRequest::getExpirationDate), expirationDate)
+                .generate(field(AddScheduleRequest::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
                 .create();
     }
 
@@ -595,6 +611,9 @@ public class TestDataHelper {
         ClassroomEntity classroom = createClassroom();
         YearbookEntity yearbook = createYearbook(Collections.singletonList(subject), teacher);
 
+        LocalDate effectiveDate = LocalDate.now();
+        LocalDate expirationDate = effectiveDate.plusDays(2);
+
         return Instancio.of(PatchScheduleRequest.class)
                 .set(field(PatchScheduleRequest::getSubjectId), subject.getId())
                 .set(field(PatchScheduleRequest::getTeacherId), teacher.getId())
@@ -603,6 +622,8 @@ public class TestDataHelper {
                 .set(field(PatchScheduleRequest::getStartTime), startTime)
                 .set(field(PatchScheduleRequest::getEndTime), endTime)
                 .set(field(PatchScheduleRequest::getDayOfWeek), dayOfWeek.getValue())
+                .set(field(PatchScheduleRequest::getEffectiveDate), effectiveDate)
+                .set(field(PatchScheduleRequest::getExpirationDate), expirationDate)
                 .create();
     }
 

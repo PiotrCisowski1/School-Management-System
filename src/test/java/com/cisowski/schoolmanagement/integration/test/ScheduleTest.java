@@ -9,7 +9,6 @@ import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVers
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -55,6 +54,9 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
         assertEquals(postScheduleRequest.getStartTime(), response.getStartTime());
         assertEquals(postScheduleRequest.getEndTime(), response.getEndTime());
         assertEquals(postScheduleRequest.getRecurrenceType(), response.getRecurrenceType());
+        assertEquals(postScheduleRequest.getEffectiveDate(), response.getEffectiveDate());
+        assertEquals(postScheduleRequest.getExpirationDate(), response.getExpirationDate());
+        assertEquals(ScheduleStatus.SCHEDULED, response.getStatus());
     }
 
     @Test
@@ -126,6 +128,8 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
         assertEquals(patchScheduleRequest.getStartTime(), patchResponse.getStartTime());
         assertEquals(patchScheduleRequest.getEndTime(), patchResponse.getEndTime());
         assertEquals(patchScheduleRequest.getRecurrenceType(), patchResponse.getRecurrenceType());
+        assertEquals(patchScheduleRequest.getEffectiveDate(), patchResponse.getEffectiveDate());
+        assertEquals(patchScheduleRequest.getExpirationDate(), patchResponse.getExpirationDate());
 
         ScheduleDetailedResponse getResponse = given()
                 .headers(fullAdminHeaders)
@@ -144,6 +148,8 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
         assertEquals(patchScheduleRequest.getStartTime(), getResponse.getStartTime());
         assertEquals(patchScheduleRequest.getEndTime(), getResponse.getEndTime());
         assertEquals(patchScheduleRequest.getRecurrenceType(), getResponse.getRecurrenceType());
+        assertEquals(patchScheduleRequest.getEffectiveDate(), getResponse.getEffectiveDate());
+        assertEquals(patchScheduleRequest.getExpirationDate(), getResponse.getExpirationDate());
     }
 
     @Test
@@ -242,5 +248,31 @@ public class ScheduleTest extends BaseIntegrationTest implements BasicCrudHappyP
                 .patch("schedules/" + schedule.getId())
         .then()
                 .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
+    }
+
+    @Test
+    void shouldAllowToCancelScheduleAndFetchCanceledSchedule() {
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null ,null);
+        String reason = "Test reason";
+
+        assertNotEquals(ScheduleStatus.CANCELLED, schedule.getStatus());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(reason)
+        .when()
+                .put(String.format("schedules/%d/CANCEL", schedule.getId()))
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.NO_CONTENT.value());
+
+        ScheduleDetailedResponse getResponse = given()
+                .headers(fullAdminHeaders)
+        .when()
+                .get("schedules/" + schedule.getScheduleVersion().getId() + "/" + schedule.getId())
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract().as(ScheduleDetailedResponse.class);
+        assertEquals(ScheduleStatus.CANCELLED, getResponse.getStatus());
     }
 }

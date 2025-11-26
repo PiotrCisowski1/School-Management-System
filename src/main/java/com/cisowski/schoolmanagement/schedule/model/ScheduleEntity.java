@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -50,6 +51,11 @@ public class ScheduleEntity {
     @Column(nullable = false)
     private ScheduleStatus status = ScheduleStatus.SCHEDULED;
 
+    @Column(nullable = false)
+    private LocalDate effectiveDate;
+
+    private LocalDate expirationDate;
+
     public ScheduleEntity(ScheduleEntity entity, ScheduleVersionEntity scheduleVersion) {
          this.scheduleVersion = scheduleVersion;
          this.subject = entity.getSubject();
@@ -85,6 +91,8 @@ public class ScheduleEntity {
                 ", startTime=" + startTime.toString() +
                 ", endTime=" + endTime.toString() +
                 ", recurrenceType=" + recurrenceType +
+                ", effectiveDate=" + effectiveDate +
+                ", expirationDate=" + (expirationDate != null ? expirationDate : "permanent") +
                 '}';
     }
 }
