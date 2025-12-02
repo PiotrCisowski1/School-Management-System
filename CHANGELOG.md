@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.1.1] - 2025-12-02
+### New 
+- AppConfig - editable (by admin) configuration values used in system
+
 ## [1.1.0] - 2025-10-31
 
 ### New
