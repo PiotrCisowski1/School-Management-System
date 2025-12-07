@@ -293,7 +293,6 @@ public class AppConfigServiceImplTest {
 
         List<AuthorityEntity> existingAuthorities = Instancio.ofList(AuthorityEntity.class)
                 .size(3)
-                .generate(field(AuthorityEntity::getId), gen -> gen.ints().range(1, 4))
                 .create();
         List<Integer> authorityIdsToRemove = List.of(existingAuthorities.get(0).getId(), existingAuthorities.get(1).getId());
 

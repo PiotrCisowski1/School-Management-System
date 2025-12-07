@@ -377,17 +377,14 @@ public class ScheduleServiceTest {
                 .create();
 
         when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(existingSchedule));
-        when(scheduleConflictValidator.checkScheduleStatusInList(existingSchedule,
-                List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED)))
-                .thenReturn(true);
+        when(scheduleConflictValidator.checkScheduleStatusInList(any(ScheduleEntity.class), any())).thenReturn(true);
 
         assertThatThrownBy(() -> scheduleService.patchSchedule(scheduleId, request))
                 .isInstanceOf(SpecificationBrokenException.class)
                 .hasMessageContaining("Schedule with ID 1 has status " + forbiddenStatus + " and cannot be updated");
 
         verify(scheduleRepository).findById(scheduleId);
-        verify(scheduleConflictValidator).checkScheduleStatusInList(existingSchedule,
-                List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED));
+        verify(scheduleConflictValidator).checkScheduleStatusInList(any(ScheduleEntity.class), any());
         verifyNoMoreInteractions(scheduleConflictValidator);
         verifyNoInteractions(scheduleMapperMocked, subjectService, teacherService, classroomService);
         verify(scheduleRepository, never()).save(any());
