@@ -1,12 +1,12 @@
 package com.cisowski.schoolmanagement.unit.services;
 
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
-import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangeType;
-import com.cisowski.schoolmanagement.schedule.model.scheduleChangelog.ScheduleChangelogDto;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleChangelogService;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleStatusService;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangeType;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangelogDto;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleChangelogService;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleStatusService;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;

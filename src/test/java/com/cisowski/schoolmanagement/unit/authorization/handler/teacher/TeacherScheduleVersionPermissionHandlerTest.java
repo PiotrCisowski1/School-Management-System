@@ -7,7 +7,7 @@ import com.cisowski.schoolmanagement.common.security.authorization.model.Permiss
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.instancio.Instancio;

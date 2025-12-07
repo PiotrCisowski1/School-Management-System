@@ -1,8 +1,8 @@
 package com.cisowski.schoolmanagement.unit.mappers;
 
-import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
+import com.cisowski.schoolmanagement.timetable.schedule.mapper.ScheduleVersionMapper;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

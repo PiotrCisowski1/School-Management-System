@@ -3,11 +3,11 @@ package com.cisowski.schoolmanagement.unit.mappers;
 
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
-import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
-import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.mapper.ScheduleMapper;
+import com.cisowski.schoolmanagement.timetable.schedule.mapper.ScheduleVersionMapper;
+import com.cisowski.schoolmanagement.timetable.schedule.model.AddScheduleRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleDetailedResponse;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import org.instancio.Instancio;

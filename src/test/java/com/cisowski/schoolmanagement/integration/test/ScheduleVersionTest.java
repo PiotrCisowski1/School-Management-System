@@ -2,10 +2,10 @@ package com.cisowski.schoolmanagement.integration.test;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionSummaryResponse;
 import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

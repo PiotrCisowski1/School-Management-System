@@ -1,21 +1,24 @@
 package com.cisowski.schoolmanagement.unit.services;
 
+import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
+import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
+import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
-import com.cisowski.schoolmanagement.schedule.helper.ScheduleConflictValidator;
-import com.cisowski.schoolmanagement.schedule.mapper.ScheduleMapper;
-import com.cisowski.schoolmanagement.schedule.mapper.ScheduleVersionMapper;
-import com.cisowski.schoolmanagement.schedule.model.*;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
-import com.cisowski.schoolmanagement.schedule.repository.ScheduleRepository;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleChangelogService;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleServiceImpl;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleStatusService;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
+import com.cisowski.schoolmanagement.timetable.schedule.helper.ScheduleConflictValidator;
+import com.cisowski.schoolmanagement.timetable.schedule.mapper.ScheduleMapper;
+import com.cisowski.schoolmanagement.timetable.schedule.mapper.ScheduleVersionMapper;
+import com.cisowski.schoolmanagement.timetable.schedule.model.*;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleChangelogService;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleServiceImpl;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleStatusService;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleVersionService;
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
@@ -37,15 +40,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.lang.reflect.Field;
 import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,11 +73,15 @@ public class ScheduleServiceTest {
     private ScheduleStatusService scheduleStatusService;
     @Mock
     private ScheduleConflictValidator scheduleConflictValidator;
+    @Mock
+    private AppConfigService configService;
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
 
+    private final List<ScheduleStatus> acceptableStatuses = Arrays.asList(ScheduleStatus.SCHEDULED, ScheduleStatus.RESCHEDULED, ScheduleStatus.UPDATED);
+
     @BeforeEach
-    public void setUp(){
+    public void setUp() throws IllegalAccessException, NoSuchFieldException {
         scheduleMapper = Mappers.getMapper(ScheduleMapper.class);
         DateMapper dateMapper = Mappers.getMapper(DateMapper.class);
         ReflectionTestUtils.setField(scheduleMapper, "dateMapper", dateMapper);
@@ -90,6 +94,10 @@ public class ScheduleServiceTest {
         ScheduleVersionMapper scheduleVersionMapper = Mappers.getMapper(ScheduleVersionMapper.class);
         ReflectionTestUtils.setField(scheduleMapper, "scheduleVersionMapper", scheduleVersionMapper);
         ReflectionTestUtils.setField(subjectMapper, "teacherMapper", teacherMapper);
+
+        Field field = scheduleService.getClass().getDeclaredField("acceptableInitScheduleStatusList");
+        field.setAccessible(true);
+        field.set(scheduleService, acceptableStatuses);
     }
 
     @Test
@@ -383,5 +391,95 @@ public class ScheduleServiceTest {
         verifyNoMoreInteractions(scheduleConflictValidator);
         verifyNoInteractions(scheduleMapperMocked, subjectService, teacherService, classroomService);
         verify(scheduleRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnUninitializedSchedules() {
+        String minTimeStr = "30";
+        AppConfigDetailedResponse mockConfig = new AppConfigDetailedResponse();
+        mockConfig.setValue(minTimeStr);
+
+        when(configService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue()))
+                .thenReturn(mockConfig);
+
+        List<ScheduleEntity> expectedSchedules = Instancio.ofList(ScheduleEntity.class).size(3).create();
+
+        when(scheduleRepository.findUninitializedSchedules(
+                anyList(),
+                anyString(),
+                any(LocalDate.class),
+                any(DayOfWeek.class),
+                anyString()
+        )).thenReturn(expectedSchedules);
+
+        List<ScheduleEntity> result = scheduleService.findUninitializedSchedules();
+
+        assertThat(result).hasSize(3).isEqualTo(expectedSchedules);
+
+        verify(scheduleRepository).findUninitializedSchedules(
+                anyList(),
+                anyString(),
+                eq(LocalDate.now()),
+                eq(LocalDate.now().getDayOfWeek()),
+                anyString()
+        );
+    }
+
+    @Test
+    void changeStatusToOngoing_ShouldDoNothing_WhenScheduleIsNull() {
+        scheduleService.changeStatusToOngoing(null);
+
+        verifyNoInteractions(scheduleRepository);
+    }
+
+    @Test
+    void changeStatusToOngoing_ShouldUpdateStatusAndSave() {
+        ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
+                .set(org.instancio.Select.field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
+                .create();
+
+        scheduleService.changeStatusToOngoing(schedule);
+
+        assertThat(schedule.getStatus()).isEqualTo(ScheduleStatus.ONGOING);
+        verify(scheduleRepository).save(schedule);
+    }
+
+    @Test
+    void fetchSchedule_ShouldReturnEntity_WhenExistsAndValid() {
+        Integer scheduleId = 123;
+        ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+        when(scheduleStatusService.isAlreadyDeleted(schedule)).thenReturn(false);
+
+        ScheduleEntity result = scheduleService.fetchSchedule(scheduleId);
+
+        assertThat(result).isEqualTo(schedule);
+    }
+
+    @Test
+    void fetchSchedule_ShouldThrowNotFound_WhenIdDoesNotExist() {
+        Integer scheduleId = 999;
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> scheduleService.fetchSchedule(scheduleId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("ID")
+                .hasMessageContaining("999");
+
+        verifyNoInteractions(scheduleStatusService);
+    }
+
+    @Test
+    void fetchSchedule_ShouldThrowSpecificationBroken_WhenEntityIsDeleted() {
+        Integer scheduleId = 123;
+        ScheduleEntity schedule = Instancio.create(ScheduleEntity.class);
+
+        when(scheduleRepository.findById(scheduleId)).thenReturn(Optional.of(schedule));
+        when(scheduleStatusService.isAlreadyDeleted(schedule)).thenReturn(true);
+
+        assertThatThrownBy(() -> scheduleService.fetchSchedule(scheduleId))
+                .isInstanceOf(SpecificationBrokenException.class)
+                .hasMessageContaining("marked as deleted");
     }
 }

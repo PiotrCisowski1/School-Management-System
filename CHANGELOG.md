@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.2.0] - 2025-12-06
+### New
+- Attendance - automatic initialization of shortly starting scheduled lessons; Endpoint to update Student absence status
+
 ## [1.1.1] - 2025-12-02
 ### New 
 - AppConfig - editable (by admin) configuration values used in system

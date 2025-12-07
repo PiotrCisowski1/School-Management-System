@@ -1,0 +1,1 @@
+INSERT INTO app_config_authorities (app_config_key, authority_id) VALUES ('attendance.initialization.start.time', 2);

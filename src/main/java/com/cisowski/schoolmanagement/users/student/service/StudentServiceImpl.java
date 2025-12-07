@@ -19,6 +19,7 @@ import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 @AllArgsConstructor
@@ -146,5 +147,21 @@ public class StudentServiceImpl implements StudentService {
         if (existingStudent.isEmpty())
             throw new EntityNotFoundException(StudentEntity.class, "ID", String.valueOf(studentId));
         return existingStudent.get();
+    }
+
+    @Override
+    public List<StudentEntity> fetchStudents(List<Integer> studentIds) {
+        DbLogger.info("Searching for Students with IDs: " + studentIds);
+        List<StudentEntity> students = repository.findAllById(studentIds);
+        if(!CollectionUtils.isEmpty(studentIds) && students.size() != studentIds.stream().distinct().toList().size()) {
+            List<Integer> notFoundIds = students.stream()
+                    .distinct()
+                    .map(StudentEntity::getId)
+                    .filter(id -> !studentIds.contains(id))
+                    .toList();
+            throw new SpecificationBrokenException("Some of the Student IDs are invalid: " + notFoundIds);
+        }
+        DbLogger.info("Found all Students for IDs: " + studentIds.toString());
+        return students;
     }
 }

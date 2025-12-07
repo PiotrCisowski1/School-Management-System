@@ -1,10 +1,11 @@
 package com.cisowski.schoolmanagement.unit.helpers;
 
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleRecurrenceType;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrenceType;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.helper.ScheduleConflictValidator;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import org.instancio.Instancio;
 import org.instancio.junit.InstancioExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,11 +25,11 @@ import static org.instancio.Select.field;
 @ExtendWith({MockitoExtension.class, InstancioExtension.class})
 class ScheduleConflictValidatorTest {
 
-    private com.cisowski.schoolmanagement.schedule.helper.ScheduleConflictValidator validator;
+    private ScheduleConflictValidator validator;
 
     @BeforeEach
     void setUp() {
-        validator = new com.cisowski.schoolmanagement.schedule.helper.ScheduleConflictValidator();
+        validator = new ScheduleConflictValidator();
     }
 
     @Test
@@ -325,6 +326,7 @@ class ScheduleConflictValidatorTest {
                 .set(field(ScheduleEntity::getEffectiveDate), LocalDate.now())
                 .set(field(ScheduleEntity::getDayOfWeek), today)
                 .set(field(ScheduleEntity::getEndTime), LocalTime.of(23, 59))
+                .set(field(ScheduleEntity::getExpirationDate), LocalDate.now().plusMonths(1))
                 .create();
 
         boolean result = validator.isLessonAlreadyHeld(schedule);

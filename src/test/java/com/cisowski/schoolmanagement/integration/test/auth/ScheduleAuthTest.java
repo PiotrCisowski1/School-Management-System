@@ -1,13 +1,13 @@
 package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
-import com.cisowski.schoolmanagement.schedule.model.AddScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.PatchScheduleRequest;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.AddScheduleVersionRequest;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.AddScheduleRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.PatchScheduleRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.AddScheduleVersionRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -19,8 +19,6 @@ import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.Collections;
 
 import static io.restassured.RestAssured.given;

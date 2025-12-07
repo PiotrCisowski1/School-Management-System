@@ -11,4 +11,5 @@ public interface StudentService extends BaseUserService {
     List<StudentSummaryResponse> findAll();
     StudentDetailedResponse findById(Integer studentId);
     StudentEntity fetchStudent(Integer studentId);
+    List<StudentEntity> fetchStudents(List<Integer> studentIds);
 }

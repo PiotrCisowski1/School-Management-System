@@ -10,5 +10,6 @@ public enum ResourceType {
     TEACHER_AVAILABILITY,
     YEARBOOK,
     SCHEDULE_VERSION,
-    SCHEDULE
+    SCHEDULE,
+    ATTENDANCE
 }
