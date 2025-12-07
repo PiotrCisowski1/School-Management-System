@@ -196,7 +196,9 @@ class ScheduleStatusServiceTest {
 
     @Test
     void filterDeletedSchedules_WhenSchedulesContainNull_ShouldFilterNull() {
-        ScheduleEntity validSchedule = Instancio.create(ScheduleEntity.class);
+        ScheduleEntity validSchedule = Instancio.of(ScheduleEntity.class)
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
+                .create();
         List<ScheduleEntity> schedules = Arrays.asList(null, validSchedule, null);
 
         List<ScheduleEntity> result = scheduleStatusService.filterDeletedSchedules(schedules);

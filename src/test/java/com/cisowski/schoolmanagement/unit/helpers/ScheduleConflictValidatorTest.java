@@ -324,7 +324,7 @@ class ScheduleConflictValidatorTest {
                 .set(field(ScheduleEntity::getRecurrenceType), ScheduleRecurrenceType.WEEKLY)
                 .set(field(ScheduleEntity::getEffectiveDate), LocalDate.now())
                 .set(field(ScheduleEntity::getDayOfWeek), today)
-                .set(field(ScheduleEntity::getEndTime), LocalTime.now().plusHours(1))
+                .set(field(ScheduleEntity::getEndTime), LocalTime.of(23, 59))
                 .create();
 
         boolean result = validator.isLessonAlreadyHeld(schedule);
@@ -338,6 +338,7 @@ class ScheduleConflictValidatorTest {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getRecurrenceType), ScheduleRecurrenceType.WEEKLY)
                 .set(field(ScheduleEntity::getEffectiveDate), LocalDate.now())
+                .set(field(ScheduleEntity::getExpirationDate), LocalDate.now().plusDays(2))
                 .set(field(ScheduleEntity::getDayOfWeek), notToday)
                 .create();
 

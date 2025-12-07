@@ -1,5 +1,8 @@
 package com.cisowski.schoolmanagement.integration.helper;
 
+import com.cisowski.schoolmanagement.appConfig.model.AppConfigEntity;
+import com.cisowski.schoolmanagement.appConfig.model.AppConfigValueType;
+import com.cisowski.schoolmanagement.appConfig.repository.AppConfigRepository;
 import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.repository.EquipmentRepository;
@@ -87,6 +90,7 @@ public class TestDataHelper {
     private final GradeRepository gradeRepository;
     private final TeacherAvailabilityRepository teacherAvailabilityRepository;
     private final ScheduleChangelogRepository scheduleChangelogRepository;
+    private final AppConfigRepository configRepository;
 
     public UserEntity createRandomAdminUser() {
         AuthorityEntity authority = dbHelper.fetchAuthorityByName("ADMINISTRATOR").orElse(null);
@@ -355,12 +359,17 @@ public class TestDataHelper {
                 .range(LocalTime.of(1, 0), LocalTime.of(22, 0))
                 .get();
         LocalTime endTime = startTime.plusHours(1);
+        LocalDate effectiveDate = LocalDate.now().plusDays(1);
+        LocalDate expirationDate = LocalDate.now().plusDays(2);
+
         return Instancio.of(AddScheduleRequest.class)
                 .set(field(AddScheduleRequest::getSubjectId), subject.getId())
                 .set(field(AddScheduleRequest::getTeacherId), teacher.getId())
                 .set(field(AddScheduleRequest::getClassroomId), classroom.getId())
                 .set(field(AddScheduleRequest::getStartTime), startTime)
                 .set(field(AddScheduleRequest::getEndTime), endTime)
+                .set(field(AddScheduleRequest::getEffectiveDate), effectiveDate)
+                .set(field(AddScheduleRequest::getExpirationDate), expirationDate)
                 .generate(field(AddScheduleRequest::getDayOfWeek), gen -> gen.ints().range(1,7))
                 .generate(field(AddScheduleRequest::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
                 .create();
@@ -732,5 +741,27 @@ public class TestDataHelper {
         if(schedule == null)
             return Collections.emptyList();
         return scheduleChangelogRepository.findAllBySchedule(schedule);
+    }
+
+    public AppConfigEntity createConfigEntity(AppConfigValueType valueType, String value, boolean isEditable, List<AuthorityEntity> authorities) {
+        if(valueType == null)
+            valueType = Instancio.create(AppConfigValueType.class);
+        if(value == null)
+            value = Instancio.create(String.class);
+        if(authorities == null) {
+            AuthorityEntity authority = dbHelper.fetchAuthorityByName("ADMINISTRATOR").orElse(null);
+            authorities = List.of(authority);
+        }
+
+        AppConfigEntity entity = Instancio.of(AppConfigEntity.class)
+                .set(field(AppConfigEntity::getId), null)
+                .set(field(AppConfigEntity::getValueType), valueType)
+                .set(field(AppConfigEntity::getValue), value)
+                .set(field(AppConfigEntity::isEditable), isEditable)
+                .set(field(AppConfigEntity::getEditableBy), authorities)
+                .set(field(AppConfigEntity::getModifiedBy), createRandomAdminUser())
+                .create();
+
+        return configRepository.save(entity);
     }
 }
