@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -30,6 +31,7 @@ class ScheduleConflictValidatorTest {
     @BeforeEach
     void setUp() {
         validator = new ScheduleConflictValidator();
+        ReflectionTestUtils.setField(validator, "acceptableInitScheduleStatusList", List.of(ScheduleStatus.CANCELLED,ScheduleStatus.DELETED,ScheduleStatus.COMPLETED));
     }
 
     @Test
@@ -295,6 +297,7 @@ class ScheduleConflictValidatorTest {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getRecurrenceType), ScheduleRecurrenceType.WEEKLY)
                 .set(field(ScheduleEntity::getEffectiveDate), LocalDate.now().minusDays(5))
+                .set(field(ScheduleEntity::getExpirationDate), LocalDate.now().minusDays(5))
                 .set(field(ScheduleEntity::getDayOfWeek), DayOfWeek.MONDAY)
                 .create();
 

@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrenceType;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -16,6 +17,9 @@ import java.util.Optional;
 
 @Component
 public class ScheduleConflictValidator {
+
+    @Value("#{'${schedule.cancel.excluded.statuses}'.split(',')}")
+    private List<ScheduleStatus> acceptableInitScheduleStatusList;
 
     public void checkIfScheduleAlreadyAppointed(ScheduleVersionEntity scheduleVersion, ScheduleEntity schedule){
         if(scheduleVersion == null || schedule == null)
@@ -60,8 +64,7 @@ public class ScheduleConflictValidator {
         if (schedule == null)
             throw new IllegalArgumentException("To check expiration Schedule cannot be null");
         DbLogger.info("Checking if cancellation is possible for Schedule with ID " + schedule.getId());
-        //TODO: move list to AppConfig
-        List<ScheduleStatus> cancelExcludedStatuses = List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED);
+        List<ScheduleStatus> cancelExcludedStatuses = acceptableInitScheduleStatusList;
         if(checkScheduleStatusInList(schedule, cancelExcludedStatuses))
             throw new SpecificationBrokenException(String.format(
                     "Schedule with ID %s, cannot be canceled because is in status: %s",

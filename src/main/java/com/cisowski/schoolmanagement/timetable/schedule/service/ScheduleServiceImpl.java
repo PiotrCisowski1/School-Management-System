@@ -54,6 +54,9 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Value("#{'${attendance.init.acceptable.schedule.statuses}'.split(',')}")
     private List<ScheduleStatus> acceptableInitScheduleStatusList;
 
+    @Value("#{'${schedule.update.excluded.statuses}'.split(',')}")
+    private List<ScheduleStatus> updateExcludedStatuses;
+
     @Override
     @Transactional
     public ScheduleDetailedResponse addSchedule(AddScheduleRequest request, Integer scheduleVersionId) {
@@ -154,8 +157,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         if(schedule.isEmpty())
             throw new EntityNotFoundException(ScheduleEntity.class, "ID", scheduleId.toString());
 
-        //TODO: move list to AppConfig
-        List<ScheduleStatus> updateExcludedStatuses = List.of(ScheduleStatus.CANCELLED, ScheduleStatus.DELETED, ScheduleStatus.COMPLETED);
         if(scheduleConflictValidator.checkScheduleStatusInList(schedule.get(), updateExcludedStatuses))
             throw new SpecificationBrokenException(String.format("Schedule with ID %s has status %s and cannot be updated", schedule.get().getId(), schedule.get().getStatus()));
 

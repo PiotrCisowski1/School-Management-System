@@ -8,6 +8,9 @@ import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
+import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,8 @@ public class ClassroomServiceImpl implements ClassroomService {
     private final ClassroomRepository classroomRepository;
     private final ClassroomMapper classroomMapper;
     private final EquipmentService equipmentService;
+    private final ScheduleRepository scheduleRepository;
+
     @Override
     @Transactional
     public ClassroomDetailedResponse addClassroom(ClassroomRequest request) {
@@ -48,7 +53,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     public void deleteClassroom(Integer classroomId) {
         DbLogger.info("Removing Classroom with ID: " + classroomId);
         ClassroomEntity existingClassroom = findClassroomById(classroomId);
-        //TODO: after schedule - check if classroom is still in use before delete
+        checkClassroomIsInUse(existingClassroom);
         classroomRepository.delete(existingClassroom);
         DbLogger.info(String.format("Classroom with ID: %s, was successfully removed", classroomId));
     }
@@ -116,5 +121,16 @@ public class ClassroomServiceImpl implements ClassroomService {
         if(classroom.isEmpty())
             throw new EntityNotFoundException(ClassroomEntity.class, "ID", classroomId.toString());
         return classroom.get();
+    }
+
+    private void checkClassroomIsInUse(ClassroomEntity classroom) {
+        List<ScheduleEntity> schedulesByClassroom = scheduleRepository.findByClassroomId(classroom.getId());
+        if(!Collections.isEmpty(schedulesByClassroom)) {
+            List<Integer> scheduleIds = schedulesByClassroom.stream().map(ScheduleEntity::getId).toList();
+            throw new SpecificationBrokenException(String.format(
+                    "Cannot delete Classroom with ID: %s, because there are some Schedules using it. Schedule IDs: %s",
+                    classroom.getId(),
+                    scheduleIds));
+        }
     }
 }

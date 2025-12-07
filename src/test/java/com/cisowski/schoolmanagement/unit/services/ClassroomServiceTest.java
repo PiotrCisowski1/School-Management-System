@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.classroom.service.impl.ClassroomServiceImpl;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,8 @@ public class ClassroomServiceTest {
     private ClassroomMapper classroomMapper;
     @Mock
     private EquipmentService equipmentService;
+    @Mock
+    private ScheduleRepository scheduleRepository;
     @InjectMocks
     private ClassroomServiceImpl classroomService;
     private ClassroomRequest validRequest;
