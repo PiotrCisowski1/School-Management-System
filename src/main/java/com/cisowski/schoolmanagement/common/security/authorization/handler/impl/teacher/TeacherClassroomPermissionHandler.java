@@ -8,8 +8,8 @@ import com.cisowski.schoolmanagement.common.security.authorization.model.Resourc
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

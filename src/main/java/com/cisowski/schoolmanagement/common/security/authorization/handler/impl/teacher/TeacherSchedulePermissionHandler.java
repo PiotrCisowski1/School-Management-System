@@ -7,8 +7,8 @@ import com.cisowski.schoolmanagement.common.security.authorization.model.Permiss
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import org.springframework.stereotype.Component;
 

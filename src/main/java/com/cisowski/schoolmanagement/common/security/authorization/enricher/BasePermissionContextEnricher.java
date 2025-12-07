@@ -3,8 +3,8 @@ package com.cisowski.schoolmanagement.common.security.authorization.enricher;
 import com.cisowski.schoolmanagement.common.security.authorization.context.PermissionContext;
 import com.cisowski.schoolmanagement.common.security.authorization.context.ResourceAccessContext;
 import com.cisowski.schoolmanagement.common.security.authorization.model.PermissionContextAttributeKey;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleVersionService;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

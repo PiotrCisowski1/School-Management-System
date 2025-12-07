@@ -6,10 +6,9 @@ import com.cisowski.schoolmanagement.common.security.authorization.handler.impl.
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
-import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

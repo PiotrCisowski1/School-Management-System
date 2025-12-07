@@ -3,7 +3,7 @@ package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;

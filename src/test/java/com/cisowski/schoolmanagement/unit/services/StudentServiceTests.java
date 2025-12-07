@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -285,4 +288,62 @@ public class StudentServiceTests {
                 studentService.findById(1));
     }
 
+    @Test
+    void fetchStudents_ShouldReturnStudents_WhenAllIdsFound() {
+        List<Integer> ids = List.of(1, 2, 3);
+        List<StudentEntity> foundStudents = ids.stream()
+                .map(id -> Instancio.of(StudentEntity.class)
+                        .set(field(StudentEntity::getId), id)
+                        .create())
+                .toList();
+
+        when(studentRepository.findAllById(ids)).thenReturn(foundStudents);
+
+        List<StudentEntity> result = studentService.fetchStudents(ids);
+
+        assertThat(result).hasSize(3).isEqualTo(foundStudents);
+    }
+
+    @Test
+    void fetchStudents_ShouldThrowException_WhenSizeMismatch() {
+        List<Integer> ids = List.of(1, 2, 3);
+        List<StudentEntity> incompleteStudents = List.of(
+                Instancio.of(StudentEntity.class).set(field(StudentEntity::getId), 1).create()
+        );
+
+        when(studentRepository.findAllById(ids)).thenReturn(incompleteStudents);
+
+        assertThatThrownBy(() -> studentService.fetchStudents(ids))
+                .isInstanceOf(SpecificationBrokenException.class)
+                .hasMessageContaining("Student IDs are invalid");
+    }
+
+    @Test
+    void fetchStudents_ShouldHandleDuplicateIds_WhenEntitiesFound() {
+        List<Integer> idsWithDuplicates = List.of(1, 1, 2);
+        List<Integer> distinctIds = List.of(1, 2);
+
+        List<StudentEntity> foundStudents = distinctIds.stream()
+                .map(id -> Instancio.of(StudentEntity.class)
+                        .set(field(StudentEntity::getId), id)
+                        .create())
+                .toList();
+
+        when(studentRepository.findAllById(idsWithDuplicates)).thenReturn(foundStudents);
+
+        List<StudentEntity> result = studentService.fetchStudents(idsWithDuplicates);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void fetchStudents_ShouldReturnEmptyList_WhenInputIsEmpty() {
+        List<Integer> emptyIds = Collections.emptyList();
+        when(studentRepository.findAllById(emptyIds)).thenReturn(Collections.emptyList());
+
+        List<StudentEntity> result = studentService.fetchStudents(emptyIds);
+
+        assertThat(result).isEmpty();
+        verify(studentRepository).findAllById(emptyIds);
+    }
 }

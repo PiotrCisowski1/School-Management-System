@@ -1,10 +1,10 @@
 package com.cisowski.schoolmanagement.unit.services;
 
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.schedule.model.ScheduleStatus;
-import com.cisowski.schoolmanagement.schedule.model.scheduleVersion.ScheduleVersionEntity;
-import com.cisowski.schoolmanagement.schedule.repository.ScheduleVersionRepository;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionServiceImpl;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleVersionServiceImpl;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

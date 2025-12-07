@@ -5,7 +5,7 @@ import com.cisowski.schoolmanagement.common.security.authorization.context.Resou
 import com.cisowski.schoolmanagement.common.security.authorization.model.PermissionContextAttributeKey;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
-import com.cisowski.schoolmanagement.schedule.service.ScheduleVersionService;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleVersionService;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
