@@ -22,6 +22,7 @@ import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -40,6 +41,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final StudentService studentService;
     private final AttendanceMapper attendanceMapper;
 
+    @Value("#{'${attendance.init.acceptable.schedule.statuses}'.split(',')}")
+    private List<ScheduleStatus> acceptableInitScheduleStatusList;
+
     @Override
     @Transactional
     public void initializeAttendances(ScheduleEntity schedule) {
@@ -54,11 +58,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     private void checkInitializationPossible(ScheduleEntity schedule) {
-        if(!schedule.getStatus().equals(ScheduleStatus.SCHEDULED))
+        if(!CollectionUtils.isEmpty(acceptableInitScheduleStatusList))
+            throw new SpecificationBrokenException(String.format("Cannot check possibility of initialization for Schedule with ID: %s, because acceptable status list is empty", schedule.getId()));
+        if(!acceptableInitScheduleStatusList.contains(schedule.getStatus()))
             throw new SpecificationBrokenException(String.format(
-                    "Cannot initialize Attendance if Schedule with ID %s is in status %s. Allowed status is SCHEDULED",
+                    "Cannot initialize Attendance if Schedule with ID %s is in status %s. Allowed statuses are: %s",
                     schedule.getId(),
-                    schedule.getStatus().name()));
+                    schedule.getStatus().name(),
+                    acceptableInitScheduleStatusList));
         AppConfigDetailedResponse minInitTimeConfig = appConfigService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue());
         Integer minInitTimeValue = Integer.valueOf(minInitTimeConfig.getValue());
         LocalTime scheduleStartTime = schedule.getStartTime();
@@ -106,6 +113,12 @@ public class AttendanceServiceImpl implements AttendanceService {
                 studentsId.size()));
 
         ScheduleEntity schedule = scheduleService.fetchSchedule(scheduleId);
+        if(!schedule.getStatus().equals(ScheduleStatus.ONGOING))
+            throw new SpecificationBrokenException(String.format(
+                    "Cannot mark status for Schedule with ID: %s, because it has status: %s. Proper status for marking is %s",
+                    schedule.getId(),
+                    schedule.getStatus(),
+                    ScheduleStatus.ONGOING));
         List<StudentEntity> students = studentService.fetchStudents(studentsId);
         checkStudentsBelongToSchedule(schedule, students);
 
