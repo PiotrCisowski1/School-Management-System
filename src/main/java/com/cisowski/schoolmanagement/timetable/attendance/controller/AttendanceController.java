@@ -24,11 +24,11 @@ public class AttendanceController {
 
     private final AttendanceService attendanceService;
 
-    @PostMapping("/schedule/{scheduleId}/mark")
+    @PostMapping("/scheduleOccurrence/{scheduleOccurrenceId}/mark")
     @RequiresPermission(resource = ResourceType.ATTENDANCE, action = ResourceActionType.CREATE)
-    ResponseEntity<List<AttendanceSummaryResponse>> setAttendanceAbsenceStatusForStudents(@PathVariable Integer scheduleId, @RequestBody @Valid MarkAttendanceRequest markRequest) {
-        DbLogger.info(String.format("Received POST request for Attendance marking with ID: %s and MarkAttendanceRequest: %s", scheduleId, markRequest.toString()));
-        List<AttendanceSummaryResponse> response = attendanceService.setAttendanceAbsenceStatusForStudents(scheduleId, markRequest);
+    ResponseEntity<List<AttendanceSummaryResponse>> setAttendanceAbsenceStatusForStudents(@PathVariable Long scheduleOccurrenceId, @RequestBody @Valid MarkAttendanceRequest markRequest) {
+        DbLogger.info(String.format("Received POST request for Attendance marking with ID: %s and MarkAttendanceRequest: %s", scheduleOccurrenceId, markRequest.toString()));
+        List<AttendanceSummaryResponse> response = attendanceService.setAttendanceAbsenceStatusForStudents(scheduleOccurrenceId, markRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

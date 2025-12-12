@@ -19,13 +19,14 @@ public class AppConfigEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(name = "\"key\"", unique = true, nullable = false, length = 100)
     private String key;
 
     @Column(nullable = false, length = 150)
     private String value;
 
     @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
     private AppConfigValueType valueType;
 
     @Column(length = 200)
@@ -35,7 +36,7 @@ public class AppConfigEntity {
     private boolean isEditable;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "app_configs_authorities",
+    @JoinTable(name = "app_config_authorities",
             joinColumns = @JoinColumn(name = "app_config_key", referencedColumnName = "key"),
             inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
     private List<AuthorityEntity> editableBy;
@@ -51,7 +52,7 @@ public class AppConfigEntity {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "modified_by", nullable = false)
+    @JoinColumn(name = "modified_by")
     private UserEntity modifiedBy;
 
     @Column(nullable = false)

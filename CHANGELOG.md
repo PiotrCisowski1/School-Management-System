@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.0] - 2025-12-12
+### New
+- ScheduleOccurrence - entity related with Schedule as actual Schedule occurrence within given threshold (created automatically based on coming lessons in X days - changed by Administrator in configuration)
+
+### Changed
+- Creating Attendance - from now attendance is related to ScheduleOccurrence not Schedule itself
+
 ## [1.2.0] - 2025-12-06
 ### New
 - Attendance - automatic initialization of shortly starting scheduled lessons; Endpoint to update Student absence status

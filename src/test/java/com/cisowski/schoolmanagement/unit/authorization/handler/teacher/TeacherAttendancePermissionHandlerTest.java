@@ -9,6 +9,8 @@ import com.cisowski.schoolmanagement.common.security.authorization.model.Resourc
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +28,7 @@ import static org.mockito.Mockito.when;
 public class TeacherAttendancePermissionHandlerTest {
 
     @Mock
-    private ScheduleService scheduleService;
+    private ScheduleOccurrenceService scheduleOccurrenceService;
     @InjectMocks
     private TeacherAttendancePermissionHandler handler;
 
@@ -52,7 +54,7 @@ public class TeacherAttendancePermissionHandlerTest {
 
     @Test
     void canAccess_Read_Granted() {
-        Integer scheduleId = 100;
+        Long scheduleOccurrenceId = 100L;
         Integer teacherId = 5;
         TeacherEntity accessingTeacher = Instancio.of(TeacherEntity.class)
                 .set(field(TeacherEntity::getId), teacherId)
@@ -60,12 +62,15 @@ public class TeacherAttendancePermissionHandlerTest {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getTeacher), accessingTeacher)
                 .create();
+        ScheduleOccurrenceEntity occurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                .set(field(ScheduleOccurrenceEntity::getSchedule), schedule)
+                .create();
 
         readContext.putAttribute(PermissionContextAttributeKey.TEACHER_ENTITY, accessingTeacher);
         ResourceAccessContext accessContext = new ResourceAccessContext(ResourceType.ATTENDANCE, ResourceActionType.CREATE);
-        accessContext.put("scheduleId", scheduleId);
+        accessContext.put("scheduleOccurrenceId", scheduleOccurrenceId);
 
-        when(scheduleService.fetchSchedule(scheduleId)).thenReturn(schedule);
+        when(scheduleOccurrenceService.fetchScheduleOccurrence(scheduleOccurrenceId)).thenReturn(occurrence);
 
         assertTrue(handler.canAccess(readContext, accessContext));
     }

@@ -6,7 +6,5 @@ public enum ScheduleStatus {
     CANCELLED,
     RESCHEDULED,
     DELETED,
-    COMPLETED,
-    UPDATED,
-    ONGOING;
+    UPDATED;
 }

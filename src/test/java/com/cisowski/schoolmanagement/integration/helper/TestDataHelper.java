@@ -29,6 +29,9 @@ import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.subject.repository.SubjectRepository;
 import com.cisowski.schoolmanagement.subject.repository.SubjectTypeRepository;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.repository.ScheduleOccurrenceRepository;
 import com.cisowski.schoolmanagement.users.common.model.AddressEntity;
 import com.cisowski.schoolmanagement.users.common.model.AuthorityEntity;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
@@ -59,6 +62,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -91,6 +95,7 @@ public class TestDataHelper {
     private final TeacherAvailabilityRepository teacherAvailabilityRepository;
     private final ScheduleChangelogRepository scheduleChangelogRepository;
     private final AppConfigRepository configRepository;
+    private final ScheduleOccurrenceRepository occurrenceRepository;
 
     public UserEntity createRandomAdminUser() {
         AuthorityEntity authority = dbHelper.fetchAuthorityByName("ADMINISTRATOR").orElse(null);
@@ -763,5 +768,19 @@ public class TestDataHelper {
                 .create();
 
         return configRepository.save(entity);
+    }
+
+    public ScheduleOccurrenceEntity createScheduleOccurrence(ScheduleEntity schedule) {
+        if(schedule == null)
+            schedule = createScheduleEntity(null, null, null);
+        ScheduleOccurrenceEntity scheduleOccurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                .set(field(ScheduleOccurrenceEntity::getId), null)
+                .set(field(ScheduleOccurrenceEntity::getSchedule), schedule)
+                .set(field(ScheduleOccurrenceEntity::getOccurrenceDateTime), LocalDateTime.now().plusMinutes(30))
+                .set(field(ScheduleOccurrenceEntity::getOccurrenceEndTime), LocalTime.now().plusMinutes(90))
+                .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
+                .set(field(ScheduleOccurrenceEntity::getAttendances), null)
+                .create();
+        return occurrenceRepository.save(scheduleOccurrence);
     }
 }

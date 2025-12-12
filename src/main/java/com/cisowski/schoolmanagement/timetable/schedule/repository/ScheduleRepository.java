@@ -2,6 +2,7 @@ package com.cisowski.schoolmanagement.timetable.schedule.repository;
 
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,21 +34,31 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Intege
     @Query("SELECT s from ScheduleEntity s JOIN s.classroom c WHERE c.id = :classroomId")
     List<ScheduleEntity> findByClassroomId(Integer classroomId);
 
-    @Query(value = "SELECT * FROM schedules WHERE status IN :statuses " +
-            "AND ( " +
-            "   (:timeNow <= :threshold AND start_time >= :timeNow AND start_time <= :threshold) " +
-            "   OR " +
-            "   (:timeNow > :threshold AND (start_time >= :timeNow OR start_time <= :threshold)) " +
-            ") " +
-            "AND effective_date <= :dateNow " +
-            "AND (expiration_date IS NULL OR expiration_date > :dateNow) " +
-            "AND day_of_week = :day",
-            nativeQuery = true)
-    List<ScheduleEntity> findUninitializedSchedules(
-            @Param("statuses") List<String> statuses,
-            @Param("threshold") String threshold,
-            @Param("dateNow") LocalDate dateNow,
-            @Param("day") DayOfWeek day,
-            @Param("timeNow") String timeNow
+//    @Query(value = "SELECT * FROM schedules WHERE status IN :statuses " +
+//            "AND ( " +
+//            "   (:timeNow <= :threshold AND start_time >= :timeNow AND start_time <= :threshold) " +
+//            "   OR " +
+//            "   (:timeNow > :threshold AND (start_time >= :timeNow OR start_time <= :threshold)) " +
+//            ") " +
+//            "AND effective_date <= :dateNow " +
+//            "AND (expiration_date IS NULL OR expiration_date > :dateNow) " +
+//            "AND day_of_week = :day",
+//            nativeQuery = true)
+//    List<ScheduleEntity> findUninitializedSchedules(
+//            @Param("statuses") List<String> statuses,
+//            @Param("threshold") String threshold,
+//            @Param("dateNow") LocalDate dateNow,
+//            @Param("day") DayOfWeek day,
+//            @Param("timeNow") String timeNow
+//    );
+
+    @Query(value = "SELECT s FROM ScheduleEntity s " +
+            "WHERE s.status IN :statuses " +
+            "AND s.effectiveDate <= :generationEndDate " +
+            "AND (s.expirationDate IS NULL OR s.expirationDate >= :generationStartDate)")
+    List<ScheduleEntity> findSchedulesToInitializeInGivenTimeGap(
+            @Param("statuses") List<ScheduleStatus> acceptableStatuses,
+            @Param("generationStartDate") LocalDate generationStartDate,
+            @Param("generationEndDate") LocalDate generationEndDate
     );
 }

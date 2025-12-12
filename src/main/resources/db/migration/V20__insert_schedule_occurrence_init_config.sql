@@ -1,0 +1,2 @@
+INSERT INTO app_config([key], [value], value_type, description, is_editable, min_value, max_value, created_at, modified_by, modified_at)
+VALUES ('schedule.init.search.time', '7', 'INTEGER', 'Value as days indicating minimal search time for Schedule - schedule plan will show as many days as this value', 'false', '1', '60', '2025-12-10 17:27:00', null, null)

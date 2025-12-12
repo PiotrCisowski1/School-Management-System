@@ -13,7 +13,9 @@ import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenEx
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
-import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.timetable.shared.TimetableHelper;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -22,7 +24,6 @@ import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import jakarta.transaction.Transactional;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -37,61 +38,55 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final AppConfigService appConfigService;
-    private final ScheduleService scheduleService;
     private final StudentService studentService;
     private final AttendanceMapper attendanceMapper;
-
-    @Value("#{'${attendance.init.acceptable.schedule.statuses}'.split(',')}")
-    private List<ScheduleStatus> acceptableInitScheduleStatusList;
+    private final ScheduleOccurrenceService occurrenceService;
 
     @Override
     @Transactional
-    public void initializeAttendances(ScheduleEntity schedule) {
-        if(schedule == null)
-            throw new SpecificationBrokenException("Cannot initialize Attendance because given Schedule is empty");
-        DbLogger.info("Initializing Attendance for Schedule with ID: " + schedule.getId());
-        checkInitializationPossible(schedule);
-        List<AttendanceEntity> attendances = getAttendanceEntities(schedule);
+    public void initializeAttendances(ScheduleOccurrenceEntity scheduleOccurrence) {
+        if(scheduleOccurrence == null)
+            throw new SpecificationBrokenException("Cannot initialize Attendance because given ScheduleOccurrence is empty");
+        DbLogger.info("Initializing Attendance for ScheduleOccurrence with ID: " + scheduleOccurrence.getId());
+        checkInitializationPossible(scheduleOccurrence);
+        List<AttendanceEntity> attendances = getAttendanceEntities(scheduleOccurrence);
         List<AttendanceEntity> savedAttendances = attendanceRepository.saveAll(attendances);
         if(attendances.size() != savedAttendances.size())
-            throw new SpecificationBrokenException("Size of saved Attendances is not same as expected size, Schedule ID: " + schedule.getId());
+            throw new SpecificationBrokenException("Size of saved Attendances is not same as expected size, ScheduleOccurrence ID: " + scheduleOccurrence.getId());
     }
 
-    private void checkInitializationPossible(ScheduleEntity schedule) {
-        if(!CollectionUtils.isEmpty(acceptableInitScheduleStatusList))
-            throw new SpecificationBrokenException(String.format("Cannot check possibility of initialization for Schedule with ID: %s, because acceptable status list is empty", schedule.getId()));
-        if(!acceptableInitScheduleStatusList.contains(schedule.getStatus()))
+    private void checkInitializationPossible(ScheduleOccurrenceEntity scheduleOccurrence) {
+        if(!OccurrenceStatus.SCHEDULED.equals(scheduleOccurrence.getStatus()))
             throw new SpecificationBrokenException(String.format(
-                    "Cannot initialize Attendance if Schedule with ID %s is in status %s. Allowed statuses are: %s",
-                    schedule.getId(),
-                    schedule.getStatus().name(),
-                    acceptableInitScheduleStatusList));
+                    "Cannot initialize Attendance because ScheduleOccurrence with ID %s has status %s. Expected status is %s",
+                    scheduleOccurrence.getId(),
+                    scheduleOccurrence.getStatus().name(),
+                    OccurrenceStatus.SCHEDULED));
         AppConfigDetailedResponse minInitTimeConfig = appConfigService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue());
         Integer minInitTimeValue = Integer.valueOf(minInitTimeConfig.getValue());
-        LocalTime scheduleStartTime = schedule.getStartTime();
         LocalTime timeNow = LocalTime.now();
-        LocalTime latestInitTime = scheduleStartTime.minusMinutes(minInitTimeValue);
-        boolean canInitialize = TimetableHelper.isStartWithinTimeWindow(timeNow, scheduleStartTime, minInitTimeValue);
+        LocalTime startTime = scheduleOccurrence.getOccurrenceDateTime().toLocalTime();
+        boolean canInitialize = TimetableHelper.isStartWithinTimeWindow(timeNow, startTime, minInitTimeValue);
         if (!canInitialize) {
             throw new SpecificationBrokenException(String.format(
-                    "Attendances cannot be initialized for Schedule with ID %s. " +
-                            "Current time: %s, schedule starts at: %s. " +
-                            "Initialization window: from %s (15 minutes before start)",
-                    schedule.getId(),
+                    "Attendances cannot be initialized for ScheduleOccurrence with ID %s. " +
+                            "Current time: %s, occurrence starts at: %s. " +
+                            "Initialization window: from %s",
+                    scheduleOccurrence.getId(),
                     timeNow.toString(),
-                    scheduleStartTime.toString(),
-                    latestInitTime.toString()
+                    startTime.toString(),
+                    timeNow.plusMinutes(minInitTimeValue).toString()
             ));
         }
     }
 
-    private List<AttendanceEntity> getAttendanceEntities(ScheduleEntity schedule) {
-        List<StudentEntity> scheduleStudents = new ArrayList<>(schedule.getScheduleVersion().getYearbook().getStudentsInYearbook());
+    private List<AttendanceEntity> getAttendanceEntities(ScheduleOccurrenceEntity scheduleOccurrence) {
+        List<StudentEntity> scheduleStudents = new ArrayList<>(scheduleOccurrence.getSchedule().getScheduleVersion().getYearbook().getStudentsInYearbook());
         List<AttendanceEntity> attendances = new ArrayList<>();
         scheduleStudents.forEach(student -> {
             DbLogger.info("Creating Attendance for Student with ID: " + student.getId());
             AttendanceEntity attendance = new AttendanceEntity();
-            attendance.setSchedule(schedule);
+            attendance.setOccurrence(scheduleOccurrence);
             attendance.setStudent(student);
             attendance.setAttendanceStatus(AttendanceStatus.ABSENT);
             attendances.add(attendance);
@@ -101,7 +96,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     @Transactional
-    public List<AttendanceSummaryResponse> setAttendanceAbsenceStatusForStudents(Integer scheduleId, MarkAttendanceRequest request) {
+    public List<AttendanceSummaryResponse> setAttendanceAbsenceStatusForStudents(Long scheduleOccurrenceId, MarkAttendanceRequest request) {
         List<Integer> studentsId = request.getStudentIds();
         AttendanceStatus status = request.getStatus();
         if(CollectionUtils.isEmpty(studentsId) || status == null)
@@ -112,15 +107,15 @@ public class AttendanceServiceImpl implements AttendanceService {
                 status.name(),
                 studentsId.size()));
 
-        ScheduleEntity schedule = scheduleService.fetchSchedule(scheduleId);
-        if(!schedule.getStatus().equals(ScheduleStatus.ONGOING))
+        ScheduleOccurrenceEntity scheduleOccurrence = occurrenceService.fetchScheduleOccurrence(scheduleOccurrenceId);
+        if(!scheduleOccurrence.getStatus().equals(OccurrenceStatus.ONGOING))
             throw new SpecificationBrokenException(String.format(
-                    "Cannot mark status for Schedule with ID: %s, because it has status: %s. Proper status for marking is %s",
-                    schedule.getId(),
-                    schedule.getStatus(),
-                    ScheduleStatus.ONGOING));
+                    "Cannot mark status for ScheduleOccurrence with ID: %s, because it has status: %s. Proper status for marking is %s",
+                    scheduleOccurrence.getId(),
+                    scheduleOccurrence.getStatus(),
+                    OccurrenceStatus.ONGOING));
         List<StudentEntity> students = studentService.fetchStudents(studentsId);
-        checkStudentsBelongToSchedule(schedule, students);
+        checkStudentsBelongToSchedule(scheduleOccurrence, students);
 
         List<AttendanceEntity> studentsAttendances = attendanceRepository.findAllByStudentIn(students);
         updateAttendancesStatus(studentsAttendances, status);
@@ -128,16 +123,16 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceMapper.toSummaryResponseList(updated);
     }
 
-    private void checkStudentsBelongToSchedule(ScheduleEntity schedule, List<StudentEntity> students) {
+    private void checkStudentsBelongToSchedule(ScheduleOccurrenceEntity occurrence, List<StudentEntity> students) {
         List<Integer> studentIds = students.stream().map(StudentEntity::getId).toList();
-        DbLogger.info(String.format("Checking if Schedule with ID: %s, is assigned for every Student with ID: %s", schedule.getId(), studentIds));
-        YearbookEntity yearbook = schedule.getScheduleVersion().getYearbook();
+        DbLogger.info(String.format("Checking if ScheduleOccurrence with ID: %s, is assigned for every Student with ID: %s", occurrence.getId(), studentIds));
+        YearbookEntity yearbook = occurrence.getSchedule().getScheduleVersion().getYearbook();
         List<Integer> yearbooksStudentsId = yearbook.getStudentsInYearbook().stream().map(UserEntity::getId).toList();
         List<Integer> notAssignedStudents = studentIds.stream()
                 .filter(id -> !yearbooksStudentsId.contains(id))
                 .toList();
         if(!CollectionUtils.isEmpty(notAssignedStudents))
-            throw new SpecificationBrokenException(String.format("Not every Student is assigned to Schedule with ID: %s, unacceptable Student's ID: %s", schedule.getId(), notAssignedStudents));
+            throw new SpecificationBrokenException(String.format("Not every Student is assigned to ScheduleOccurrence with ID: %s, unacceptable Student's ID: %s", occurrence.getId(), notAssignedStudents));
     }
 
     private void updateAttendancesStatus(List<AttendanceEntity> attendances, AttendanceStatus status) {

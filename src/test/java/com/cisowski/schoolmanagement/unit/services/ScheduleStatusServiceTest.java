@@ -328,7 +328,7 @@ class ScheduleStatusServiceTest {
     @Test
     void changeStatusToCanceled_WhenScheduleHasDifferentStatus_ShouldCaptureOldStatus() {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
-                .set(field(ScheduleEntity::getStatus), ScheduleStatus.COMPLETED)
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 
         scheduleStatusService.changeStatusToCanceled(schedule, "Test");
@@ -336,7 +336,7 @@ class ScheduleStatusServiceTest {
         verify(scheduleChangelogService).logChange(changelogCaptor.capture());
 
         ScheduleChangelogDto capturedDto = changelogCaptor.getValue();
-        assertThat(capturedDto.getOldValue()).isEqualTo("COMPLETED");
+        assertThat(capturedDto.getOldValue()).isEqualTo("SCHEDULED");
         assertThat(capturedDto.getNewValue()).isEqualTo("CANCELLED");
     }
 

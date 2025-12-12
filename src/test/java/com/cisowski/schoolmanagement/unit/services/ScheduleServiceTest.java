@@ -367,7 +367,7 @@ public class ScheduleServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ScheduleStatus.class, names = {"CANCELLED", "DELETED", "COMPLETED"})
+    @EnumSource(value = ScheduleStatus.class, names = {"CANCELLED", "DELETED"})
     void patchSchedule_WhenScheduleHasForbiddenStatus_ShouldThrowSpecificationBrokenException(ScheduleStatus forbiddenStatus) {
         Integer scheduleId = 1;
         PatchScheduleRequest request = new PatchScheduleRequest();
@@ -396,49 +396,23 @@ public class ScheduleServiceTest {
         AppConfigDetailedResponse mockConfig = new AppConfigDetailedResponse();
         mockConfig.setValue(minTimeStr);
 
-        when(configService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue()))
-                .thenReturn(mockConfig);
-
         List<ScheduleEntity> expectedSchedules = Instancio.ofList(ScheduleEntity.class).size(3).create();
 
-        when(scheduleRepository.findUninitializedSchedules(
+        when(scheduleRepository.findSchedulesToInitializeInGivenTimeGap(
                 anyList(),
-                anyString(),
                 any(LocalDate.class),
-                any(DayOfWeek.class),
-                anyString()
+                any(LocalDate.class)
         )).thenReturn(expectedSchedules);
 
-        List<ScheduleEntity> result = scheduleService.findUninitializedSchedules();
+        List<ScheduleEntity> result = scheduleService.findUninitializedSchedules(7);
 
         assertThat(result).hasSize(3).isEqualTo(expectedSchedules);
 
-        verify(scheduleRepository).findUninitializedSchedules(
+        verify(scheduleRepository).findSchedulesToInitializeInGivenTimeGap(
                 anyList(),
-                anyString(),
-                eq(LocalDate.now()),
-                eq(LocalDate.now().getDayOfWeek()),
-                anyString()
+                any(LocalDate.class),
+                any(LocalDate.class)
         );
-    }
-
-    @Test
-    void changeStatusToOngoing_ShouldDoNothing_WhenScheduleIsNull() {
-        scheduleService.changeStatusToOngoing(null);
-
-        verifyNoInteractions(scheduleRepository);
-    }
-
-    @Test
-    void changeStatusToOngoing_ShouldUpdateStatusAndSave() {
-        ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
-                .set(org.instancio.Select.field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
-                .create();
-
-        scheduleService.changeStatusToOngoing(schedule);
-
-        assertThat(schedule.getStatus()).isEqualTo(ScheduleStatus.ONGOING);
-        verify(scheduleRepository).save(schedule);
     }
 
     @Test
