@@ -31,7 +31,7 @@ class ScheduleConflictValidatorTest {
     @BeforeEach
     void setUp() {
         validator = new ScheduleConflictValidator();
-        ReflectionTestUtils.setField(validator, "acceptableInitScheduleStatusList", List.of(ScheduleStatus.CANCELLED,ScheduleStatus.DELETED,ScheduleStatus.COMPLETED));
+        ReflectionTestUtils.setField(validator, "acceptableInitScheduleStatusList", List.of(ScheduleStatus.CANCELLED,ScheduleStatus.DELETED));
     }
 
     @Test
@@ -172,17 +172,6 @@ class ScheduleConflictValidatorTest {
     }
 
     @Test
-    void checkScheduleCancellationPossible_WhenScheduleIsCompleted_ShouldThrowException() {
-        ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
-                .set(field(ScheduleEntity::getStatus), ScheduleStatus.COMPLETED)
-                .create();
-
-        assertThatThrownBy(() -> validator.checkScheduleCancellationPossible(schedule))
-                .isInstanceOf(SpecificationBrokenException.class)
-                .hasMessageContaining("cannot be canceled because is in status: COMPLETED");
-    }
-
-    @Test
     void checkScheduleCancellationPossible_WhenScheduleIsScheduled_ShouldNotThrowException() {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
@@ -194,7 +183,7 @@ class ScheduleConflictValidatorTest {
 
     @Test
     void checkScheduleStatusInList_WhenScheduleIsNull_ShouldThrowException() {
-        List<ScheduleStatus> statuses = List.of(ScheduleStatus.CANCELLED, ScheduleStatus.COMPLETED);
+        List<ScheduleStatus> statuses = List.of(ScheduleStatus.CANCELLED, ScheduleStatus.CANCELLED);
 
         assertThatThrownBy(() -> validator.checkScheduleStatusInList(null, statuses))
                 .isInstanceOf(IllegalArgumentException.class)

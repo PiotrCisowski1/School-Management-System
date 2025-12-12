@@ -2,8 +2,9 @@ package com.cisowski.schoolmanagement.timetable.shared;
 
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.attendance.service.AttendanceService;
-import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,27 +20,27 @@ import java.util.Objects;
 public class AttendanceInitTask {
 
     private final AttendanceService attendanceService;
-    private final ScheduleService scheduleService;
+    private final ScheduleOccurrenceService occurrenceService;
 
     @Scheduled(cron = "${attendance.init.task.cron}")
     public void initializeAttendanceForStartingSchedules() {
-        DbLogger.info("Checking for any uninitialized attendance for schedules, time: " + LocalDateTime.now());
+        DbLogger.info("Checking for any uninitialized ScheduleOccurrence and Attendance for Schedules, time: " + LocalDateTime.now());
         try {
-            List<ScheduleEntity> uninitializedSchedules = scheduleService.findUninitializedSchedules();
-            initializeAttendance(uninitializedSchedules);
+            List<ScheduleOccurrenceEntity> uninitializedOccurrences = occurrenceService.fetchUninitializedOccurrencesForAttendance();
+            initializeAttendance(uninitializedOccurrences);
         } catch (Exception ex) {
             DbLogger.error("Error while initializing attendance: " + ex.getMessage());
         }
     }
 
     @Transactional
-    private void initializeAttendance(List<ScheduleEntity> schedules) {
-        if(!CollectionUtils.isEmpty(schedules)) {
-            schedules.stream()
+    private void initializeAttendance(List<ScheduleOccurrenceEntity> scheduleOccurrences) {
+        if(!CollectionUtils.isEmpty(scheduleOccurrences)) {
+            scheduleOccurrences.stream()
                     .filter(Objects::nonNull)
-                    .forEach(schedule -> {
-                        attendanceService.initializeAttendances(schedule);
-                        scheduleService.changeStatusToOngoing(schedule);
+                    .forEach(occurrence -> {
+                        attendanceService.initializeAttendances(occurrence);
+                        occurrenceService.changeOccurrenceStatus(occurrence, OccurrenceStatus.ONGOING);
                     });
         }
     }

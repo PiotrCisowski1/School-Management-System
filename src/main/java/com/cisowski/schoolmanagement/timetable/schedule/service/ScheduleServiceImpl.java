@@ -1,8 +1,5 @@
 package com.cisowski.schoolmanagement.timetable.schedule.service;
 
-import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
-import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
-import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.classroom.service.ClassroomService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
@@ -31,7 +28,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,7 +45,6 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleChangelogService scheduleChangelogService;
     private final ScheduleStatusService scheduleStatusService;
     private final ScheduleConflictValidator scheduleConflictValidator;
-    private final AppConfigService configService;
 
     @Value("#{'${attendance.init.acceptable.schedule.statuses}'.split(',')}")
     private List<ScheduleStatus> acceptableInitScheduleStatusList;
@@ -371,37 +366,17 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleEntity> findUninitializedSchedules() {
+    public List<ScheduleEntity> findUninitializedSchedules(Integer minInitDays) {
         DbLogger.info("Searching for Schedules with following statuses: " + acceptableInitScheduleStatusList);
-        AppConfigDetailedResponse config = configService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue());
-        Integer minInitTimeValue = Integer.valueOf(config.getValue());
-        LocalTime minTimeBeforeInit = LocalTime.now().plusMinutes(minInitTimeValue.longValue());
-        List<String> acceptableStatuses = acceptableInitScheduleStatusList.stream().map(ScheduleStatus::name).toList();
-        LocalDateTime dateTimeNow = LocalDateTime.now();
-        DayOfWeek today = dateTimeNow.getDayOfWeek();
-        String timeNow = dateTimeNow.toLocalTime().toString();
-        LocalDate dateNow = dateTimeNow.toLocalDate();
-        List<ScheduleEntity> schedules = scheduleRepository.findUninitializedSchedules(acceptableStatuses, minTimeBeforeInit.toString(), dateNow, today, timeNow);
+        LocalDate todayDate = LocalDate.now();
+        LocalDate maxDateToInit = todayDate.plusDays(minInitDays);
+        List<ScheduleEntity> schedules = scheduleRepository.findSchedulesToInitializeInGivenTimeGap(acceptableInitScheduleStatusList, todayDate, maxDateToInit);
         DbLogger.info(String.format(
-                "Found %s Schedule entities with status %s and starting time after %s",
+                "Found %s uninitialized Schedules with status %s and up to %s",
                 schedules.size(),
                 acceptableInitScheduleStatusList,
-                minTimeBeforeInit.toString()));
+                maxDateToInit));
         return schedules;
-    }
-
-    @Override
-    @Transactional
-    public void changeStatusToOngoing(ScheduleEntity schedule) {
-        if (schedule == null)
-            return;
-        DbLogger.info(String.format(
-                "Changing status of Schedule with ID %s from %s to %s",
-                schedule.getId(),
-                schedule.getStatus(),
-                ScheduleStatus.ONGOING));
-        schedule.setStatus(ScheduleStatus.ONGOING);
-        scheduleRepository.save(schedule);
     }
 
     @Override

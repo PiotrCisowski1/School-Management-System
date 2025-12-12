@@ -8,8 +8,8 @@ import com.cisowski.schoolmanagement.common.security.authorization.model.Resourc
 import com.cisowski.schoolmanagement.common.security.authorization.model.UserType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
-import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TeacherAttendancePermissionHandler extends BaseResourcePermissionHandler<AttendanceEntity> {
 
-    private final ScheduleService scheduleService;
+    private final ScheduleOccurrenceService occurrenceService;
 
     @Override
     public boolean canAccess(PermissionContext context, ResourceAccessContext accessContext) {
@@ -43,10 +43,10 @@ public class TeacherAttendancePermissionHandler extends BaseResourcePermissionHa
         TeacherEntity teacher = context.getAttribute(PermissionContextAttributeKey.TEACHER_ENTITY);
         if(teacher == null)
             return false;
-        Integer scheduleId = accessContext.getAccessedMethodParameter("scheduleId");
-        if(scheduleId == null)
+        Long scheduleOccurrenceId = accessContext.getAccessedMethodParameter("scheduleOccurrenceId");
+        if(scheduleOccurrenceId == null)
             return false;
-        ScheduleEntity schedule = scheduleService.fetchSchedule(scheduleId);
-        return schedule.getTeacher().getId().equals(teacher.getId());
+        ScheduleOccurrenceEntity occurrence = occurrenceService.fetchScheduleOccurrence(scheduleOccurrenceId);
+        return occurrence.getSchedule().getTeacher().getId().equals(teacher.getId());
     }
 }

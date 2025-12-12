@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.timetable.attendance.model;
 
-import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import jakarta.persistence.*;
@@ -13,16 +13,12 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity(name = "attendances")
-@ToString(exclude = {"schedule", "student", "lastModifiedBy"})
+@ToString(exclude = {"student", "lastModifiedBy"})
 public class AttendanceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "schedule_id", nullable = false)
-    private ScheduleEntity schedule;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
@@ -42,4 +38,7 @@ public class AttendanceEntity {
     @JoinColumn(name = "last_modified_by_user_id")
     private UserEntity lastModifiedBy;
 
+    @ManyToOne
+    @JoinColumn(name="occurrence_id", nullable=false)
+    private ScheduleOccurrenceEntity occurrence;
 }

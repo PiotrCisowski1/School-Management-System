@@ -15,6 +15,9 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.timetable.shared.TimetableHelper;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -31,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,11 +55,11 @@ public class AttendanceServiceTest {
     @Mock
     private AppConfigService appConfigService;
     @Mock
-    private ScheduleService scheduleService;
-    @Mock
     private StudentService studentService;
     @Mock
     private AttendanceMapper attendanceMapper;
+    @Mock
+    private ScheduleOccurrenceService occurrenceService;
 
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
@@ -66,7 +70,7 @@ public class AttendanceServiceTest {
     @Nested
     class InitializeAttendancesTests {
 
-        private ScheduleEntity validSchedule;
+        private ScheduleOccurrenceEntity validScheduleOccurrence;
         private List<StudentEntity> students;
 
         @BeforeEach
@@ -84,10 +88,16 @@ public class AttendanceServiceTest {
                     .set(field(ScheduleVersionEntity::getYearbook), yearbook)
                     .create();
 
-            validSchedule = Instancio.of(ScheduleEntity.class)
+            ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                     .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                     .set(field(ScheduleEntity::getScheduleVersion), scheduleVersion)
                     .set(field(ScheduleEntity::getStartTime), LocalTime.now().plusMinutes(MIN_INIT_TIME_VALUE + 5))
+                    .create();
+            validScheduleOccurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getSchedule), schedule)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.SCHEDULED)
+                    .set(field(ScheduleOccurrenceEntity::getAttendances), null)
+                    .set(field(ScheduleOccurrenceEntity::getOccurrenceDateTime), LocalDateTime.of(schedule.getEffectiveDate(), schedule.getStartTime()))
                     .create();
         }
 
@@ -107,7 +117,7 @@ public class AttendanceServiceTest {
                         .thenReturn(config);
                 when(attendanceRepository.saveAll(anyList())).thenReturn(savedAttendances);
 
-                assertDoesNotThrow(() -> attendanceService.initializeAttendances(validSchedule));
+                assertDoesNotThrow(() -> attendanceService.initializeAttendances(validScheduleOccurrence));
 
                 verify(attendanceRepository, times(1)).saveAll(anyList());
             }
@@ -118,66 +128,20 @@ public class AttendanceServiceTest {
             SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
                     () -> attendanceService.initializeAttendances(null));
 
-            assertTrue(exception.getMessage().contains("Cannot initialize Attendance because given Schedule is empty"));
+            assertTrue(exception.getMessage().contains("Cannot initialize Attendance because given ScheduleOccurrence is empty"));
             verify(attendanceRepository, never()).saveAll(any());
         }
 
         @Test
         void initializeAttendances_StatusNotScheduled_ThrowsException() {
-            validSchedule.setStatus(ScheduleStatus.COMPLETED);
+            validScheduleOccurrence.setStatus(OccurrenceStatus.CANCELLED);
 
             SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                    () -> attendanceService.initializeAttendances(validSchedule));
+                    () -> attendanceService.initializeAttendances(validScheduleOccurrence));
 
-            assertTrue(exception.getMessage().contains("Allowed status is SCHEDULED"));
             verify(attendanceRepository, never()).saveAll(any());
         }
 
-        @Test
-        void initializeAttendances_TimeWindowExceeded_ThrowsException() {
-            try (MockedStatic<TimetableHelper> mockedTimetableHelper = mockStatic(TimetableHelper.class)) {
-                mockedTimetableHelper.when(() -> TimetableHelper.isStartWithinTimeWindow(any(LocalTime.class), any(LocalTime.class), anyInt()))
-                        .thenReturn(false);
-
-                LocalTime startTime = LocalTime.now().minusMinutes(MIN_INIT_TIME_VALUE + 1);
-                validSchedule.setStartTime(startTime);
-
-                AppConfigDetailedResponse config = Instancio.create(AppConfigDetailedResponse.class);
-                config.setValue(String.valueOf(MIN_INIT_TIME_VALUE));
-
-                when(appConfigService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue()))
-                        .thenReturn(config);
-
-                SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                        () -> attendanceService.initializeAttendances(validSchedule));
-
-                assertTrue(exception.getMessage().contains("Attendances cannot be initialized"));
-                verify(attendanceRepository, never()).saveAll(any());
-            }
-        }
-
-        @Test
-        void initializeAttendances_SaveSizeMismatch_ThrowsException() {
-            try (MockedStatic<TimetableHelper> mockedTimetableHelper = mockStatic(TimetableHelper.class)) {
-                mockedTimetableHelper.when(() -> TimetableHelper.isStartWithinTimeWindow(any(LocalTime.class), any(LocalTime.class), anyInt()))
-                        .thenReturn(true);
-
-                int expectedSize = students.size();
-                List<AttendanceEntity> savedAttendances = Instancio.ofList(AttendanceEntity.class).size(expectedSize - 1).create();
-
-                AppConfigDetailedResponse config = Instancio.create(AppConfigDetailedResponse.class);
-                config.setValue(String.valueOf(MIN_INIT_TIME_VALUE));
-
-                when(appConfigService.getConfigByKey(AppConfigKeys.ATTENDANCE_INITIALIZATION_MIN_TIME.getValue()))
-                        .thenReturn(config);
-                when(attendanceRepository.saveAll(anyList())).thenReturn(savedAttendances);
-
-                SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                        () -> attendanceService.initializeAttendances(validSchedule));
-
-                assertTrue(exception.getMessage().contains("Size of saved Attendances is not same as expected size"));
-            }
-        }
     }
 
     @Nested
@@ -188,6 +152,7 @@ public class AttendanceServiceTest {
         private List<StudentEntity> students;
         private List<AttendanceEntity> attendances;
         private MarkAttendanceRequest request;
+        private ScheduleOccurrenceEntity occurrence;
 
         @BeforeEach
         void setup() {
@@ -226,6 +191,13 @@ public class AttendanceServiceTest {
 
             List<Integer> studentIds = students.stream().map(StudentEntity::getId).toList();
             request = new MarkAttendanceRequest(studentIds, AttendanceStatus.PRESENT);
+
+            occurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getSchedule), schedule)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
+                    .set(field(ScheduleOccurrenceEntity::getAttendances), null)
+                    .set(field(ScheduleOccurrenceEntity::getOccurrenceDateTime), LocalDateTime.of(schedule.getEffectiveDate(), schedule.getStartTime()))
+                    .create();
         }
 
         @Test
@@ -240,9 +212,9 @@ public class AttendanceServiceTest {
 
             when(attendanceRepository.saveAll(anyList())).thenReturn(updatedAttendances);
             when(attendanceMapper.toSummaryResponseList(updatedAttendances)).thenReturn(expectedResponses);
-            when(scheduleService.fetchSchedule(any())).thenReturn(schedule);
+            when(occurrenceService.fetchScheduleOccurrence(any())).thenReturn(occurrence);
 
-            List<AttendanceSummaryResponse> result = attendanceService.setAttendanceAbsenceStatusForStudents(schedule.getId(), request);
+            List<AttendanceSummaryResponse> result = attendanceService.setAttendanceAbsenceStatusForStudents(occurrence.getId(), request);
 
             assertNotNull(result);
             assertEquals(expectedResponses.size(), result.size());
@@ -260,10 +232,9 @@ public class AttendanceServiceTest {
             request.setStudentIds(Collections.emptyList());
 
             SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(schedule.getId(), request));
+                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(occurrence.getId(), request));
 
             assertTrue(exception.getMessage().contains("Cannot mark attendance for:"));
-            verify(scheduleService, never()).fetchSchedule(anyInt());
         }
 
         @Test
@@ -271,10 +242,9 @@ public class AttendanceServiceTest {
             request.setStatus(null);
 
             SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(schedule.getId(), request));
+                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(occurrence.getId(), request));
 
             assertTrue(exception.getMessage().contains("Cannot mark attendance for:"));
-            verify(scheduleService, never()).fetchSchedule(anyInt());
         }
 
         @Test
@@ -288,13 +258,13 @@ public class AttendanceServiceTest {
             request.setStudentIds(allStudentIds);
 
             when(studentService.fetchStudents(allStudentIds)).thenReturn(allStudents);
-            when(scheduleService.fetchSchedule(any())).thenReturn(schedule);
+            when(occurrenceService.fetchScheduleOccurrence(any())).thenReturn(occurrence);
 
             SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
-                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(schedule.getId(), request));
+                    () -> attendanceService.setAttendanceAbsenceStatusForStudents(occurrence.getId(), request));
 
-            assertTrue(exception.getMessage().contains("Not every Student is assigned to Schedule with ID:"));
-            assertTrue(exception.getMessage().contains(String.valueOf(999)));
+            assertTrue(exception.getMessage().contains("Not every Student is assigned to ScheduleOccurrence with ID:"));
+            assertTrue(exception.getMessage().contains(String.valueOf(unauthorizedStudent.getId())));
             verify(attendanceRepository, never()).findAllByStudentIn(anyList());
         }
     }

@@ -12,7 +12,6 @@ public interface ScheduleService {
     List<ScheduleSummaryResponse> getScheduleByDayOfWeek(Integer scheduleVersionId, Integer dayOfWeek, boolean needsFiltering, Integer userId);
     List<ScheduleEntity> fetchSchedulesByClassroomId(Integer classroomId);
     void cancelSchedule(Integer scheduleId, String reason);
-    List<ScheduleEntity> findUninitializedSchedules();
-    void changeStatusToOngoing(ScheduleEntity schedule);
+    List<ScheduleEntity> findUninitializedSchedules(Integer minimalInitDays);
     ScheduleEntity fetchSchedule(Integer schedule);
 }
