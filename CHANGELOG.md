@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.0] - 2025-12-12
 ### New
 - ScheduleOccurrence - entity related with Schedule as actual Schedule occurrence within given threshold (created automatically based on coming lessons in X days - changed by Administrator in configuration)
+- Attendance GET endpoints for Teachers
 
 ### Changed
 - Creating Attendance - from now attendance is related to ScheduleOccurrence not Schedule itself

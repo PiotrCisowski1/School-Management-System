@@ -3,11 +3,9 @@ package com.cisowski.schoolmanagement.timetable.attendance.service;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.timetable.attendance.mapper.AttendanceMapper;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceStatus;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceSummaryResponse;
-import com.cisowski.schoolmanagement.timetable.attendance.model.MarkAttendanceRequest;
+import com.cisowski.schoolmanagement.timetable.attendance.model.*;
 import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceRepository;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
@@ -30,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Data
@@ -88,7 +87,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             AttendanceEntity attendance = new AttendanceEntity();
             attendance.setOccurrence(scheduleOccurrence);
             attendance.setStudent(student);
-            attendance.setAttendanceStatus(AttendanceStatus.ABSENT);
+            attendance.setAttendanceStatus(AttendanceStatus.UNMARKED);
             attendances.add(attendance);
         });
         return attendances;
@@ -148,5 +147,46 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendances.stream()
                 .filter(att -> att.getAttendanceStatus().equals(oppositeStatus))
                 .forEach(att -> att.setAttendanceStatus(status));
+    }
+
+    @Override
+    public List<AttendanceSummaryResponse> getActiveAttendanceForScheduleOccurrence(Long scheduleOccurrenceId) {
+        DbLogger.info("Searching for Attendances for ScheduleOccurrence with ID: " + scheduleOccurrenceId);
+        ScheduleOccurrenceEntity scheduleOccurrence = occurrenceService.fetchScheduleOccurrence(scheduleOccurrenceId);
+        if(!scheduleOccurrence.getStatus().equals(OccurrenceStatus.ONGOING))
+            throw new SpecificationBrokenException(String.format("Schedule occurrence with ID: %s is not active for updates as it's status is %s", scheduleOccurrenceId, scheduleOccurrence.getStatus().name()));
+        List<AttendanceEntity> attendances = attendanceRepository.findAllByOccurrence(scheduleOccurrence);
+        DbLogger.info(String.format("Found %s Attendances for ScheduleOccurrence with ID %s", attendances.size(), scheduleOccurrenceId));
+        return attendanceMapper.toSummaryResponseList(attendances);
+    }
+
+    @Override
+    public AttendanceDetailedResponse getAttendanceById(Long attendanceId) {
+        AttendanceEntity attendance = fetchAttendance(attendanceId);
+        return attendanceMapper.toDetailedResponse(attendance);
+    }
+
+    @Override
+    public List<AttendanceSummaryResponse> getCompletedAttendanceForScheduleOccurrence(Long scheduleOccurrenceId) {
+        DbLogger.info("Searching for completed Attendances for ScheduleOccurrence with ID: " + scheduleOccurrenceId);
+        ScheduleOccurrenceEntity scheduleOccurrence = occurrenceService.fetchScheduleOccurrence(scheduleOccurrenceId);
+        if(!scheduleOccurrence.getStatus().equals(OccurrenceStatus.COMPLETED))
+            throw new SpecificationBrokenException(String.format(
+                    "Cannot search for Attendances for Schedule occurrence with ID %s because it has status %s. Expected status is %s",
+                    scheduleOccurrenceId,
+                    scheduleOccurrence.getStatus(),
+                    OccurrenceStatus.COMPLETED));
+        List<AttendanceEntity> attendances = attendanceRepository.findAllByOccurrence(scheduleOccurrence);
+        return attendanceMapper.toSummaryResponseList(attendances);
+    }
+
+    @Override
+    public AttendanceEntity fetchAttendance(Long attendanceId) {
+        DbLogger.info("Searching for Attendance with ID: " + attendanceId);
+        Optional<AttendanceEntity> attendance = attendanceRepository.findById(attendanceId);
+        if(attendance.isEmpty())
+            throw new EntityNotFoundException(AttendanceEntity.class, "ID", attendanceId.toString());
+        DbLogger.info(String.format("Found Attendance with ID %s: %s", attendanceId, attendance.get().toString()));
+        return attendance.get();
     }
 }
