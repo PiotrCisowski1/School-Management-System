@@ -16,6 +16,9 @@ import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeScaleRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeTypeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeValueRepository;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceStatus;
+import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceRepository;
 import com.cisowski.schoolmanagement.timetable.schedule.model.*;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangeLogEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.AddScheduleVersionRequest;
@@ -96,6 +99,7 @@ public class TestDataHelper {
     private final ScheduleChangelogRepository scheduleChangelogRepository;
     private final AppConfigRepository configRepository;
     private final ScheduleOccurrenceRepository occurrenceRepository;
+    private final AttendanceRepository attendanceRepository;
 
     public UserEntity createRandomAdminUser() {
         AuthorityEntity authority = dbHelper.fetchAuthorityByName("ADMINISTRATOR").orElse(null);
@@ -782,5 +786,37 @@ public class TestDataHelper {
                 .set(field(ScheduleOccurrenceEntity::getAttendances), null)
                 .create();
         return occurrenceRepository.save(scheduleOccurrence);
+    }
+
+    public ScheduleOccurrenceEntity createScheduleOccurrence(ScheduleEntity schedule, OccurrenceStatus status) {
+        if(schedule == null)
+            schedule = createScheduleEntity(null, null, null);
+        ScheduleOccurrenceEntity scheduleOccurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                .set(field(ScheduleOccurrenceEntity::getId), null)
+                .set(field(ScheduleOccurrenceEntity::getSchedule), schedule)
+                .set(field(ScheduleOccurrenceEntity::getOccurrenceDateTime), LocalDateTime.now().plusMinutes(30))
+                .set(field(ScheduleOccurrenceEntity::getOccurrenceEndTime), LocalTime.now().plusMinutes(90))
+                .set(field(ScheduleOccurrenceEntity::getStatus), status)
+                .set(field(ScheduleOccurrenceEntity::getAttendances), null)
+                .create();
+        return occurrenceRepository.save(scheduleOccurrence);
+    }
+
+    public AttendanceEntity createAttendance(StudentEntity student, AttendanceStatus status, ScheduleOccurrenceEntity occurrence) {
+        if(student == null)
+            student = createStudent(null, null);
+        if(status == null)
+            status = AttendanceStatus.UNMARKED;
+        if(occurrence == null)
+            occurrence = createScheduleOccurrence(null);
+        AttendanceEntity attendance = Instancio.of(AttendanceEntity.class)
+                .set(field(AttendanceEntity::getId), null)
+                .set(field(AttendanceEntity::getLastModifiedAt), null)
+                .set(field(AttendanceEntity::getLastModifiedBy), null)
+                .set(field(AttendanceEntity::getStudent), student)
+                .set(field(AttendanceEntity::getOccurrence), occurrence)
+                .set(field(AttendanceEntity::getAttendanceStatus), status)
+                .create();
+        return attendanceRepository.save(attendance);
     }
 }

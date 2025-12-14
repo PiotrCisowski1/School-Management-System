@@ -3,12 +3,10 @@ package com.cisowski.schoolmanagement.unit.services;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.timetable.attendance.mapper.AttendanceMapper;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceStatus;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceSummaryResponse;
-import com.cisowski.schoolmanagement.timetable.attendance.model.MarkAttendanceRequest;
+import com.cisowski.schoolmanagement.timetable.attendance.model.*;
 import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceRepository;
 import com.cisowski.schoolmanagement.timetable.attendance.service.AttendanceServiceImpl;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
@@ -39,6 +37,7 @@ import java.time.LocalTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.instancio.Select.field;
@@ -266,6 +265,201 @@ public class AttendanceServiceTest {
             assertTrue(exception.getMessage().contains("Not every Student is assigned to ScheduleOccurrence with ID:"));
             assertTrue(exception.getMessage().contains(String.valueOf(unauthorizedStudent.getId())));
             verify(attendanceRepository, never()).findAllByStudentIn(anyList());
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for getActiveAttendanceForScheduleOccurrence")
+    class GetActiveAttendanceTests {
+        private final Long occurrenceId = 10L;
+        private ScheduleOccurrenceEntity ongoingOccurrence;
+        private List<AttendanceEntity> attendances;
+        private List<AttendanceSummaryResponse> expectedResponses;
+
+        @BeforeEach
+        void setup() {
+            ongoingOccurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getId), occurrenceId)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
+                    .create();
+            attendances = Instancio.ofList(AttendanceEntity.class).size(3).create();
+            expectedResponses = Instancio.ofList(AttendanceSummaryResponse.class).size(3).create();
+        }
+
+        @Test
+        void getActiveAttendanceForScheduleOccurrence_Success() {
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(ongoingOccurrence);
+            when(attendanceRepository.findAllByOccurrence(ongoingOccurrence)).thenReturn(attendances);
+            when(attendanceMapper.toSummaryResponseList(attendances)).thenReturn(expectedResponses);
+
+            List<AttendanceSummaryResponse> result = attendanceService.getActiveAttendanceForScheduleOccurrence(occurrenceId);
+
+            assertNotNull(result);
+            assertEquals(expectedResponses.size(), result.size());
+            assertEquals(expectedResponses, result);
+            verify(occurrenceService, times(1)).fetchScheduleOccurrence(occurrenceId);
+            verify(attendanceRepository, times(1)).findAllByOccurrence(ongoingOccurrence);
+            verify(attendanceMapper, times(1)).toSummaryResponseList(attendances);
+        }
+
+        @Test
+        void getActiveAttendanceForScheduleOccurrence_StatusNotOngoing_ThrowsException() {
+            ongoingOccurrence.setStatus(OccurrenceStatus.COMPLETED);
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(ongoingOccurrence);
+
+            SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
+                    () -> attendanceService.getActiveAttendanceForScheduleOccurrence(occurrenceId));
+
+            assertTrue(exception.getMessage().contains("is not active for updates as it's status is COMPLETED"));
+            verify(attendanceRepository, never()).findAllByOccurrence(any());
+        }
+
+        @Test
+        void getActiveAttendanceForScheduleOccurrence_NoAttendancesFound_ReturnsEmptyList() {
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(ongoingOccurrence);
+            when(attendanceRepository.findAllByOccurrence(ongoingOccurrence)).thenReturn(Collections.emptyList());
+            when(attendanceMapper.toSummaryResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            List<AttendanceSummaryResponse> result = attendanceService.getActiveAttendanceForScheduleOccurrence(occurrenceId);
+
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(attendanceRepository, times(1)).findAllByOccurrence(ongoingOccurrence);
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for getCompletedAttendanceForScheduleOccurrence")
+    class GetCompletedAttendanceTests {
+        private final Long occurrenceId = 20L;
+        private ScheduleOccurrenceEntity completedOccurrence;
+        private List<AttendanceEntity> attendances;
+        private List<AttendanceSummaryResponse> expectedResponses;
+
+        @BeforeEach
+        void setup() {
+            completedOccurrence = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getId), occurrenceId)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.COMPLETED)
+                    .create();
+            attendances = Instancio.ofList(AttendanceEntity.class).size(4).create();
+            expectedResponses = Instancio.ofList(AttendanceSummaryResponse.class).size(4).create();
+        }
+
+        @Test
+        void getCompletedAttendanceForScheduleOccurrence_Success() {
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(completedOccurrence);
+            when(attendanceRepository.findAllByOccurrence(completedOccurrence)).thenReturn(attendances);
+            when(attendanceMapper.toSummaryResponseList(attendances)).thenReturn(expectedResponses);
+
+            List<AttendanceSummaryResponse> result = attendanceService.getCompletedAttendanceForScheduleOccurrence(occurrenceId);
+
+            assertNotNull(result);
+            assertEquals(expectedResponses.size(), result.size());
+            assertEquals(expectedResponses, result);
+            verify(occurrenceService, times(1)).fetchScheduleOccurrence(occurrenceId);
+            verify(attendanceRepository, times(1)).findAllByOccurrence(completedOccurrence);
+            verify(attendanceMapper, times(1)).toSummaryResponseList(attendances);
+        }
+
+        @Test
+        void getCompletedAttendanceForScheduleOccurrence_StatusNotCompleted_ThrowsException() {
+            completedOccurrence.setStatus(OccurrenceStatus.ONGOING);
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(completedOccurrence);
+
+            SpecificationBrokenException exception = assertThrows(SpecificationBrokenException.class,
+                    () -> attendanceService.getCompletedAttendanceForScheduleOccurrence(occurrenceId));
+
+            assertTrue(exception.getMessage().contains("Expected status is COMPLETED"));
+            verify(attendanceRepository, never()).findAllByOccurrence(any());
+        }
+
+        @Test
+        void getCompletedAttendanceForScheduleOccurrence_NoAttendancesFound_ReturnsEmptyList() {
+            when(occurrenceService.fetchScheduleOccurrence(occurrenceId)).thenReturn(completedOccurrence);
+            when(attendanceRepository.findAllByOccurrence(completedOccurrence)).thenReturn(Collections.emptyList());
+            when(attendanceMapper.toSummaryResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+            List<AttendanceSummaryResponse> result = attendanceService.getCompletedAttendanceForScheduleOccurrence(occurrenceId);
+
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(attendanceRepository, times(1)).findAllByOccurrence(completedOccurrence);
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for fetchAttendance")
+    class FetchAttendanceTests {
+        private final Long attendanceId = 30L;
+        private AttendanceEntity attendanceEntity;
+
+        @BeforeEach
+        void setup() {
+            attendanceEntity = Instancio.of(AttendanceEntity.class)
+                    .set(field(AttendanceEntity::getId), attendanceId)
+                    .create();
+        }
+
+        @Test
+        void fetchAttendance_Success() {
+            when(attendanceRepository.findById(attendanceId)).thenReturn(Optional.of(attendanceEntity));
+
+            AttendanceEntity result = attendanceService.fetchAttendance(attendanceId);
+
+            assertNotNull(result);
+            assertEquals(attendanceId, result.getId());
+            verify(attendanceRepository, times(1)).findById(attendanceId);
+        }
+
+        @Test
+        void fetchAttendance_NotFound_ThrowsException() {
+            when(attendanceRepository.findById(attendanceId)).thenReturn(Optional.empty());
+
+            EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                    () -> attendanceService.fetchAttendance(attendanceId));
+
+            verify(attendanceRepository, times(1)).findById(attendanceId);
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for getAttendanceById")
+    class GetAttendanceByIdTests {
+        private final Long attendanceId = 40L;
+        private AttendanceEntity attendanceEntity;
+        private AttendanceDetailedResponse expectedResponse;
+
+        @BeforeEach
+        void setup() {
+            attendanceEntity = Instancio.of(AttendanceEntity.class)
+                    .set(field(AttendanceEntity::getId), attendanceId)
+                    .create();
+            expectedResponse = Instancio.create(AttendanceDetailedResponse.class);
+        }
+
+        @Test
+        void getAttendanceById_Success() {
+            when(attendanceRepository.findById(attendanceId)).thenReturn(Optional.of(attendanceEntity));
+            when(attendanceMapper.toDetailedResponse(attendanceEntity)).thenReturn(expectedResponse);
+
+            AttendanceDetailedResponse result = attendanceService.getAttendanceById(attendanceId);
+
+            assertNotNull(result);
+            assertEquals(expectedResponse, result);
+            verify(attendanceRepository, times(1)).findById(attendanceId);
+            verify(attendanceMapper, times(1)).toDetailedResponse(attendanceEntity);
+        }
+
+        @Test
+        void getAttendanceById_NotFound_ThrowsException() {
+            when(attendanceRepository.findById(attendanceId)).thenReturn(Optional.empty());
+
+            assertThrows(EntityNotFoundException.class,
+                    () -> attendanceService.getAttendanceById(attendanceId));
+
+            verify(attendanceRepository, times(1)).findById(attendanceId);
+            verify(attendanceMapper, never()).toDetailedResponse(any());
         }
     }
 }
