@@ -12,4 +12,5 @@ import java.util.List;
 public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Long> {
     List<AttendanceEntity> findAllByStudentIn(List<StudentEntity> students);
     List<AttendanceEntity> findAllByOccurrence(ScheduleOccurrenceEntity occurrence);
+    List<AttendanceEntity> findAllByStudent(StudentEntity student);
 }

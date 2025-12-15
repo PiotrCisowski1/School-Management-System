@@ -4,6 +4,7 @@ import com.cisowski.schoolmanagement.common.security.authorization.annotation.Re
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceAbsenceByScheduleResponse;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceDetailedResponse;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceSummaryResponse;
 import com.cisowski.schoolmanagement.timetable.attendance.model.MarkAttendanceRequest;
@@ -51,6 +52,14 @@ public class AttendanceController {
     ResponseEntity<List<AttendanceSummaryResponse>> getCompletedAttendanceForScheduleOccurrence(@PathVariable Long scheduleOccurrenceId) {
         DbLogger.info("Received GET request for active ScheduleAttendances for ScheduleOccurrence with ID: " + scheduleOccurrenceId);
         List<AttendanceSummaryResponse> response = attendanceService.getCompletedAttendanceForScheduleOccurrence(scheduleOccurrenceId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/student/{studentId}/absence-by-schedule")
+    @RequiresPermission(resource = ResourceType.ATTENDANCE, action = ResourceActionType.READ)
+    ResponseEntity<List<AttendanceAbsenceByScheduleResponse>> getAbsenceStatsByScheduleForStudent(@PathVariable Integer studentId) {
+        DbLogger.info("Received GET request for absence stats for Student with ID: " + studentId);
+        List<AttendanceAbsenceByScheduleResponse> response = attendanceService.getAbsenceStatsByScheduleForStudent(studentId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

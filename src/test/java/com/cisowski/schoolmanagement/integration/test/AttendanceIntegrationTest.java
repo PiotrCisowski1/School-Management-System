@@ -1,8 +1,15 @@
 package com.cisowski.schoolmanagement.integration.test;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceAbsenceByScheduleResponse;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,8 +17,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class AttendanceIntegrationTest extends BaseIntegrationTest {
@@ -92,6 +102,45 @@ public class AttendanceIntegrationTest extends BaseIntegrationTest {
             .then()
                     .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
         }
+    }
+
+    @Test
+    void shouldReturnAttendanceAbsenceStatsForStudent() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null, null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(yearbook);
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(scheduleVersion, null, null);
+        ScheduleOccurrenceEntity occurrence = dataHelper.createScheduleOccurrence(schedule);
+        ScheduleOccurrenceEntity anotherOccurrence = dataHelper.createScheduleOccurrence(schedule);
+        int presentAttendance = 5;
+        int absentAttendance = 6;
+        int unmarkedAttendance = 7;
+        for(int i = 0; i < presentAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.PRESENT, occurrence);
+        }
+        for(int i = 0; i < absentAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.ABSENT, anotherOccurrence);
+        }
+        for(int i = 0; i < unmarkedAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.UNMARKED, occurrence);
+        }
+        StudentEntity anotherStudent = dataHelper.createStudent(null, null);
+        AttendanceEntity attendance = dataHelper.createAttendance(anotherStudent, AttendanceStatus.ABSENT, anotherOccurrence);
+        AttendanceEntity attendance2 = dataHelper.createAttendance(anotherStudent, AttendanceStatus.UNMARKED, occurrence);
+
+        String path = String.format("/student/%s/absence-by-schedule", student.getId());
+        List<AttendanceAbsenceByScheduleResponse> response = given()
+                .headers(fullAdminHeaders)
+        .when()
+                .get(path)
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract().jsonPath().getList("", AttendanceAbsenceByScheduleResponse.class);
+
+        assertEquals(absentAttendance, response.get(0).getTotalAbsenceCount());
+        assertEquals(unmarkedAttendance, response.get(0).getUnmarkedAbsenceCount());
+        assertEquals(schedule.getId(), response.get(0).getScheduleId());
+        assertEquals(schedule.getSubject().getName(), response.get(0).getScheduleName());
     }
 
 

@@ -10,7 +10,6 @@ import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceR
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
@@ -26,9 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Data
@@ -188,5 +187,55 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new EntityNotFoundException(AttendanceEntity.class, "ID", attendanceId.toString());
         DbLogger.info(String.format("Found Attendance with ID %s: %s", attendanceId, attendance.get().toString()));
         return attendance.get();
+    }
+
+    @Override
+    public List<AttendanceAbsenceByScheduleResponse> getAbsenceStatsByScheduleForStudent(Integer studentId) {
+        DbLogger.info("Searching for Attendance absence stats for Student with ID: " + studentId);
+        StudentEntity student = studentService.fetchStudent(studentId);
+        List<AttendanceEntity> attendances = attendanceRepository.findAllByStudent(student);
+        return calculateStats(attendances);
+    }
+
+    private List<AttendanceAbsenceByScheduleResponse> calculateStats(List<AttendanceEntity> attendances) {
+        Map<ScheduleEntity, List<AttendanceEntity>> occurrencesBySchedule = mapOccurrencesToSchedule(attendances);
+        return calculateStatsPerSchedule(occurrencesBySchedule);
+    }
+
+    private Map<ScheduleEntity, List<AttendanceEntity>> mapOccurrencesToSchedule(List<AttendanceEntity> attendances) {
+        if(CollectionUtils.isEmpty(attendances))
+            return new HashMap<>();
+        return attendances.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(
+                        attendance -> attendance.getOccurrence().getSchedule(),
+                        Collectors.toList()
+                ));
+    }
+
+    private List<AttendanceAbsenceByScheduleResponse> calculateStatsPerSchedule(Map<ScheduleEntity, List<AttendanceEntity>> occurrencesPerSchedule) {
+        List<AttendanceAbsenceByScheduleResponse> responseList = new ArrayList<>();
+        if(!CollectionUtils.isEmpty(occurrencesPerSchedule)) {
+            for(ScheduleEntity schedule : occurrencesPerSchedule.keySet()) {
+                List<AttendanceEntity> attendances = occurrencesPerSchedule.get(schedule);
+                AttendanceAbsenceByScheduleResponse response = new AttendanceAbsenceByScheduleResponse();
+                response.setScheduleId(schedule.getId());
+                response.setScheduleName(schedule.getSubject().getName());
+
+                int unmarkedAbsences = 0;
+                int totalAbsence = 0;
+
+                for(AttendanceEntity attendance : attendances) {
+                        if(attendance.getAttendanceStatus().equals(AttendanceStatus.ABSENT))
+                            totalAbsence += 1;
+                        else if(attendance.getAttendanceStatus().equals(AttendanceStatus.UNMARKED))
+                            unmarkedAbsences += 1;
+                }
+                response.setTotalAbsenceCount(totalAbsence);
+                response.setUnmarkedAbsenceCount(unmarkedAbsences);
+                responseList.add(response);
+            }
+        }
+        return responseList;
     }
 }
