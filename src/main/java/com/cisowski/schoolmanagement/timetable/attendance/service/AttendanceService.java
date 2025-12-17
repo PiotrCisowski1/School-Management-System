@@ -1,11 +1,9 @@
 package com.cisowski.schoolmanagement.timetable.attendance.service;
 
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceDetailedResponse;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
-import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceSummaryResponse;
-import com.cisowski.schoolmanagement.timetable.attendance.model.MarkAttendanceRequest;
+import com.cisowski.schoolmanagement.timetable.attendance.model.*;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface AttendanceService {
@@ -15,4 +13,6 @@ public interface AttendanceService {
     AttendanceDetailedResponse getAttendanceById(Long attendanceId);
     List<AttendanceSummaryResponse> getCompletedAttendanceForScheduleOccurrence(Long scheduleOccurrenceId);
     AttendanceEntity fetchAttendance(Long attendanceId);
+    List<AttendanceAbsenceByScheduleResponse> getAbsenceStatsByScheduleForStudent(Integer studentId);
+    AttendanceOverallSummaryResponse getSummaryAttendanceForStudent(Integer studentId, LocalDate periodStart, LocalDate periodEnd);
 }

@@ -10,7 +10,6 @@ import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceR
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
-import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
@@ -25,10 +24,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Data
@@ -188,5 +190,131 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new EntityNotFoundException(AttendanceEntity.class, "ID", attendanceId.toString());
         DbLogger.info(String.format("Found Attendance with ID %s: %s", attendanceId, attendance.get().toString()));
         return attendance.get();
+    }
+
+    @Override
+    public List<AttendanceAbsenceByScheduleResponse> getAbsenceStatsByScheduleForStudent(Integer studentId) {
+        DbLogger.info("Searching for Attendance absence stats for Student with ID: " + studentId);
+        StudentEntity student = studentService.fetchStudent(studentId);
+        List<AttendanceEntity> attendances = attendanceRepository.findAllByStudent(student);
+        return calculateStats(attendances);
+    }
+
+    private List<AttendanceAbsenceByScheduleResponse> calculateStats(List<AttendanceEntity> attendances) {
+        Map<ScheduleEntity, List<AttendanceEntity>> occurrencesBySchedule = mapOccurrencesToSchedule(attendances);
+        return calculateStatsPerSchedule(occurrencesBySchedule);
+    }
+
+    private Map<ScheduleEntity, List<AttendanceEntity>> mapOccurrencesToSchedule(List<AttendanceEntity> attendances) {
+        if(CollectionUtils.isEmpty(attendances))
+            return new HashMap<>();
+        return attendances.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(
+                        attendance -> attendance.getOccurrence().getSchedule(),
+                        Collectors.toList()
+                ));
+    }
+
+    private List<AttendanceAbsenceByScheduleResponse> calculateStatsPerSchedule(Map<ScheduleEntity, List<AttendanceEntity>> occurrencesPerSchedule) {
+        List<AttendanceAbsenceByScheduleResponse> responseList = new ArrayList<>();
+        if(!CollectionUtils.isEmpty(occurrencesPerSchedule)) {
+            for(ScheduleEntity schedule : occurrencesPerSchedule.keySet()) {
+                List<AttendanceEntity> attendances = occurrencesPerSchedule.get(schedule);
+                AttendanceAbsenceByScheduleResponse response = new AttendanceAbsenceByScheduleResponse();
+                response.setScheduleId(schedule.getId());
+                response.setScheduleName(schedule.getSubject().getName());
+
+                int unmarkedAbsences = 0;
+                int totalAbsence = 0;
+
+                for(AttendanceEntity attendance : attendances) {
+                        if(attendance.getAttendanceStatus().equals(AttendanceStatus.ABSENT))
+                            totalAbsence += 1;
+                        else if(attendance.getAttendanceStatus().equals(AttendanceStatus.UNMARKED))
+                            unmarkedAbsences += 1;
+                }
+                response.setTotalAbsenceCount(totalAbsence);
+                response.setUnmarkedAbsenceCount(unmarkedAbsences);
+                responseList.add(response);
+            }
+        }
+        return responseList;
+    }
+
+    @Override
+    public AttendanceOverallSummaryResponse getSummaryAttendanceForStudent(Integer studentId, LocalDate periodStart, LocalDate periodEnd) {
+        DbLogger.info(String.format(
+                "Fetching summarized attendance stats for Student with ID: %s, from %s to %s",
+                studentId,
+                periodStart,
+                periodEnd));
+
+        StudentEntity student = studentService.fetchStudent(studentId);
+        AttendanceOverallSummaryResponse response = new AttendanceOverallSummaryResponse();
+        response.setPeriodStart(periodStart);
+        response.setPeriodEnd(periodEnd);
+        checkSearchingPeriod(response, student.getYearbook().getStartingYear());
+        LocalDateTime start = LocalDateTime.of(response.getPeriodStart(), LocalTime.of(0,0));
+        LocalDateTime end = LocalDateTime.of(response.getPeriodEnd(), LocalTime.of(23, 59));
+
+        List<AttendanceEntity> attendanceEntities = attendanceRepository.findAllByStudent(student);
+        List<AttendanceEntity> attendances = attendanceRepository.findAllByStudentAndCreatedAtBetween(student, start, end);
+        DbLogger.info(String.format(
+                "Found %s Attendances for Student with ID %s between %s and %s",
+                attendances.size(),
+                student.getId(),
+                start,
+                end));
+
+        calcSummaryStats(attendances, response);
+        DbLogger.info(String.format("Attendance summary stats for Student with ID %s: %s", student.getId(), response));
+        return response;
+    }
+
+    private void checkSearchingPeriod(AttendanceOverallSummaryResponse response, ZonedDateTime yearbookStartingYear) {
+        LocalDate periodEnd = response.getPeriodEnd();
+        LocalDate periodStart = response.getPeriodStart();
+
+        if(periodEnd == null || periodEnd.isAfter(LocalDate.now())) {
+            periodEnd = LocalDate.now();
+            DbLogger.info("Summarized attendance - replacing wrong periodEnd to " + periodEnd);
+        }
+        if(periodStart == null || periodStart.isAfter(periodEnd)) {
+            if(yearbookStartingYear == null || yearbookStartingYear.isBefore(ZonedDateTime.now().minusMonths(6)))
+                periodStart = LocalDate.now().minusMonths(6);
+            else if(!yearbookStartingYear.isAfter(ZonedDateTime.now()))
+                periodStart = yearbookStartingYear.toLocalDate();
+            else
+                periodStart = LocalDate.now();
+            DbLogger.info(String.format("Summarized attendance - replacing periodStart to %s", periodStart));
+        }
+        response.setPeriodEnd(periodEnd);
+        response.setPeriodStart(periodStart);
+    }
+
+    private void calcSummaryStats(List<AttendanceEntity> attendances, AttendanceOverallSummaryResponse response) {
+        if(CollectionUtils.isEmpty(attendances))
+            return;
+        int totalAttendance = attendances.size();
+        int totalAbsence = 0;
+        int totalUnmarked = 0;
+
+        for(AttendanceEntity attendance : attendances) {
+            if(attendance == null)
+                return;
+
+            if(attendance.getAttendanceStatus().equals(AttendanceStatus.ABSENT))
+                totalAbsence += 1;
+            else if(attendance.getAttendanceStatus().equals(AttendanceStatus.UNMARKED))
+                totalUnmarked += 1;
+        }
+        response.setTotalAttendanceCount(totalAttendance);
+        response.setTotalAbsence(totalAbsence);
+        response.setTotalUnmarked(totalUnmarked);
+
+        Double presentPercent = ((double) (totalAttendance - totalAbsence) / totalAttendance * 100);
+
+        response.setPresentPercentage(Math.round(presentPercent * 10.0) / 10.0);
     }
 }

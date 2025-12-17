@@ -11,6 +11,8 @@ import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity
 import com.cisowski.schoolmanagement.timetable.attendance.service.AttendanceService;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.users.student.service.StudentService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,7 @@ public class TeacherAttendancePermissionHandler extends BaseResourcePermissionHa
 
     private final ScheduleOccurrenceService occurrenceService;
     private final AttendanceService attendanceService;
+    private final StudentService studentService;
 
     @Override
     public boolean canAccess(PermissionContext context, ResourceAccessContext accessContext) {
@@ -45,6 +48,9 @@ public class TeacherAttendancePermissionHandler extends BaseResourcePermissionHa
         TeacherEntity teacher = context.getAttribute(PermissionContextAttributeKey.TEACHER_ENTITY);
         if(teacher == null)
             return false;
+        Integer studentId = accessContext.getAccessedMethodParameter("studentId");
+        if(studentId != null)
+            return checkIsYearbookHeadTeacher(teacher.getId(), studentId);
         ScheduleOccurrenceEntity occurrence = null;
         Long scheduleOccurrenceId = accessContext.getAccessedMethodParameter("scheduleOccurrenceId");
         if(scheduleOccurrenceId != null)
@@ -62,5 +68,10 @@ public class TeacherAttendancePermissionHandler extends BaseResourcePermissionHa
 
     private boolean checkTeacherOwnsOccurrence(ScheduleOccurrenceEntity occurrence, TeacherEntity teacher) {
         return occurrence.getSchedule().getTeacher().getId().equals(teacher.getId());
+    }
+
+    private boolean checkIsYearbookHeadTeacher(Integer teacherId, Integer studentId) {
+        StudentEntity student = studentService.fetchStudent(studentId);
+        return student.getYearbook().getHeadTeacher().getId().equals(teacherId);
     }
 }
