@@ -816,6 +816,7 @@ public class TestDataHelper {
                 .set(field(AttendanceEntity::getStudent), student)
                 .set(field(AttendanceEntity::getOccurrence), occurrence)
                 .set(field(AttendanceEntity::getAttendanceStatus), status)
+                .set(field(AttendanceEntity::getCreatedAt), LocalDateTime.now())
                 .create();
         return attendanceRepository.save(attendance);
     }

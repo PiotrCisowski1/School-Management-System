@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.integration.test;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceAbsenceByScheduleResponse;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceEntity;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceOverallSummaryResponse;
 import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
@@ -143,5 +144,42 @@ public class AttendanceIntegrationTest extends BaseIntegrationTest {
         assertEquals(schedule.getSubject().getName(), response.get(0).getScheduleName());
     }
 
+    @Test
+    void shouldReturnSummaryOfAllAttendances() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null, null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(yearbook);
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(scheduleVersion, null, null);
+        ScheduleOccurrenceEntity occurrence = dataHelper.createScheduleOccurrence(schedule);
+        int presentAttendance = 4;
+        int absentAttendance = 4;
+        int unmarkedAttendance = 4;
+        for(int i = 0; i < presentAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.PRESENT, occurrence);
+        }
+        for(int i = 0; i < absentAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.ABSENT, occurrence);
+        }
+        for(int i = 0; i < unmarkedAttendance; i++) {
+            dataHelper.createAttendance(student, AttendanceStatus.UNMARKED, occurrence);
+        }
 
+        int totalAttendance = presentAttendance + absentAttendance + unmarkedAttendance;
+        double present = ((double) (totalAttendance - absentAttendance) / totalAttendance * 100);
+        String path = String.format("/student/%s/summary", student.getId());
+        Double expectedPresent = Math.round(present * 10.0) / 10.0;
+
+        AttendanceOverallSummaryResponse response = given()
+                .headers(fullAdminHeaders)
+        .when()
+                .get(path)
+        .then()
+                .statusCode(HttpStatus.OK.value())
+                .extract().as(AttendanceOverallSummaryResponse.class);
+
+        assertEquals(totalAttendance, response.getTotalAttendanceCount());
+        assertEquals(absentAttendance, response.getTotalAbsence());
+        assertEquals(unmarkedAttendance, response.getTotalUnmarked());
+        assertEquals(expectedPresent, response.getPresentPercentage());
+    }
 }

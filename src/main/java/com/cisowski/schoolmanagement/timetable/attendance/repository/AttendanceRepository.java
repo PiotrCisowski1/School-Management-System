@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -13,4 +14,5 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Lo
     List<AttendanceEntity> findAllByStudentIn(List<StudentEntity> students);
     List<AttendanceEntity> findAllByOccurrence(ScheduleOccurrenceEntity occurrence);
     List<AttendanceEntity> findAllByStudent(StudentEntity student);
+    List<AttendanceEntity> findAllByStudentAndCreatedAtBetween(StudentEntity student, LocalDateTime periodStart, LocalDateTime periodEnd);
 }

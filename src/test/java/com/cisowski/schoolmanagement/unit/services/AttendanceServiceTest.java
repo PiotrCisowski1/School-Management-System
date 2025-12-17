@@ -32,14 +32,17 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -461,5 +464,133 @@ public class AttendanceServiceTest {
             verify(attendanceRepository, times(1)).findById(attendanceId);
             verify(attendanceMapper, never()).toDetailedResponse(any());
         }
+    }
+
+
+    @Nested
+    class GetSummaryAttendanceForStudentTests {
+
+        private StudentEntity student;
+        private final Integer studentId = 123;
+
+        @BeforeEach
+        void setUp() {
+            YearbookEntity yearbook = Instancio.of(YearbookEntity.class)
+                    .set(field("startingYear"), ZonedDateTime.now().minusYears(1))
+                    .create();
+            student = Instancio.of(StudentEntity.class)
+                    .set(field(StudentEntity::getId), studentId)
+                    .set(field(StudentEntity::getYearbook), yearbook)
+                    .create();
+        }
+
+        @Test
+        void shouldReturnCorrectSummaryForValidRange() {
+            LocalDate start = LocalDate.now().minusDays(7);
+            LocalDate end = LocalDate.now();
+            LocalDateTime startDateTime = LocalDateTime.of(start, LocalTime.MIN);
+            LocalDateTime endDateTime = LocalDateTime.of(end, LocalTime.of(23, 59));
+
+            List<AttendanceEntity> attendances = List.of(
+                    createAttendance(AttendanceStatus.PRESENT),
+                    createAttendance(AttendanceStatus.PRESENT),
+                    createAttendance(AttendanceStatus.ABSENT),
+                    createAttendance(AttendanceStatus.UNMARKED)
+            );
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(eq(student), eq(startDateTime), eq(endDateTime)))
+                    .thenReturn(attendances);
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, start, end);
+
+            assertThat(result.getTotalAttendanceCount()).isEqualTo(4);
+            assertThat(result.getTotalAbsence()).isEqualTo(1);
+            assertThat(result.getTotalUnmarked()).isEqualTo(1);
+            assertThat(result.getPresentPercentage()).isEqualTo(75.0);
+            assertThat(result.getPeriodStart()).isEqualTo(start);
+            assertThat(result.getPeriodEnd()).isEqualTo(end);
+        }
+
+        @Test
+        void shouldHandleEmptyAttendances() {
+            LocalDate start = LocalDate.now().minusDays(5);
+            LocalDate end = LocalDate.now();
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, start, end);
+
+            assertThat(result.getTotalAttendanceCount()).isNull();
+            assertThat(result.getPresentPercentage()).isNull();
+        }
+
+        @Test
+        void shouldFixPeriodEndIfInFuture() {
+            LocalDate start = LocalDate.now().minusDays(10);
+            LocalDate futureEnd = LocalDate.now().plusDays(5);
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, start, futureEnd);
+
+            assertThat(result.getPeriodEnd()).isEqualTo(LocalDate.now());
+        }
+
+        @Test
+        void shouldFixPeriodStartIfNullUsingYearbookDate() {
+            LocalDate end = LocalDate.now();
+            ZonedDateTime yearbookStart = ZonedDateTime.now().minusMonths(3);
+            student.getYearbook().setStartingYear(yearbookStart);
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, null, end);
+
+            assertThat(result.getPeriodStart()).isEqualTo(yearbookStart.toLocalDate());
+        }
+
+        @Test
+        void shouldFixPeriodStartToSixMonthsAgoIfYearbookIsVeryOld() {
+            LocalDate end = LocalDate.now();
+            student.getYearbook().setStartingYear(ZonedDateTime.now().minusYears(2));
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, null, end);
+
+            assertThat(result.getPeriodStart()).isEqualTo(LocalDate.now().minusMonths(6));
+        }
+
+        @Test
+        void shouldCalculatePercentageWithRounding() {
+            List<AttendanceEntity> attendances = List.of(
+                    createAttendance(AttendanceStatus.PRESENT),
+                    createAttendance(AttendanceStatus.PRESENT),
+                    createAttendance(AttendanceStatus.ABSENT)
+            );
+
+            when(studentService.fetchStudent(studentId)).thenReturn(student);
+            when(attendanceRepository.findAllByStudentAndCreatedAtBetween(any(), any(), any()))
+                    .thenReturn(attendances);
+
+            AttendanceOverallSummaryResponse result = attendanceService.getSummaryAttendanceForStudent(studentId, LocalDate.now().minusDays(1), LocalDate.now());
+
+            assertThat(result.getPresentPercentage()).isEqualTo(66.7);
+        }
+    }
+
+    private AttendanceEntity createAttendance(AttendanceStatus status) {
+        return Instancio.of(AttendanceEntity.class)
+                .set(field("attendanceStatus"), status)
+                .create();
     }
 }
