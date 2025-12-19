@@ -8,18 +8,28 @@ import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenEx
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrenceType;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.mapper.ScheduleOccurrenceMapper;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceSummaryResponse;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.repository.ScheduleOccurrenceRepository;
+import com.cisowski.schoolmanagement.timetable.shared.ScheduleHelper;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +37,9 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
 
     private final ScheduleOccurrenceRepository occurrenceRepository;
     private final AppConfigService configService;
+    private final YearbookService yearbookService;
+    private final ScheduleVersionRepository scheduleVersionRepository;
+    private final ScheduleOccurrenceMapper occurrenceMapper;
 
     @Override
     public ScheduleOccurrenceEntity fetchScheduleOccurrence(Long scheduleOccurrenceId) {
@@ -133,4 +146,26 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
         ScheduleOccurrenceEntity saved = occurrenceRepository.save(occurrence);
         DbLogger.info("Status change successfully for ScheduleOccurrence: " + saved.toString());
     }
+
+    @Override
+    public List<ScheduleOccurrenceSummaryResponse> getOccurrencesForYearbook(Integer yearbookId) {
+        DbLogger.info("Searching for ScheduleOccurrences for Yearbook with ID: " + yearbookId);
+        YearbookEntity yearbook = yearbookService.fetchYearbookEntity(yearbookId);
+        Optional<ScheduleVersionEntity> scheduleVersion = scheduleVersionRepository.findByIsActiveTrueAndYearbookId(yearbook.getId());
+        if(scheduleVersion.isEmpty())
+            throw new SpecificationBrokenException("Cannot fetch Schedule occurrences because there is no active Schedule version for Yearbook with ID " + yearbookId);
+        List<ScheduleEntity> activeSchedules = scheduleVersion.get().getSchedules().stream()
+                .filter(Objects::nonNull)
+                .filter(ScheduleHelper::isActiveSchedule)
+                .toList();
+        AppConfigDetailedResponse config = configService.getConfigByKey(AppConfigKeys.SCHEDULE_INIT_SEARCH_TIME.getValue());
+        Integer daysThreshold = Integer.parseInt(config.getValue());
+        LocalDate endThreshold = LocalDate.now().plusDays(daysThreshold);
+        LocalDateTime thresholdStart = LocalDateTime.of(LocalDate.now(), LocalTime.of(0,0));
+        LocalDateTime thresholdEnd = LocalDateTime.of(endThreshold, LocalTime.of(23, 59));
+        Set<ScheduleOccurrenceEntity> occurrences = occurrenceRepository.findByScheduleInAndOccurrenceDateTimeBetween(activeSchedules, thresholdStart, thresholdEnd);
+        return occurrenceMapper.toSummaryResponseList(occurrences);
+    }
+
+
 }
