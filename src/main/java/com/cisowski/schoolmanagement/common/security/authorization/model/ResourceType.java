@@ -11,5 +11,6 @@ public enum ResourceType {
     YEARBOOK,
     SCHEDULE_VERSION,
     SCHEDULE,
-    ATTENDANCE
+    ATTENDANCE,
+    SCHEDULE_OCCURRENCE
 }

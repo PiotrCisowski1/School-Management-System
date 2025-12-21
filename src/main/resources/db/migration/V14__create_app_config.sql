@@ -5,11 +5,11 @@ CREATE TABLE app_config(
     value_type VARCHAR(50) NOT NULL,
     description VARCHAR(200),
     is_editable BIT NOT NULL,
-    minValue VARCHAR(30),
-    maxValue VARCHAR(30),
+    min_value VARCHAR(30),
+    max_value VARCHAR(30),
     created_at DATETIME NOT NULL,
-    modified_by INTEGER NOT NULL,
-    modified_at DATETIME NOT NULL,
+    modified_by INTEGER,
+    modified_at DATETIME,
 );
 
 ALTER TABLE app_config WITH CHECK ADD CONSTRAINT FK_app_config_users FOREIGN KEY(modified_by)

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.1] - 2025-12-21
+### New
+- ScheduleOccurrence endpoint to get upcoming lessons for given Yearbook, up to X days (definied in AppConfig as Schedule init time)
+- ScheduleOccurrence endpoint to get single occurrence
+
 ## [1.3.0] - 2025-12-12
 ### New
 - ScheduleOccurrence - entity related with Schedule as actual Schedule occurrence within given threshold (created automatically based on coming lessons in X days - changed by Administrator in configuration)
