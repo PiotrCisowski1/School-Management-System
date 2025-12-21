@@ -167,5 +167,19 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
         return occurrenceMapper.toSummaryResponseList(occurrences);
     }
 
+    @Override
+    public ScheduleOccurrenceSummaryResponse getOccurrenceById(Long scheduleOccurrenceId) {
+        ScheduleOccurrenceEntity occurrence = fetchOccurrence(scheduleOccurrenceId);
+        return occurrenceMapper.toSummaryResponse(occurrence);
+    }
 
+    @Override
+    public ScheduleOccurrenceEntity fetchOccurrence(Long scheduleOccurrenceId) {
+        DbLogger.info("Searching for ScheduleOccurrence with ID: " + scheduleOccurrenceId);
+        Optional<ScheduleOccurrenceEntity> scheduleOccurrence = occurrenceRepository.findById(scheduleOccurrenceId);
+        if(scheduleOccurrence.isEmpty())
+            throw new EntityNotFoundException(ScheduleOccurrenceEntity.class, "ID", scheduleOccurrenceId.toString());
+        DbLogger.info(String.format("Found ScheduleOccurrence with ID %s: %s", scheduleOccurrenceId, scheduleOccurrence.get()));
+        return scheduleOccurrence.get();
+    }
 }

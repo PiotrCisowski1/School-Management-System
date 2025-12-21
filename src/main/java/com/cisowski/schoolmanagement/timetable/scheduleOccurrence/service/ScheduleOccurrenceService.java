@@ -13,4 +13,6 @@ public interface ScheduleOccurrenceService {
     List<ScheduleOccurrenceEntity> fetchUninitializedOccurrencesForAttendance();
     void changeOccurrenceStatus(ScheduleOccurrenceEntity occurrence, OccurrenceStatus occurrenceStatus);
     List<ScheduleOccurrenceSummaryResponse> getOccurrencesForYearbook(Integer yearbookId);
+    ScheduleOccurrenceSummaryResponse getOccurrenceById(Long scheduleOccurrenceId);
+    ScheduleOccurrenceEntity fetchOccurrence(Long scheduleOccurrenceId);
 }
