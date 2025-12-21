@@ -7,10 +7,17 @@ import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundExcepti
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrenceType;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.mapper.ScheduleOccurrenceMapper;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceSummaryResponse;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.repository.ScheduleOccurrenceRepository;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceServiceImpl;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +34,7 @@ import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +54,15 @@ public class ScheduleOccurrenceServiceTest {
 
     @Mock
     private AppConfigService configService;
+
+    @Mock
+    private YearbookService yearbookService;
+
+    @Mock
+    private ScheduleVersionRepository scheduleVersionRepository;
+
+    @Mock
+    private ScheduleOccurrenceMapper occurrenceMapper;
 
     @InjectMocks
     private ScheduleOccurrenceServiceImpl scheduleOccurrenceService;
@@ -264,5 +281,75 @@ public class ScheduleOccurrenceServiceTest {
         scheduleOccurrenceService.initializeScheduleOccurrence(schedule, MIN_INIT_DAYS);
 
         verify(occurrenceRepository, times(1)).save(any(ScheduleOccurrenceEntity.class));
+    }
+
+    @Test
+    void shouldReturnOccurrencesForYearbook() {
+        Integer yearbookId = 1;
+        YearbookEntity yearbook = Instancio.create(YearbookEntity.class);
+        yearbook.setId(yearbookId);
+
+        ScheduleEntity activeSchedule = Instancio.create(ScheduleEntity.class);
+        activeSchedule.setStatus(ScheduleStatus.SCHEDULED);
+
+        ScheduleVersionEntity scheduleVersion = Instancio.create(ScheduleVersionEntity.class);
+        scheduleVersion.setSchedules(List.of(activeSchedule));
+
+        AppConfigDetailedResponse config = Instancio.create(AppConfigDetailedResponse.class);
+        config.setValue("7");
+
+        Set<ScheduleOccurrenceEntity> occurrences = Instancio.ofSet(ScheduleOccurrenceEntity.class).size(3).create();
+        List<ScheduleOccurrenceSummaryResponse> expectedResponse = Instancio.ofList(ScheduleOccurrenceSummaryResponse.class).size(3).create();
+
+        when(yearbookService.fetchYearbookEntity(yearbookId)).thenReturn(yearbook);
+        when(scheduleVersionRepository.findByIsActiveTrueAndYearbookId(yearbookId)).thenReturn(Optional.of(scheduleVersion));
+        when(configService.getConfigByKey(AppConfigKeys.SCHEDULE_INIT_SEARCH_TIME.getValue())).thenReturn(config);
+
+        LocalDate endThresholdDate = LocalDate.now().plusDays(7);
+        LocalDateTime start = LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0));
+        LocalDateTime end = LocalDateTime.of(endThresholdDate, LocalTime.of(23, 59));
+
+        when(occurrenceRepository.findByScheduleInAndOccurrenceDateTimeBetween(any(), eq(start), eq(end))).thenReturn(occurrences);
+        when(occurrenceMapper.toSummaryResponseList(occurrences)).thenReturn(expectedResponse);
+
+        List<ScheduleOccurrenceSummaryResponse> result = scheduleOccurrenceService.getOccurrencesForYearbook(yearbookId);
+
+        assertEquals(expectedResponse, result);
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenScheduleVersionNotFound() {
+        Integer yearbookId = 1;
+        YearbookEntity yearbook = Instancio.create(YearbookEntity.class);
+        yearbook.setId(yearbookId);
+
+        when(yearbookService.fetchYearbookEntity(yearbookId)).thenReturn(yearbook);
+        when(scheduleVersionRepository.findByIsActiveTrueAndYearbookId(yearbookId)).thenReturn(Optional.empty());
+
+        assertThrows(SpecificationBrokenException.class, () -> scheduleOccurrenceService.getOccurrencesForYearbook(yearbookId));
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoActiveSchedulesFound() {
+        Integer yearbookId = 1;
+        YearbookEntity yearbook = Instancio.create(YearbookEntity.class);
+        yearbook.setId(yearbookId);
+
+        ScheduleVersionEntity scheduleVersion = Instancio.create(ScheduleVersionEntity.class);
+        scheduleVersion.setSchedules(Collections.emptyList());
+
+        AppConfigDetailedResponse config = Instancio.create(AppConfigDetailedResponse.class);
+        config.setValue("5");
+
+        when(yearbookService.fetchYearbookEntity(yearbookId)).thenReturn(yearbook);
+        when(scheduleVersionRepository.findByIsActiveTrueAndYearbookId(yearbookId)).thenReturn(Optional.of(scheduleVersion));
+        when(configService.getConfigByKey(AppConfigKeys.SCHEDULE_INIT_SEARCH_TIME.getValue())).thenReturn(config);
+        when(occurrenceRepository.findByScheduleInAndOccurrenceDateTimeBetween(eq(Collections.emptyList()), any(), any())).thenReturn(Collections.emptySet());
+        when(occurrenceMapper.toSummaryResponseList(Collections.emptySet())).thenReturn(Collections.emptyList());
+
+        List<ScheduleOccurrenceSummaryResponse> result = scheduleOccurrenceService.getOccurrencesForYearbook(yearbookId);
+
+        assertEquals(0, result.size());
     }
 }
