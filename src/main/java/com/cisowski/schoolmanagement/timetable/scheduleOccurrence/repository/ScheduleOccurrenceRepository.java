@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -28,4 +27,6 @@ public interface ScheduleOccurrenceRepository extends JpaRepository<ScheduleOccu
     );
 
     Set<ScheduleOccurrenceEntity> findByScheduleInAndOccurrenceDateTimeBetween(List<ScheduleEntity> schedules, LocalDateTime thresholdStartTime, LocalDateTime thresholdEndTime);
+
+    List<ScheduleOccurrenceEntity> findByStatusInAndOccurrenceDateTimeBefore(List<OccurrenceStatus> statuses, LocalDateTime occurrenceExpirationTime);
 }

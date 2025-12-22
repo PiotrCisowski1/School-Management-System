@@ -20,16 +20,17 @@ import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+
+import static com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -118,7 +119,7 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
             occurrence.setSchedule(schedule);
             occurrence.setOccurrenceDateTime(occurrenceDateTime);
             occurrence.setOccurrenceEndTime(schedule.getEndTime());
-            occurrence.setStatus(OccurrenceStatus.SCHEDULED);
+            occurrence.setStatus(SCHEDULED);
             ScheduleOccurrenceEntity saved = occurrenceRepository.save(occurrence);
             DbLogger.info("Occurrence successfully created: " + saved.toString());
         }
@@ -131,7 +132,7 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
         Integer minInitTime = Integer.parseInt(minInitTimeConfig.getValue());
         LocalDateTime dateTimeNow = LocalDateTime.now();
         LocalDateTime maxInitDateTime = dateTimeNow.plusMinutes(minInitTime);
-        List<ScheduleOccurrenceEntity> occurrences = occurrenceRepository.findOccurrencesReadyForInitialization(OccurrenceStatus.SCHEDULED, dateTimeNow, maxInitDateTime);
+        List<ScheduleOccurrenceEntity> occurrences = occurrenceRepository.findOccurrencesReadyForInitialization(SCHEDULED, dateTimeNow, maxInitDateTime);
         DbLogger.info(String.format("Found %s ScheduleOccurrences ready for initialize Attendances", occurrences.size()));
         return occurrences;
     }
@@ -142,6 +143,7 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
         if(occurrence.getStatus().equals(occurrenceStatus))
             return;
         DbLogger.info(String.format("Changing ScheduleOccurrence(ID: %s) status from %s to %s", occurrence.getId(), occurrence.getStatus(), occurrenceStatus));
+        checkStatusConversionPossible(occurrence.getStatus(), occurrenceStatus);
         occurrence.setStatus(occurrenceStatus);
         ScheduleOccurrenceEntity saved = occurrenceRepository.save(occurrence);
         DbLogger.info("Status change successfully for ScheduleOccurrence: " + saved.toString());
@@ -181,5 +183,44 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
             throw new EntityNotFoundException(ScheduleOccurrenceEntity.class, "ID", scheduleOccurrenceId.toString());
         DbLogger.info(String.format("Found ScheduleOccurrence with ID %s: %s", scheduleOccurrenceId, scheduleOccurrence.get()));
         return scheduleOccurrence.get();
+    }
+
+    @Override
+    public List<ScheduleOccurrenceEntity> findOccurrencesReadyToComplete(List<OccurrenceStatus> acceptableStatuses, Integer daysGap) {
+        DbLogger.info(String.format(
+                "Searching for ScheduleOccurrences with status in '%s' and occurrence time after '%s' days",
+                StringUtils.join(acceptableStatuses),
+                daysGap));
+        LocalDateTime expirationDT = LocalDateTime.now().minusDays(daysGap);
+        List<ScheduleOccurrenceEntity> occurrences = occurrenceRepository.findByStatusInAndOccurrenceDateTimeBefore(acceptableStatuses, expirationDT);
+        DbLogger.info(String.format(
+                "Found %s ScheduleOccurrences with status in '%s' and occurrenceTime before '%s'",
+                occurrences.size(),
+                StringUtils.join(acceptableStatuses),
+                expirationDT));
+        return occurrences;
+    }
+
+    @Transactional
+    @Override
+    public void changeOccurrencesStatus(List<ScheduleOccurrenceEntity> occurrences, OccurrenceStatus targetStatus) {
+        if(CollectionUtils.isEmpty(occurrences) || targetStatus == null)
+            return;
+        occurrences.forEach(occurrence -> changeOccurrenceStatus(occurrence, targetStatus));
+    }
+
+    private void checkStatusConversionPossible(OccurrenceStatus currentStatus, OccurrenceStatus targetStatus) {
+        if(!isConversionPossible(currentStatus, targetStatus))
+            throw new SpecificationBrokenException(String.format("Cannot change ScheduleOccurrence status from %s to %s", currentStatus, targetStatus));
+    }
+
+    private boolean isConversionPossible(OccurrenceStatus currentStatus, OccurrenceStatus targetStatus) {
+        List<OccurrenceStatus> possibleTransitionStatuses = new ArrayList<>();
+        switch (currentStatus) {
+            case SCHEDULED -> possibleTransitionStatuses = List.of(ONGOING, COMPLETED, CANCELLED);
+            case ONGOING -> possibleTransitionStatuses = List.of(COMPLETED);
+            case COMPLETED, CANCELLED -> {}
+        }
+        return possibleTransitionStatuses.contains(targetStatus);
     }
 }

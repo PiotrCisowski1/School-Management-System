@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service;
+package com.cisowski.schoolmanagement.timetable.scheduleOccurrence.task;
 
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
@@ -6,6 +6,7 @@ import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
