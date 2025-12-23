@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleChangelogService;
 import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleStatusService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
@@ -38,9 +39,12 @@ class ScheduleStatusServiceTest {
     @Captor
     private ArgumentCaptor<ScheduleChangelogDto> changelogCaptor;
 
+    @Mock
+    private ScheduleOccurrenceService statusService;
+
     @BeforeEach
     void setUp() {
-        scheduleStatusService = new ScheduleStatusService(scheduleChangelogService);
+        scheduleStatusService = new ScheduleStatusService(scheduleChangelogService, statusService);
     }
 
     @Test

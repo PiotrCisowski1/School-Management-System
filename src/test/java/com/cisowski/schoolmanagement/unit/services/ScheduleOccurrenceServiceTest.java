@@ -10,6 +10,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrence
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleStatusService;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.mapper.ScheduleOccurrenceMapper;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
@@ -100,7 +101,7 @@ public class ScheduleOccurrenceServiceTest {
 
     @Test
     void changeOccurrenceStatus_shouldChangeStatusAndSaveWhenDifferent() {
-        OccurrenceStatus newStatus = OccurrenceStatus.COMPLETED;
+        OccurrenceStatus newStatus = OccurrenceStatus.ONGOING;
         mockOccurrence.setStatus(OccurrenceStatus.SCHEDULED);
         when(occurrenceRepository.save(any(ScheduleOccurrenceEntity.class))).thenReturn(mockOccurrence);
 
@@ -171,6 +172,7 @@ public class ScheduleOccurrenceServiceTest {
                 .set(field(ScheduleEntity::getEndTime), END_TIME)
                 .set(field(ScheduleEntity::getEffectiveDate), CURRENT_DATE.plusDays(1))
                 .set(field(ScheduleEntity::getDayOfWeek), CURRENT_DATE.plusDays(1).getDayOfWeek())
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 
         when(occurrenceRepository.existsByScheduleAndOccurrenceDateTime(any(), any())).thenReturn(false);
@@ -395,7 +397,7 @@ public class ScheduleOccurrenceServiceTest {
             OccurrenceStatus targetStatus = OccurrenceStatus.COMPLETED;
             List<ScheduleOccurrenceEntity> occurrences = Instancio.ofList(ScheduleOccurrenceEntity.class)
                     .size(3)
-                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.SCHEDULED)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
                     .create();
 
             when(occurrenceRepository.save(any())).thenReturn(occurrences.get(0));
