@@ -175,6 +175,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         ScheduleEntity existingSchedule = schedule.get();
         scheduleMapper.patchEntities(requestSchedule, existingSchedule);
+        existingSchedule.setStatus(ScheduleStatus.UPDATED);
 
         ScheduleEntity savedSchedule = scheduleRepository.save(existingSchedule);
         logPatchChanges(requestSchedule, existingSchedule, request.getUpdateReason());
@@ -364,8 +365,14 @@ public class ScheduleServiceImpl implements ScheduleService {
                     "Schedule with ID %s cannot be canceled because it has already been held",
                     scheduleId
             ));
+        if(occurrenceRepository.existsByScheduleAndStatusIn(schedule.get(), List.of(OccurrenceStatus.ONGOING, OccurrenceStatus.COMPLETED)))
+            throw new SpecificationBrokenException(String.format(
+                    "Schedule with ID '%s' cannot be canceled because it has active occurrences.",
+                    schedule.get().getId()
+            ));
 
         scheduleStatusService.changeStatusToCanceled(schedule.get(), reason);
+        scheduleStatusService.cancelOccurrencesForSchedule(schedule.get());
         scheduleRepository.save(schedule.get());
         DbLogger.info(String.format("Schedule with ID %s was successfully marked as CANCELED", scheduleId));
     }

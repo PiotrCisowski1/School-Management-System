@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - fix Schedule deletion - check if any active (ONGOING or COMPLETED) occurrences for Schedule -> if not, set occurrences status to 'CANCELED'
+- fix Schedule cancellation - check if there are any active occurrences, if not - set schedule and occurrences to CANCEL status
 
 ## [1.3.0] - 2025-12-12
 ### New
