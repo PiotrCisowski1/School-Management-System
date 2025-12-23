@@ -217,10 +217,18 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
     private boolean isConversionPossible(OccurrenceStatus currentStatus, OccurrenceStatus targetStatus) {
         List<OccurrenceStatus> possibleTransitionStatuses = new ArrayList<>();
         switch (currentStatus) {
-            case SCHEDULED -> possibleTransitionStatuses = List.of(ONGOING, COMPLETED, CANCELLED);
+            case SCHEDULED -> possibleTransitionStatuses = List.of(ONGOING, CANCELLED);
             case ONGOING -> possibleTransitionStatuses = List.of(COMPLETED);
             case COMPLETED, CANCELLED -> {}
         }
         return possibleTransitionStatuses.contains(targetStatus);
+    }
+
+    @Override
+    public List<ScheduleOccurrenceEntity> fetchOccurrencesForSchedule(ScheduleEntity schedule) {
+        DbLogger.info("Searching for all ScheduleOccurrences for Schedule with ID: " + schedule.getId());
+        List<ScheduleOccurrenceEntity> occurrences = occurrenceRepository.findAllBySchedule(schedule);
+        DbLogger.info(String.format("Found %s ScheduleOccurrences for Schedule with ID '%s'", occurrences.size(), schedule.getId()));
+        return occurrences;
     }
 }

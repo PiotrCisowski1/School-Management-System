@@ -5,6 +5,9 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangeType;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangelogDto;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.service.ScheduleOccurrenceService;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 public class ScheduleStatusService {
 
     private final ScheduleChangelogService scheduleChangelogService;
+    private final ScheduleOccurrenceService occurrenceService;
 
     public List<UserEntity> createListWithUsersAffectedByChange(ScheduleEntity schedule) {
         if (schedule == null)
@@ -106,5 +110,13 @@ public class ScheduleStatusService {
                 false,
                 usersAffected);
         scheduleChangelogService.logChange(changelogDto);
+    }
+
+    public void cancelOccurrencesForSchedule(ScheduleEntity schedule) {
+        if(schedule == null)
+            return;
+        DbLogger.info("Trying to cancel ScheduleOccurrences for Schedule with ID: " + schedule.getId());
+        List<ScheduleOccurrenceEntity> occurrences = occurrenceService.fetchOccurrencesForSchedule(schedule);
+        occurrenceService.changeOccurrencesStatus(occurrences, OccurrenceStatus.CANCELLED);
     }
 }

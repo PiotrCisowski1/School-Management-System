@@ -14,6 +14,8 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.Sc
 import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.repository.ScheduleOccurrenceRepository;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
@@ -45,6 +47,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleChangelogService scheduleChangelogService;
     private final ScheduleStatusService scheduleStatusService;
     private final ScheduleConflictValidator scheduleConflictValidator;
+    private final ScheduleOccurrenceRepository occurrenceRepository;
 
     @Value("#{'${attendance.init.acceptable.schedule.statuses}'.split(',')}")
     private List<ScheduleStatus> acceptableInitScheduleStatusList;
@@ -138,7 +141,9 @@ public class ScheduleServiceImpl implements ScheduleService {
         if(scheduleStatusService.isAlreadyDeleted(schedule))
             throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.getId()));
 
+        checkIfAnyActiveOccurrencesForSchedule(schedule);
         scheduleStatusService.changeStatusToDeleted(schedule);
+        scheduleStatusService.cancelOccurrencesForSchedule(schedule);
         scheduleRepository.save(schedule);
         DbLogger.info(String.format("Schedule with ID %s was marked as deleted successfully", scheduleId));
     }
@@ -387,5 +392,13 @@ public class ScheduleServiceImpl implements ScheduleService {
         if(scheduleStatusService.isAlreadyDeleted(schedule.get()))
             throw new SpecificationBrokenException(String.format("Schedule with ID %s is marked as deleted", schedule.get().getId()));
         return schedule.get();
+    }
+
+    public void checkIfAnyActiveOccurrencesForSchedule(ScheduleEntity schedule) {
+        if(schedule == null)
+            return;
+        DbLogger.info(String.format("Checking if Schedule with ID '%s' has any ongoing occurrences", schedule.getId()));
+        if (occurrenceRepository.existsByScheduleAndStatusIn(schedule, List.of(OccurrenceStatus.ONGOING, OccurrenceStatus.COMPLETED)))
+            throw new SpecificationBrokenException(String.format("Cannot delete Schedule with ID '%s' because there are active Schedule occurrences", schedule.getId()));
     }
 }

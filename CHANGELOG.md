@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - ScheduleOccurrence endpoint to get single occurrence
 - Automate ScheduleOccurrence completion - scheduled task checking every 3 hours to change status of ScheduleOccurrence with starting dateTime after particular amount of days (config based value)
 
+### Changed
+- fix Schedule deletion - check if any active (ONGOING or COMPLETED) occurrences for Schedule -> if not, set occurrences status to 'CANCELED'
+
 ## [1.3.0] - 2025-12-12
 ### New
 - ScheduleOccurrence - entity related with Schedule as actual Schedule occurrence within given threshold (created automatically based on coming lessons in X days - changed by Administrator in configuration)
