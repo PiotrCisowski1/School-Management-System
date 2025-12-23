@@ -20,7 +20,7 @@ public class YearbookEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "head_teacher_user_id", referencedColumnName = "user_id")
     private TeacherEntity headTeacher;
     @Column(nullable = false)

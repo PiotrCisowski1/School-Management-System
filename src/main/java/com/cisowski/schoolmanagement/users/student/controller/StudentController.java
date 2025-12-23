@@ -1,5 +1,8 @@
 package com.cisowski.schoolmanagement.users.student.controller;
 
+import com.cisowski.schoolmanagement.common.security.authorization.annotation.RequiresPermission;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
+import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
 import com.cisowski.schoolmanagement.users.student.model.StudentPatchRequest;
 import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
@@ -8,24 +11,24 @@ import com.cisowski.schoolmanagement.users.student.model.StudentSummaryResponse;
 import com.cisowski.schoolmanagement.users.student.service.StudentService;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/students")
+@RequiredArgsConstructor
 public class StudentController {
 
     private final StudentService studentService;
 
-    public StudentController(StudentService service) {
-        this.studentService = service;
-    }
-
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<AddStudentResponse> addStudent(@Valid @RequestBody StudentCreateRequest student){
         String message = "Received Student POST request for object: " + student.toString();
         DbLogger.info(message);
@@ -35,6 +38,7 @@ public class StudentController {
     }
 
     @PatchMapping("/{studentId}")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<StudentDetailedResponse> updateStudent(@Valid @RequestBody StudentPatchRequest request, @PathVariable Integer studentId){
         String message = String.format("Received Student PUT request for object: %s", request.toString());
         DbLogger.info(message);
@@ -44,6 +48,7 @@ public class StudentController {
     }
 
     @DeleteMapping("/{studentId}")
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity deleteStudent(@PathVariable Integer studentId){
         String message = String.format("Received Student DELETE request for ID: %s", studentId);
         DbLogger.info(message);
@@ -52,6 +57,7 @@ public class StudentController {
         return new ResponseEntity(HttpStatusCode.valueOf(204));
     }
 
+    @RequiresPermission(resource = ResourceType.STUDENT, action = ResourceActionType.READ)
     @GetMapping("/{studentId}")
     public ResponseEntity<StudentDetailedResponse> getStudent(@PathVariable Integer studentId){
         String message = String.format("Received Student GET request for ID: %s", studentId);
@@ -62,6 +68,7 @@ public class StudentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
     public ResponseEntity<Collection<StudentSummaryResponse>> getStudents(){
         String message = "Received Students GET request";
         DbLogger.info(message);

@@ -6,7 +6,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.time.DayOfWeek;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = BaseMapperConfig.class)
 public interface DateMapper {
 
     @Named("toDayOfWeek")

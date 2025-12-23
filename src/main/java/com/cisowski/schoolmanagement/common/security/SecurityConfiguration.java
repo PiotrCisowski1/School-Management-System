@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -63,22 +64,14 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         return security.csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception ->
-                        exception.authenticationEntryPoint(authEntryPoint))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
                 .logout(LogoutConfigurer::permitAll)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(request ->
-                        request
-                                .requestMatchers("/login").permitAll()
-                                .requestMatchers("/students/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/parents/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/teachers/**").hasAnyAuthority("ADMINISTRATOR")
-                                .requestMatchers("/yearbooks/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/subjects/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/schedules/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/classrooms/**").hasAuthority("ADMINISTRATOR")
-                                .requestMatchers("/**").hasAnyAuthority("SYS_ADMIN"))
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .build();
     }
 

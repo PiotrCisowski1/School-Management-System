@@ -1,0 +1,2 @@
+INSERT INTO app_config([key], [value], value_type, description, is_editable, min_value, max_value, created_at, modified_by, modified_at)
+VALUES ('attendance.initialization.start.time', '15', 'INTEGER', 'Value in minutes indicating min. time before marking attendance is possible', 'true', '1', '-', '2025-12-02 20:33:00', null, null)

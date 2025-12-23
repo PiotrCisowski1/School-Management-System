@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.teacher.mapper;
 
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.common.mapper.DateMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
@@ -10,7 +11,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+@Mapper(config = BaseMapperConfig.class,
     uses = {TeacherMapper.class, DateMapper.class})
 public interface TeacherAvailabilityMapper {
 

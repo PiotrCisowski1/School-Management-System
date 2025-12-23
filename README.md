@@ -30,8 +30,12 @@ This project serves both as an educational journey and a professional showcase o
 - 📆 **Lesson Scheduling**
   - Assign subjects and teachers to time slots and classrooms
   - Validate teacher availability
+  - Automatic schedule occurrences creation and completion
+  - Attendance marking
 - 📚 **Subject & Year Structure**
   - Assign subjects to academic years and groups
+- ⚙️ **App Configuration**
+  - Administrator-editable values, changing system behavior (such as a time threshold for attendance marking)
 - 📈 **Event Logging**
   - System events and exceptions are persisted to the database
 - 🔐 **Secure Access**
@@ -43,15 +47,15 @@ This project serves both as an educational journey and a professional showcase o
 
 ## Tech Stack 
 
-| Layer         | Technology                                  |
-|--------------|----------------------------------------------|
-| Language      | Java 17                                     |
-| Framework     | Spring Boot, Spring Security, Spring Data JPA |
-| Build Tool    | Maven                                       |
-| Database      | Microsoft SQL Server                        |
-| Auth          | JWT Token-based Authentication              |
-| Utilities     | Lombok, MapStruct                           |
-| Testing       | JUnit 5, Mockito, Instancio                 |
+| Layer         | Technology                                                     |
+|--------------|----------------------------------------------------------------|
+| Language      | Java 17                                                        |
+| Framework     | Spring Boot, Spring Security, Spring Data JPA                  |
+| Build Tool    | Maven                                                          |
+| Database      | Microsoft SQL Server as main, PostgreSQL for integration tests |
+| Auth          | JWT Token-based Authentication                                 |
+| Utilities     | Lombok, MapStruct                                              |
+| Testing       | JUnit 5, Mockito, Instancio, Testcontainers, Rest Assured      |
 
 > ℹ️ This is a backend-only project. Frontend will be developed in future phases.
 
@@ -75,11 +79,17 @@ Access to endpoints is restricted based on authority levels
 ## Testing 
 Unit tests for core logic using:
 
-JUnit 5
+-JUnit 5
 
-Mockito
+-Mockito
 
-Instancio for test data generation
+-Instancio for test data generation
+
+Integration tests:
+
+-Testcontainers
+
+-Rest Assured
 
 🧠 JaCoCo integration for code coverage reports is planned.
 

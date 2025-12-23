@@ -1,0 +1,243 @@
+package com.cisowski.schoolmanagement.unit.services;
+
+import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
+import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
+import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherAvailabilityMapper;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherSummaryResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityRequest;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityResponse;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
+import com.cisowski.schoolmanagement.users.teacher.repository.TeacherAvailabilityRepository;
+import com.cisowski.schoolmanagement.users.teacher.repository.TeacherRepository;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherAvailabilityServiceImpl;
+import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
+import org.instancio.Instancio;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class TeacherAvailabilityServiceTest {
+    @Mock
+    private TeacherAvailabilityRepository teacherAvailabilityRepository;
+    @Mock
+    private TeacherService teacherService;
+    @Mock
+    private TeacherAvailabilityMapper teacherAvailabilityMapper;
+    private TeacherAvailabilityMapper mapper;
+    @Mock
+    private SubjectService subjectService;
+    @Mock
+    private TeacherRepository teacherRepository;
+    @InjectMocks
+    private TeacherAvailabilityServiceImpl teacherAvailabilityService;
+
+    private TeacherAvailabilityRequest request;
+    private TeacherAvailabilityEntity requestEntity;
+    private TeacherEntity teacher;
+    private TeacherAvailabilityResponse response;
+
+    @BeforeEach
+    public void setUp(){
+        request = new TeacherAvailabilityRequest(
+             4,
+                LocalTime.of(8,30,0),
+                LocalTime.of(10,0,0),
+                true,
+                "The notes"
+        );
+        teacher = Instancio.create(TeacherEntity.class);
+
+        requestEntity = new TeacherAvailabilityEntity();
+        requestEntity.setId(1);
+        requestEntity.setTeacher(teacher);
+        requestEntity.setDayOfWeek(DayOfWeek.of(request.getDayOfWeek()));
+        requestEntity.setStartTime(request.getStartTime());
+        requestEntity.setEndTime(request.getEndTime());
+        requestEntity.setAvailable(request.isAvailable());
+        requestEntity.setNotes(request.getNotes());
+
+        TeacherSummaryResponse teacherSummaryResponse = new TeacherSummaryResponse();
+        teacherSummaryResponse.setId(teacher.getId());
+
+        response = new TeacherAvailabilityResponse();
+        response.setId(requestEntity.getId());
+        response.setTeacher(teacherSummaryResponse);
+        response.setDayOfWeek(requestEntity.getDayOfWeek());
+        response.setStartTime(requestEntity.getStartTime());
+        response.setEndTime(requestEntity.getEndTime());
+        response.setAvailable(requestEntity.isAvailable());
+        response.setNotes(requestEntity.getNotes());
+
+        mapper = Mappers.getMapper(TeacherAvailabilityMapper.class);
+    }
+
+
+    @Test
+    @DisplayName("addTeacherAvailability successful - should return TeacherAvailabilityResponse")
+    public void addTeacherAvailability_successful(){
+        when(teacherService.fetchTeacher(teacher.getId())).thenReturn(teacher);
+        when(teacherAvailabilityMapper.toEntity(request)).thenReturn(requestEntity);
+        when(teacherAvailabilityRepository.findOverlappingAvailability(
+                requestEntity.getTeacher().getId(),
+                requestEntity.getDayOfWeek(),
+                requestEntity.getStartTime(),
+                requestEntity.getEndTime()))
+                .thenReturn(null);
+        when(teacherAvailabilityRepository.save(requestEntity)).thenReturn(requestEntity);
+        when(teacherAvailabilityMapper.toResponse(requestEntity)).thenReturn(response);
+
+        TeacherAvailabilityResponse result = teacherAvailabilityService.addTeacherAvailability(request, teacher.getId());
+
+        assertNotNull(result);
+        assertNotNull(result.getId());
+        assertEquals(request.getDayOfWeek(), result.getDayOfWeek().getValue());
+        assertEquals(request.getStartTime(), result.getStartTime());
+        assertEquals(request.getEndTime(), result.getEndTime());
+        assertEquals(request.isAvailable(), result.isAvailable());
+        assertEquals(request.getNotes(), result.getNotes());
+        assertEquals(teacher.getId(), result.getTeacher().getId());
+        verify(teacherService).fetchTeacher(teacher.getId());
+        verify(teacherAvailabilityMapper).toEntity(request);
+        verify(teacherAvailabilityRepository).findOverlappingAvailability(
+                requestEntity.getTeacher().getId(),
+                requestEntity.getDayOfWeek(),
+                requestEntity.getStartTime(),
+                requestEntity.getEndTime());
+        verify(teacherAvailabilityRepository).save(requestEntity);
+        verify(teacherAvailabilityMapper).toResponse(requestEntity);
+    }
+
+    @Test
+    @DisplayName("addTeacherAvailability hours overlap - should throw SpecificationBrokenException")
+    public void addTeacherAvailability_hoursOverlap(){
+        when(teacherService.fetchTeacher(teacher.getId())).thenReturn(teacher);
+        when(teacherAvailabilityMapper.toEntity(request)).thenReturn(requestEntity);
+        when(teacherAvailabilityRepository.findOverlappingAvailability(
+                requestEntity.getTeacher().getId(),
+                requestEntity.getDayOfWeek(),
+                requestEntity.getStartTime(),
+                requestEntity.getEndTime()))
+                .thenReturn(requestEntity);
+
+        SpecificationBrokenException result = assertThrows(
+                SpecificationBrokenException.class,
+                () -> teacherAvailabilityService.addTeacherAvailability(request, teacher.getId()));
+        assertNotNull(result);
+        assertTrue(result.getMessage().contains("already booked Availability"));
+        assertTrue(result.getMessage().contains(requestEntity.getDayOfWeek().toString()));
+        assertTrue(result.getMessage().contains(requestEntity.getStartTime().toString()));
+        assertTrue(result.getMessage().contains(requestEntity.getEndTime().toString()));
+        assertTrue(result.getMessage().contains(requestEntity.getTeacher().getId().toString()));
+    }
+
+    @Test
+    public void deleteTeacherAvailability_successful(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        doNothing().when(teacherAvailabilityRepository).delete(requestEntity);
+
+        teacherAvailabilityService.deleteTeacherAvailability(1);
+
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityRepository).delete(requestEntity);
+    }
+
+    @Test
+    @DisplayName("deleteTeacherAvailability no availability found - should throw EntityNotFoundException")
+    public void deleteTeacherAvailability_noEntity(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.empty());
+
+        EntityNotFoundException result = assertThrows(
+                EntityNotFoundException.class,
+                () -> teacherAvailabilityService.deleteTeacherAvailability(1));
+
+        verify(teacherAvailabilityRepository).findById(1);
+        assertTrue(result.getMessage().contains("ID"));
+        assertTrue(result.getMessage().contains("1"));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityById successfull - should return TeacherAvailabilityResponse")
+    public void getTeacherAvailabilityById(){
+        when(teacherAvailabilityRepository.findById(1)).thenReturn(Optional.of(requestEntity));
+        when(teacherAvailabilityMapper.toResponse(requestEntity)).thenReturn(response);
+
+        TeacherAvailabilityResponse result = teacherAvailabilityService.getTeacherAvailabilityById(1);
+        assertNotNull(result);
+        assertEquals(result, response);
+        verify(teacherAvailabilityRepository).findById(1);
+        verify(teacherAvailabilityMapper).toResponse(requestEntity);
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilityByTeacherId successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilityByTeacherId(){
+        when(teacherAvailabilityRepository.findByTeacherId(1)).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilityByTeacherId(1);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByTeacherId(1);
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailabilitiesByDayOfWeek successfull - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilitiesByDayOfWeek(){
+        when(teacherAvailabilityRepository.findByDayOfWeek(DayOfWeek.of(5))).thenReturn(Collections.singletonList(requestEntity));
+        when(teacherAvailabilityMapper.toResponseList(Collections.singletonList(requestEntity))).thenReturn(Collections.singletonList(response));
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilitiesByDayOfWeek(5);
+
+        assertNotNull(result);
+        assertIterableEquals(result, Collections.singletonList(response));
+        verify(teacherAvailabilityRepository).findByDayOfWeek(DayOfWeek.of(5));
+        verify(teacherAvailabilityMapper).toResponseList(Collections.singletonList(requestEntity));
+    }
+
+    @Test
+    @DisplayName("getTeacherAvailability by TimeRange and SubjectType - should return Collection<TeacherAvailabilityResponse>")
+    public void getTeacherAvailabilityByTimeRangeAndSubjectType(){
+        TimeRange timeRange = Instancio.create(TimeRange.class);
+        timeRange.setDayOfWeek(2);
+        DayOfWeek day = DayOfWeek.of(timeRange.getDayOfWeek());
+        SubjectEntity subject = Instancio.create(SubjectEntity.class);
+        List<TeacherEntity> teachersBySubjects = Instancio.createList(TeacherEntity.class);
+        List<TeacherAvailabilityEntity> availabilities = Instancio.createList(TeacherAvailabilityEntity.class);
+        List<TeacherAvailabilityResponse> availabilityResponses = teacherAvailabilityMapper.toResponseList(availabilities);
+
+
+        when(subjectService.fetchSubject(subject.getId())).thenReturn(subject);
+        when(teacherRepository.findByTeachingSubjects(subject)).thenReturn(teachersBySubjects);
+        when(teacherAvailabilityRepository.findByTeachersAndTimeRange(
+                teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime())).thenReturn(availabilities);
+        when(teacherAvailabilityMapper.toResponseList(availabilities)).thenReturn(availabilityResponses);
+
+        Collection<TeacherAvailabilityResponse> result = teacherAvailabilityService.getTeacherAvailabilityByTimeRangeAndSubjectType(
+                timeRange, subject.getId());
+
+        assertNotNull(result);
+        assertIterableEquals(availabilityResponses, result);
+        verify(subjectService).fetchSubject(subject.getId());
+        verify(teacherRepository).findByTeachingSubjects(subject);
+        verify(teacherAvailabilityRepository).findByTeachersAndTimeRange(teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime());
+    }
+}

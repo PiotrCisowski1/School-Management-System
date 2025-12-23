@@ -27,12 +27,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.nio.file.AccessDeniedException;
 import java.security.SignatureException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -45,7 +43,15 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         String error = "Malformed JSON request";
-        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, error, ex));
+        if (ex.getCause() instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException invalidFormatException) {
+            String fieldName = invalidFormatException.getPath().get(0).getFieldName();
+            error = switch (fieldName) {
+                case "effectiveDate" -> "Effective date has invalid format, expected format is yyyy-mm-dd";
+                case "expirationDate" -> "Expiration date has invalid format, expected format is yyyy-mm-dd";
+                default -> "Invalid value for field: " + fieldName;
+            };
+        }
+        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, error));
     }
 
     @Override
@@ -164,7 +170,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(SpecificationBrokenException.class)
     protected ResponseEntity<Object> handleSpecificationBrokenException(SpecificationBrokenException exception){
-        ApiError apiError = new ApiError(CONFLICT);
+        ApiError apiError = new ApiError(NOT_ACCEPTABLE);
         String exMessage = exception.getMessage();
         apiError.setMessage(exMessage);
         return buildResponseEntity(apiError);
@@ -178,11 +184,19 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(apiError);
     }
 
-    @ExceptionHandler(Exception.class)
-    protected ResponseEntity<Object> handleGenericException(Exception ex) {
-        ex.printStackTrace(); // 👈 kluczowe do testu
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
-        apiError.setMessage("Unexpected error occurred: " + ex.getClass().getSimpleName() + Arrays.toString(ex.getStackTrace()));
+    @ExceptionHandler(com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException.class)
+    protected ResponseEntity<Object> handleAccessDeniedException(com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException exception){
+        ApiError apiError = new ApiError(FORBIDDEN);
+        String exMessage = exception.getMessage();
+        apiError.setMessage(exMessage);
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(UnsupportedOperationException.class)
+    protected ResponseEntity<Object> handleUnsupportedOperationException(UnsupportedOperationException exception) {
+        ApiError apiError = new ApiError(HttpStatus.valueOf(501));
+        String exMessage = exception.getMessage();
+        apiError.setMessage(exMessage);
         return buildResponseEntity(apiError);
     }
 }

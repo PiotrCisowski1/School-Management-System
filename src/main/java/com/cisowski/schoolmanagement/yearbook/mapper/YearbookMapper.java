@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.yearbook.mapper;
 
+import com.cisowski.schoolmanagement.common.mapper.BaseMapperConfig;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
@@ -12,7 +13,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.Collection;
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = BaseMapperConfig.class)
 public abstract class YearbookMapper {
 
     @Autowired
@@ -65,6 +66,7 @@ public abstract class YearbookMapper {
         }
     }
 
+    @Mapping(target = "mainCourseSubjects", ignore = true)
     public abstract void patchYearbook(@MappingTarget YearbookEntity targetEntity, YearbookEntity requestEntity);
 
     String toStringSubjectType(SubjectTypeEntity subjectType){
