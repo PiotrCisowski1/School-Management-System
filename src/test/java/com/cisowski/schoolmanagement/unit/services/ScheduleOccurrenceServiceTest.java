@@ -10,6 +10,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrence
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleVersionRepository;
+import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleStatusService;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.mapper.ScheduleOccurrenceMapper;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.OccurrenceStatus;
 import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.model.ScheduleOccurrenceEntity;
@@ -20,6 +21,7 @@ import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +38,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.instancio.Select.field;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,7 +101,7 @@ public class ScheduleOccurrenceServiceTest {
 
     @Test
     void changeOccurrenceStatus_shouldChangeStatusAndSaveWhenDifferent() {
-        OccurrenceStatus newStatus = OccurrenceStatus.COMPLETED;
+        OccurrenceStatus newStatus = OccurrenceStatus.ONGOING;
         mockOccurrence.setStatus(OccurrenceStatus.SCHEDULED);
         when(occurrenceRepository.save(any(ScheduleOccurrenceEntity.class))).thenReturn(mockOccurrence);
 
@@ -168,6 +172,7 @@ public class ScheduleOccurrenceServiceTest {
                 .set(field(ScheduleEntity::getEndTime), END_TIME)
                 .set(field(ScheduleEntity::getEffectiveDate), CURRENT_DATE.plusDays(1))
                 .set(field(ScheduleEntity::getDayOfWeek), CURRENT_DATE.plusDays(1).getDayOfWeek())
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 
         when(occurrenceRepository.existsByScheduleAndOccurrenceDateTime(any(), any())).thenReturn(false);
@@ -198,11 +203,12 @@ public class ScheduleOccurrenceServiceTest {
         ScheduleEntity schedule = Instancio.of(ScheduleEntity.class)
                 .set(field(ScheduleEntity::getRecurrenceType), ScheduleRecurrenceType.NONE)
                 .set(field(ScheduleEntity::getEffectiveDate), CURRENT_DATE.plusDays(1))
-                .set(field(ScheduleEntity::getDayOfWeek), DayOfWeek.MONDAY)
+                .set(field(ScheduleEntity::getExpirationDate), CURRENT_DATE.plusDays(5))
                 .create();
         if (schedule.getEffectiveDate().getDayOfWeek() == DayOfWeek.MONDAY) {
             schedule.setDayOfWeek(DayOfWeek.TUESDAY);
         }
+        schedule.setDayOfWeek(schedule.getEffectiveDate().getDayOfWeek().plus(1));
 
         assertThrows(SpecificationBrokenException.class, () -> scheduleOccurrenceService.initializeScheduleOccurrence(schedule, MIN_INIT_DAYS));
         verify(occurrenceRepository, never()).save(any(ScheduleOccurrenceEntity.class));
@@ -351,5 +357,81 @@ public class ScheduleOccurrenceServiceTest {
         List<ScheduleOccurrenceSummaryResponse> result = scheduleOccurrenceService.getOccurrencesForYearbook(yearbookId);
 
         assertEquals(0, result.size());
+    }
+
+    @Nested
+    class FindOccurrencesTests {
+
+        @Test
+        void shouldReturnOccurrencesReadyToComplete() {
+            int daysGap = 5;
+            List<OccurrenceStatus> statuses = List.of(OccurrenceStatus.SCHEDULED, OccurrenceStatus.ONGOING);
+            List<ScheduleOccurrenceEntity> expectedOccurrences = Instancio.createList(ScheduleOccurrenceEntity.class);
+
+            when(occurrenceRepository.findByStatusInAndOccurrenceDateTimeBefore(eq(statuses), any(LocalDateTime.class)))
+                    .thenReturn(expectedOccurrences);
+
+            List<ScheduleOccurrenceEntity> result = scheduleOccurrenceService.findOccurrencesReadyToComplete(statuses, daysGap);
+
+            assertThat(result).hasSameSizeAs(expectedOccurrences);
+
+            ArgumentCaptor<LocalDateTime> dateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+            verify(occurrenceRepository).findByStatusInAndOccurrenceDateTimeBefore(eq(statuses), dateCaptor.capture());
+            assertThat(dateCaptor.getValue()).isBeforeOrEqualTo(LocalDateTime.now().minusDays(daysGap));
+        }
+    }
+
+    @Nested
+    class ChangeStatusTests {
+
+        @Test
+        void shouldDoNothingWhenInputIsInvalid() {
+            scheduleOccurrenceService.changeOccurrencesStatus(Collections.emptyList(), OccurrenceStatus.COMPLETED);
+            scheduleOccurrenceService.changeOccurrencesStatus(List.of(new ScheduleOccurrenceEntity()), null);
+
+            verifyNoInteractions(occurrenceRepository);
+        }
+
+        @Test
+        void shouldChangeStatusFromScheduledToCompleted() {
+            OccurrenceStatus targetStatus = OccurrenceStatus.COMPLETED;
+            List<ScheduleOccurrenceEntity> occurrences = Instancio.ofList(ScheduleOccurrenceEntity.class)
+                    .size(3)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
+                    .create();
+
+            when(occurrenceRepository.save(any())).thenReturn(occurrences.get(0));
+
+            scheduleOccurrenceService.changeOccurrencesStatus(occurrences, targetStatus);
+
+            occurrences.forEach(occ -> assertThat(occ.getStatus()).isEqualTo(targetStatus));
+        }
+
+        @Test
+        void shouldThrowExceptionForIllegalTransition() {
+            OccurrenceStatus targetStatus = OccurrenceStatus.SCHEDULED;
+            ScheduleOccurrenceEntity entity = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.COMPLETED)
+                    .create();
+
+            List<ScheduleOccurrenceEntity> occurrences = List.of(entity);
+
+            assertThatThrownBy(() -> scheduleOccurrenceService.changeOccurrencesStatus(occurrences, targetStatus))
+                    .isInstanceOf(SpecificationBrokenException.class);
+        }
+
+        @Test
+        void shouldAllowOngoingToCompleted() {
+            OccurrenceStatus targetStatus = OccurrenceStatus.COMPLETED;
+            ScheduleOccurrenceEntity entity = Instancio.of(ScheduleOccurrenceEntity.class)
+                    .set(field(ScheduleOccurrenceEntity::getStatus), OccurrenceStatus.ONGOING)
+                    .create();
+
+            when(occurrenceRepository.save(any())).thenReturn(entity);
+
+            scheduleOccurrenceService.changeOccurrencesStatus(List.of(entity), targetStatus);
+
+            assertThat(entity.getStatus()).isEqualTo(targetStatus);
+        }
     }
 }

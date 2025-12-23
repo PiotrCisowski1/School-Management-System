@@ -10,6 +10,11 @@ All notable changes to this project will be documented in this file.
 ### New
 - ScheduleOccurrence endpoint to get upcoming lessons for given Yearbook, up to X days (definied in AppConfig as Schedule init time)
 - ScheduleOccurrence endpoint to get single occurrence
+- Automate ScheduleOccurrence completion - scheduled task checking every 3 hours to change status of ScheduleOccurrence with starting dateTime after particular amount of days (config based value)
+
+### Changed
+- fix Schedule deletion - check if any active (ONGOING or COMPLETED) occurrences for Schedule -> if not, set occurrences status to 'CANCELED'
+- fix Schedule cancellation - check if there are any active occurrences, if not - set schedule and occurrences to CANCEL status
 
 ## [1.3.0] - 2025-12-12
 ### New

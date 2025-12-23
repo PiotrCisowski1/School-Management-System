@@ -1,7 +1,6 @@
 package com.cisowski.schoolmanagement.unit.services;
 
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigDetailedResponse;
-import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.classroom.mapper.ClassroomMapper;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
@@ -22,6 +21,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.service.ScheduleVersionS
 import com.cisowski.schoolmanagement.subject.mapper.SubjectMapper;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.timetable.scheduleOccurrence.repository.ScheduleOccurrenceRepository;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapper;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
@@ -75,6 +75,8 @@ public class ScheduleServiceTest {
     private ScheduleConflictValidator scheduleConflictValidator;
     @Mock
     private AppConfigService configService;
+    @Mock
+    private ScheduleOccurrenceRepository occurrenceRepository;
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
 
