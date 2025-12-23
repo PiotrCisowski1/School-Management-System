@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.1] - 2025-12-23
+RELEASE VERSION
+
 ## [1.3.1] - 2025-12-21
 ### New
 - ScheduleOccurrence endpoint to get upcoming lessons for given Yearbook, up to X days (definied in AppConfig as Schedule init time)
