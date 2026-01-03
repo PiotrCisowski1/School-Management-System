@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.1] - 2026-01-03
+### Fixed
+- Add custom cors config in SecurityConfiguration restricting API access to hosts from application.properties
+- Add missing User's authorities when creating access token
+
 ## [1.3.1] - 2025-12-23
 RELEASE VERSION
 
