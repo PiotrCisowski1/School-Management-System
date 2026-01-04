@@ -2,10 +2,7 @@ package com.cisowski.schoolmanagement.common.security.authentication;
 
 import com.cisowski.schoolmanagement.common.exception.type.AccessDeniedException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
-import com.cisowski.schoolmanagement.users.common.model.LoginResponse;
-import com.cisowski.schoolmanagement.users.common.model.LoginUserRequest;
-import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
-import com.cisowski.schoolmanagement.users.common.model.UserEntity;
+import com.cisowski.schoolmanagement.users.common.model.*;
 import com.cisowski.schoolmanagement.users.common.repository.UserDetailsRepository;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +45,23 @@ public class AuthenticationService {
         long expiresIn = jwtService.getJwtExpirationTime();
 
         return new LoginResponse(token, expiresIn);
+    }
+
+    public UserSummaryResponse getAuthenticatedUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsEntity userDetails = (UserDetailsEntity) auth.getPrincipal();
+        UserSummaryResponse response = new UserSummaryResponse();
+        if(userDetails == null || userDetails.getUser() == null)
+            return response;
+
+        UserEntity user = userDetails.getUser();
+        response.setId(user.getId());
+        response.setEmail(user.getEmail());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setBirthDate(user.getBirthDate());
+        response.setGender(user.getGender());
+        response.setPhoneNumber(user.getPhoneNumber());
+        return response;
     }
 }

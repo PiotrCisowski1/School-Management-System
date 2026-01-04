@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.3] - 2026-01-04
 ### New
 - Add refresh JWT token endpoint - restricted to authenticated users
+- Add 'me' endpoint returning base User data
 
 ## [1.3.2] - 2026-01-03
 ### Fixed
