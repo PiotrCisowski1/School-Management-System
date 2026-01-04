@@ -6,7 +6,11 @@ All notable changes to this project will be documented in this file.
 
 
 ---
-## [1.3.1] - 2026-01-03
+## [1.3.3] - 2026-01-04
+### New
+- Add refresh JWT token endpoint - restricted to authenticated users
+
+## [1.3.2] - 2026-01-03
 ### Fixed
 - Add custom cors config in SecurityConfiguration restricting API access to hosts from application.properties
 - Add missing User's authorities when creating access token

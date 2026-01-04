@@ -1,12 +1,12 @@
 package com.cisowski.schoolmanagement.common.security;
 
+import com.cisowski.schoolmanagement.common.security.authentication.JwtAuthenticationFilter;
 import com.cisowski.schoolmanagement.users.common.service.SchoolUserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;

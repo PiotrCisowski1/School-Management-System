@@ -1,4 +1,4 @@
-package com.cisowski.schoolmanagement.users.common.service;
+package com.cisowski.schoolmanagement.common.security.authentication;
 
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;

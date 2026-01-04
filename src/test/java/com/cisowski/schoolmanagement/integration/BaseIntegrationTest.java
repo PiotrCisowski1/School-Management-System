@@ -3,7 +3,7 @@ package com.cisowski.schoolmanagement.integration;
 import com.cisowski.schoolmanagement.integration.helper.DatabaseHelper;
 import com.cisowski.schoolmanagement.integration.helper.TestDataHelper;
 import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
-import com.cisowski.schoolmanagement.users.common.service.JwtService;
+import com.cisowski.schoolmanagement.common.security.authentication.JwtService;
 import com.cisowski.schoolmanagement.users.common.service.SchoolUserDetailsServiceImpl;
 import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
