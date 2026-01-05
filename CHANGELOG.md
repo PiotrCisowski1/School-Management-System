@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 - Add refresh JWT token endpoint - restricted to authenticated users
 - Add 'me' endpoint returning base User data
 
+### Changed
+- Changed way of creating User - from now Authority will be fetched from DB while creating User
+
 ## [1.3.2] - 2026-01-03
 ### Fixed
 - Add custom cors config in SecurityConfiguration restricting API access to hosts from application.properties

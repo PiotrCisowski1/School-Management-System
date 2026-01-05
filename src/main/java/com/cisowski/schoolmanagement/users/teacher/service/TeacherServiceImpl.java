@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.users.teacher.service;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
@@ -30,6 +31,7 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherMapper mapper;
     private final SubjectService subjectService;
     private final YearbookRepository yearbookRepository;
+    private final AuthorityService authorityService;
 
     @Transactional
     @Override
@@ -47,6 +49,7 @@ public class TeacherServiceImpl implements TeacherService {
         String firstPassword = this.generateNewUserPassword();
         String hashedPassword = this.hashPassword(firstPassword);
         requestTeacher.setPassword(hashedPassword);
+        authorityService.resolveUserAuthorities(requestTeacher, dto.getAuthority());
 
         TeacherEntity savedTeacher = repository.save(requestTeacher);
 

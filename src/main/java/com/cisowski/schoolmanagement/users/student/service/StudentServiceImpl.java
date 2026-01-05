@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.student.service;
 
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.service.ParentService;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -30,6 +31,7 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final ParentService parentService;
     private final YearbookService yearbookService;
+    private final AuthorityService authorityService;
 
     @Override
     @Transactional
@@ -47,6 +49,7 @@ public class StudentServiceImpl implements StudentService {
         requestStudent.setPassword(hashedPassword);
         requestStudent.setParents(parentService.fetchParentEntities(studentDto.getParentsIds()));
         requestStudent.setYearbook(yearbookService.fetchYearbookEntity(studentDto.getYearbookId()));
+        authorityService.resolveUserAuthorities(requestStudent, studentDto.getAuthority());
 
         StudentEntity savedStudent = repository.save(requestStudent);
 
