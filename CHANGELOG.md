@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 - Add refresh JWT token endpoint - restricted to authenticated users
 - Add 'me' endpoint returning base User data
 
+### Fixed
+- Fix DB support for polish characters
+
 ### Changed
 - Changed way of creating User - from now Authority will be fetched from DB while creating User
 
