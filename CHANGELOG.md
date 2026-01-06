@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Fix DB support for polish characters
+- Fix AppConfig lazy init exception on editableBy field
 
 ### Changed
 - Changed way of creating User - from now Authority will be fetched from DB while creating User
