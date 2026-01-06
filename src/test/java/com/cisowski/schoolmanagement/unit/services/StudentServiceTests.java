@@ -139,8 +139,6 @@ public class StudentServiceTests {
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
         List<Integer> parentIdsToAdd = Collections.singletonList(2);
         List<Integer> parentIdsToRemove = Collections.singletonList(3);
-        studentDto.setParentIdsToAdd(parentIdsToAdd);
-        studentDto.setParentIdsToRemove(parentIdsToRemove);
         StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
         YearbookEntity yearbook = new YearbookEntity();
@@ -198,8 +196,6 @@ public class StudentServiceTests {
         Integer studentId = 1;
         Integer parentToRemoveId = 2;
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
-        studentDto.setParentIdsToRemove(Collections.singletonList(parentToRemoveId));
-        studentDto.setParentIdsToAdd(null);
         StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
         student.setYearbook(Instancio.create(YearbookEntity.class));

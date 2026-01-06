@@ -709,8 +709,6 @@ public class TestDataHelper {
             yearbook = createYearbook(null, null);
         return Instancio.of(StudentPatchRequest.class)
                 .set(field(StudentPatchRequest::getYearbookId), yearbook.getId())
-                .set(field(StudentPatchRequest::getParentIdsToAdd), null)
-                .set(field(StudentPatchRequest::getParentIdsToRemove), null)
                 .set(field(StudentPatchRequest::getAddress), null)
                 .set(field(StudentPatchRequest::getAuthority), null)
                 .generate(field(StudentPatchRequest::getEmail), gen -> gen.net().email())

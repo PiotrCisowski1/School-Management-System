@@ -72,7 +72,6 @@ public class StudentServiceImpl implements StudentService {
 
         StudentEntity requestStudent = studentMapper.toStudentEntity(studentDto);
 
-        checkAndUpdateParentEntities(existingStudentEntity, studentDto);
         YearbookEntity yearbookUpdate = yearbookService.fetchYearbookEntity(studentDto.getYearbookId());
         studentMapper.patchStudent(requestStudent, existingStudentEntity);
         if(yearbookUpdate != null)
@@ -83,18 +82,6 @@ public class StudentServiceImpl implements StudentService {
         DbLogger.info(message);
 
         return studentMapper.toStudentResponse(updatedStudent);
-    }
-
-    private void checkAndUpdateParentEntities(StudentEntity student, StudentPatchRequest request){
-        if(request.getParentIdsToAdd() != null && !request.getParentIdsToAdd().isEmpty()){
-            List<ParentEntity> parents = new ArrayList<>(parentService.fetchParentEntities(request.getParentIdsToAdd()));
-            if(student.getParents() != null)
-                parents.addAll(student.getParents());
-            student.setParents(parents);
-        }
-        if(request.getParentIdsToRemove() != null && !request.getParentIdsToRemove().isEmpty()){
-            removeParentRelation(student, request.getParentIdsToRemove());
-        }
     }
 
     private void removeParentRelation(StudentEntity student, Collection<Integer> parentIds){
