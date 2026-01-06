@@ -16,6 +16,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @PropertySource("classpath:authentication.properties")
@@ -37,6 +38,7 @@ public class JwtService {
     public String generateToken(UserEntity user) {
         Map<String, Object> authorityClaims = new HashMap<>();
         authorityClaims.put("authorities", user.getAuthority());
+        authorityClaims.put("jti", UUID.randomUUID().toString());
         return generateToken(authorityClaims, user);
     }
 

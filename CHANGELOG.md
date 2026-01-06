@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Changed way of creating User - from now Authority will be fetched from DB while creating User
 - Removed Parent IDs in patch Student request - flow does not require student side update, Parent cannot be created without children and updates both sides of relation
+- Add random UUID to JWT token, to generate more unique tokens
 
 ## [1.3.2] - 2026-01-03
 ### Fixed

@@ -2,6 +2,7 @@ package com.cisowski.schoolmanagement.unit.services;
 
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectServiceImpl;
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.teacher.mapper.TeacherMapperImpl;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -49,6 +50,8 @@ public class TeacherServiceTests {
     @InjectMocks
     private TeacherServiceImpl service;
     private final String generatedPassword = PasswordGenerator.generatePassword();
+    @Mock
+    private AuthorityService authorityService;
 
     @BeforeEach
     public void setUp() {

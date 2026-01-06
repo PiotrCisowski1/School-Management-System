@@ -78,7 +78,7 @@ public class StudentServiceImpl implements StudentService {
             existingStudentEntity.setYearbook(yearbookUpdate);
         StudentEntity updatedStudent = repository.save(existingStudentEntity);
 
-        message = "Student updated successfully: " + updatedStudent.toString();
+        message = "Student updated successfully: " + updatedStudent;
         DbLogger.info(message);
 
         return studentMapper.toStudentResponse(updatedStudent);
