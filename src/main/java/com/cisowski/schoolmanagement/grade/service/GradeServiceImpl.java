@@ -147,6 +147,7 @@ public class GradeServiceImpl implements GradeService {
         TeacherEntity teacher = teacherService.fetchTeacher(request.getTeacherId());
         SubjectEntity subject = subjectService.fetchSubject(request.getSubjectId());
         gradeValidator.checkTeacherAssociatedWithSubject(teacher, subject);
+        gradeValidator.checkStudentAttendingSubject(student, subject.getId());
         GradeTypeEntity gradeType = gradeTypeService.fetchGradeType(request.getGradeTypeId());
         GradeValueEntity gradeValue = gradeScaleService.fetchGradeValue(request.getGradeValueId());
 
