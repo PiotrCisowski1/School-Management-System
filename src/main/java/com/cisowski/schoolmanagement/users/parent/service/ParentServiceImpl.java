@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.parent.service;
 
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -15,25 +16,19 @@ import com.cisowski.schoolmanagement.users.parent.repository.ParentRepository;
 import com.cisowski.schoolmanagement.users.student.repository.StudentRepository;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class ParentServiceImpl implements ParentService {
 
     private final ParentRepository parentRepository;
     private final ParentMapper parentMapper;
     private final StudentRepository studentRepository;
-
-    public ParentServiceImpl(
-            ParentRepository parentRepository,
-            ParentMapper parentMapper,
-            StudentRepository studentRepository) {
-        this.parentRepository = parentRepository;
-        this.parentMapper = parentMapper;
-        this.studentRepository = studentRepository;
-    }
+    private final AuthorityService authorityService;
 
     @Transactional
     @Override
@@ -50,6 +45,7 @@ public class ParentServiceImpl implements ParentService {
         String hashedPassword = this.hashPassword(firstPassword);
         requestParent.setPassword(hashedPassword);
         fetchChildrenEntities(requestParent, parentDto.getChildrenIds());
+        authorityService.resolveUserAuthorities(requestParent, parentDto.getAuthority());
 
         ParentEntity savedParent = parentRepository.save(requestParent);
 

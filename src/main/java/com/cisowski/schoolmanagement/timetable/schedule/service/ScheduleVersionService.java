@@ -15,4 +15,5 @@ public interface ScheduleVersionService {
     ScheduleVersionEntity fetchScheduleVersion(Integer scheduleVersionId);
     void deleteScheduleVersion(Integer scheduleVersionId);
     ScheduleVersionDetailedResponse patchScheduleVersion(Integer scheduleVersionId, PatchScheduleVersionRequest request);
+    ScheduleVersionDetailedResponse getActiveScheduleVersionForYearbook(Integer yearbookId);
 }

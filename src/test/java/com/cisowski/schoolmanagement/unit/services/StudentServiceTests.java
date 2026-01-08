@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.unit.services;
 
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.parent.service.ParentService;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapperImpl;
@@ -62,6 +63,8 @@ public class StudentServiceTests {
     @InjectMocks
     private StudentServiceImpl studentService;
     private final String generatedPassword = PasswordGenerator.generatePassword();
+    @Mock
+    private AuthorityService authorityService;
 
     @BeforeEach
     public void setUp(){
@@ -139,8 +142,6 @@ public class StudentServiceTests {
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
         List<Integer> parentIdsToAdd = Collections.singletonList(2);
         List<Integer> parentIdsToRemove = Collections.singletonList(3);
-        studentDto.setParentIdsToAdd(parentIdsToAdd);
-        studentDto.setParentIdsToRemove(parentIdsToRemove);
         StudentEntity student = studentMapper.toStudentEntity(studentDto);
         student.setId(studentId);
         YearbookEntity yearbook = new YearbookEntity();
@@ -156,9 +157,6 @@ public class StudentServiceTests {
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
         when(studentRepository.save(any())).thenReturn(student);
         when(mockedStudentMapper.toStudentResponse(any())).thenReturn(studentResponse);
-        when(parentService.fetchParentEntities(any()))
-                .thenReturn(Collections.singletonList(parentToAdd))
-                .thenReturn(Collections.singletonList(parentToRemove));
 
         StudentDetailedResponse result = studentService.updateStudent(studentDto, studentId);
 
@@ -190,32 +188,6 @@ public class StudentServiceTests {
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.updateStudent(studentDto, 1));
-    }
-
-    @Test
-    @DisplayName("updateStudent should throw SpecificationBrokenException - Parent to remove not associated with Student")
-    public void updateStudent_throwsSpecBrokenEx(){
-        Integer studentId = 1;
-        Integer parentToRemoveId = 2;
-        StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
-        studentDto.setParentIdsToRemove(Collections.singletonList(parentToRemoveId));
-        studentDto.setParentIdsToAdd(null);
-        StudentEntity student = studentMapper.toStudentEntity(studentDto);
-        student.setId(studentId);
-        student.setYearbook(Instancio.create(YearbookEntity.class));
-        ParentEntity parentToRemove = Instancio.create(ParentEntity.class);
-        parentToRemove.setId(parentToRemoveId);
-
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
-        when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
-        when(parentService.fetchParentEntities(any()))
-                .thenReturn(Collections.singletonList(parentToRemove));
-
-        SpecificationBrokenException thrown = assertThrows(
-                SpecificationBrokenException.class,
-                () -> studentService.updateStudent(studentDto ,studentId)
-        );
-        assertTrue(thrown.getMessage().contains("not associated with Student"));
     }
 
     @Test

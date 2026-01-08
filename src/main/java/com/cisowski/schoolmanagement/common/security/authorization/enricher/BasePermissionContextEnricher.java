@@ -14,6 +14,8 @@ public abstract class BasePermissionContextEnricher implements PermissionContext
 
     public void addScheduleVersionToContext(PermissionContext context, ResourceAccessContext accessContext){
         Integer scheduleVersionId = accessContext.getAccessedMethodParameter("scheduleVersionId");
+        if(scheduleVersionId == null)
+            return;
         ScheduleVersionEntity accessedScheduleVersion = scheduleVersionService.fetchScheduleVersion(scheduleVersionId);
         context.putAttribute(PermissionContextAttributeKey.SCHEDULE_VERSION_ENTITY, accessedScheduleVersion);
     }

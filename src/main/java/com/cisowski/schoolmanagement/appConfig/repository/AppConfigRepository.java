@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.appConfig.repository;
 
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigEntity;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface AppConfigRepository extends JpaRepository<AppConfigEntity, Long> {
+    @EntityGraph(attributePaths = {"editableBy"})
     Optional<AppConfigEntity> findByKey(String key);
     List<AppConfigEntity> findAllByIsEditable(boolean isEditable);
 }

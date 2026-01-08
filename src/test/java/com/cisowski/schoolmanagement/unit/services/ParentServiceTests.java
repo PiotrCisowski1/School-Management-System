@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.unit.services;
 
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.mapper.ParentMapperImpl;
 import com.cisowski.schoolmanagement.users.parent.model.ParentCreateRequest;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
@@ -48,6 +49,8 @@ public class ParentServiceTests {
     @InjectMocks
     private ParentServiceImpl service;
     private final String generatedPassword = PasswordGenerator.generatePassword();
+    @Mock
+    private AuthorityService authorityService;
 
 
     @BeforeEach

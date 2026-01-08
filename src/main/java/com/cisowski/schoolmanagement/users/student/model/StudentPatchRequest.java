@@ -10,6 +10,4 @@ import java.util.Collection;
 @Data
 public class StudentPatchRequest extends BasePatchUserRequest {
     private Integer yearbookId;
-    private Collection<Integer> parentIdsToAdd;
-    private Collection<Integer> parentIdsToRemove;
 }

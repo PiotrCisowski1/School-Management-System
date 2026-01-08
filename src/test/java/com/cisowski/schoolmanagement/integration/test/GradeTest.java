@@ -14,6 +14,7 @@ import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,11 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     @Test
     @Override
     public void shouldCreateAndFetchEntity() {
-        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, student, null);
         Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
 
         GradeDetailedResponse gradeResponse = given()
@@ -64,7 +69,9 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     public void shouldCreateUpdateAndFetchEntity() {
         SubjectEntity subject = dataHelper.createSubject();
         TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
-        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, null, null);
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, student, null);
         Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
 
         PatchGradeRequest patchGradeRequest = dataHelper.createPatchGradeRequest(subject);
@@ -105,7 +112,11 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     @Test
     @Override
     public void shouldCreateDeleteAndNotFetchEntity() {
-        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, student, null);
         Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
 
         given()
@@ -126,16 +137,19 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     @Test
     void shouldCreateGradesAndFetchByStudentId() {
         List<Long> firstStudentGradeIds = new ArrayList<>();
-        StudentEntity firstStudent = dataHelper.createStudent(null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity firstStudent = dataHelper.createStudent(yearbook, null);
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
         for(int i = 0; i < 5; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, firstStudent, null);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, firstStudent, null);
             Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
             firstStudentGradeIds.add(gradeId.longValue());
         }
 
-        StudentEntity secondStudent = dataHelper.createStudent(null, null);
+        StudentEntity secondStudent = dataHelper.createStudent(yearbook, null);
         for(int i = 0; i < 3; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, secondStudent, null);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, secondStudent, null);
             postEntity(fullAdminHeaders, "grades", postGradeRequest);
         }
 
@@ -159,13 +173,14 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     void shouldCreateGradesAndFetchByStudentIdAndSubjectId() {
         List<Long> firstSubjectGradeIds = new ArrayList<>();
         SubjectEntity firstSubject = dataHelper.createSubject();
-        StudentEntity student = dataHelper.createStudent(null, null);
+        SubjectEntity secondSubject = dataHelper.createSubject();
+        YearbookEntity yearbook = dataHelper.createYearbook(List.of(firstSubject, secondSubject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
         for(int i = 0; i < 5; i++) {
             AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, firstSubject, student, null);
             Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
             firstSubjectGradeIds.add(gradeId.longValue());
         }
-        SubjectEntity secondSubject = dataHelper.createSubject();
         for(int i = 0; i < 3; i++) {
             AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, secondSubject, student, null);
             postEntity(fullAdminHeaders, "grades", postGradeRequest);
@@ -192,14 +207,17 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     void shouldCreateGradesAndFetchBySubjectId() {
         List<Long> firstSubjectGradeIds = new ArrayList<>();
         SubjectEntity firstSubject = dataHelper.createSubject();
+        SubjectEntity secondSubject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(List.of(firstSubject, secondSubject));
+        YearbookEntity yearbook = dataHelper.createYearbook(List.of(firstSubject, secondSubject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
         for(int i = 0; i < 5; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, firstSubject, null, null);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, firstSubject, student, null);
             Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
             firstSubjectGradeIds.add(gradeId.longValue());
         }
-        SubjectEntity secondSubject = dataHelper.createSubject();
         for(int i = 0; i < 3; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, secondSubject, null, null);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, secondSubject, student, null);
             postEntity(fullAdminHeaders, "grades", postGradeRequest);
         }
 
@@ -224,14 +242,19 @@ public class GradeTest extends BaseIntegrationTest implements BasicCrudHappyPath
     void shouldCreateGradesAndFetchByGradeType() {
         List<Long> firstGradeTypeGradeIds = new ArrayList<>();
         GradeTypeEntity firstGradeType = dataHelper.createGradeType();
+        SubjectEntity subject = dataHelper.createSubject();
+        SubjectEntity secondSubject = dataHelper.createSubject();
+        YearbookEntity yearbook = dataHelper.createYearbook(List.of(subject, secondSubject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        TeacherEntity teacher = dataHelper.createTeacher(List.of(subject, secondSubject));
         for(int i = 0; i < 5; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, null, firstGradeType);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, subject, student, firstGradeType);
             Integer gradeId = postEntity(fullAdminHeaders, "grades", postGradeRequest);
             firstGradeTypeGradeIds.add(gradeId.longValue());
         }
         GradeTypeEntity secondGradeType = dataHelper.createGradeType();
         for(int i = 0; i < 3; i++) {
-            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(null, null, null, secondGradeType);
+            AddGradeRequest postGradeRequest = dataHelper.createAddGradeRequest(teacher, secondSubject, student, secondGradeType);
             postEntity(fullAdminHeaders, "grades", postGradeRequest);
         }
 

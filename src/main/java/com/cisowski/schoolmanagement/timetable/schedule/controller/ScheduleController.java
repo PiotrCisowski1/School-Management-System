@@ -111,6 +111,14 @@ public class ScheduleController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/version/yearbook/{yearbookId}/active")
+    @RequiresPermission(action = ResourceActionType.READ, resource = ResourceType.SCHEDULE_VERSION)
+    public ResponseEntity<ScheduleVersionDetailedResponse> getActiveScheduleVersionsForYearbook(@PathVariable Integer yearbookId){
+        DbLogger.info(String.format("Received GET active ScheduleVersion for Yearbook with ID: %s", yearbookId));
+        ScheduleVersionDetailedResponse response = scheduleVersionService.getActiveScheduleVersionForYearbook(yearbookId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("/version/{scheduleVersionId}")
     @RequiresPermission(action = ResourceActionType.READ, resource = ResourceType.SCHEDULE_VERSION)
     public ResponseEntity<ScheduleVersionDetailedResponse> getScheduleVersionsForId(@PathVariable Integer scheduleVersionId){

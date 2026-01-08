@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.users.student.service;
 
+import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.service.ParentService;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -30,6 +31,7 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final ParentService parentService;
     private final YearbookService yearbookService;
+    private final AuthorityService authorityService;
 
     @Override
     @Transactional
@@ -47,6 +49,7 @@ public class StudentServiceImpl implements StudentService {
         requestStudent.setPassword(hashedPassword);
         requestStudent.setParents(parentService.fetchParentEntities(studentDto.getParentsIds()));
         requestStudent.setYearbook(yearbookService.fetchYearbookEntity(studentDto.getYearbookId()));
+        authorityService.resolveUserAuthorities(requestStudent, studentDto.getAuthority());
 
         StudentEntity savedStudent = repository.save(requestStudent);
 
@@ -69,29 +72,16 @@ public class StudentServiceImpl implements StudentService {
 
         StudentEntity requestStudent = studentMapper.toStudentEntity(studentDto);
 
-        checkAndUpdateParentEntities(existingStudentEntity, studentDto);
         YearbookEntity yearbookUpdate = yearbookService.fetchYearbookEntity(studentDto.getYearbookId());
         studentMapper.patchStudent(requestStudent, existingStudentEntity);
         if(yearbookUpdate != null)
             existingStudentEntity.setYearbook(yearbookUpdate);
         StudentEntity updatedStudent = repository.save(existingStudentEntity);
 
-        message = "Student updated successfully: " + updatedStudent.toString();
+        message = "Student updated successfully: " + updatedStudent;
         DbLogger.info(message);
 
         return studentMapper.toStudentResponse(updatedStudent);
-    }
-
-    private void checkAndUpdateParentEntities(StudentEntity student, StudentPatchRequest request){
-        if(request.getParentIdsToAdd() != null && !request.getParentIdsToAdd().isEmpty()){
-            List<ParentEntity> parents = new ArrayList<>(parentService.fetchParentEntities(request.getParentIdsToAdd()));
-            if(student.getParents() != null)
-                parents.addAll(student.getParents());
-            student.setParents(parents);
-        }
-        if(request.getParentIdsToRemove() != null && !request.getParentIdsToRemove().isEmpty()){
-            removeParentRelation(student, request.getParentIdsToRemove());
-        }
     }
 
     private void removeParentRelation(StudentEntity student, Collection<Integer> parentIds){

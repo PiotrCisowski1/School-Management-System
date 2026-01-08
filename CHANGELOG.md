@@ -6,7 +6,23 @@ All notable changes to this project will be documented in this file.
 
 
 ---
-## [1.3.1] - 2026-01-03
+## [1.3.3] - 2026-01-04
+### New
+- Add refresh JWT token endpoint - restricted to authenticated users
+- Add 'me' endpoint returning base User data
+- Add missing endpoint to retrieve active ScheduleVersion for Student's Yearbook
+
+### Fixed
+- Fix DB support for polish characters
+- Fix AppConfig lazy init exception on editableBy field
+- Fix bug when creating Grade for Student not attending Subject
+
+### Changed
+- Changed way of creating User - from now Authority will be fetched from DB while creating User
+- Removed Parent IDs in patch Student request - flow does not require student side update, Parent cannot be created without children and updates both sides of relation
+- Add random UUID to JWT token, to generate more unique tokens
+
+## [1.3.2] - 2026-01-03
 ### Fixed
 - Add custom cors config in SecurityConfiguration restricting API access to hosts from application.properties
 - Add missing User's authorities when creating access token

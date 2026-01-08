@@ -1,6 +1,5 @@
-package com.cisowski.schoolmanagement.common.security;
+package com.cisowski.schoolmanagement.common.security.authentication;
 
-import com.cisowski.schoolmanagement.users.common.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

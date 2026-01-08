@@ -186,4 +186,13 @@ public class ScheduleVersionServiceImpl implements ScheduleVersionService {
                 .filter(version -> !isAlreadyDeleted(version))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public ScheduleVersionDetailedResponse getActiveScheduleVersionForYearbook(Integer yearbookId) {
+        DbLogger.info("Searching for active ScheduleVersion for Yearbook with ID: " + yearbookId);
+        Optional<ScheduleVersionEntity> scheduleVersion = repository.findByIsActiveTrueAndYearbookId(yearbookId);
+        if(scheduleVersion.isEmpty())
+            throw new SpecificationBrokenException("There is no active schedule version for Yearbook with ID: " + yearbookId);
+        return scheduleVersionMapper.toDetailedResponse(scheduleVersion.get());
+    }
 }

@@ -420,7 +420,11 @@ public class GradeAuthTest extends BaseIntegrationTest {
     @Test
     void shouldAllowAdminToCreateGrade() {
         Headers headers = createHeadersWithRandomAdminUser();
-        AddGradeRequest gradeRequest = dataHelper.createAddGradeRequest(null, null, null, null);
+        SubjectEntity subject = dataHelper.createSubject();
+        TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        AddGradeRequest gradeRequest = dataHelper.createAddGradeRequest(teacher, subject, student, null);
 
         given()
                 .headers(headers)
@@ -437,8 +441,10 @@ public class GradeAuthTest extends BaseIntegrationTest {
     void shouldAllowTeacherToCreateGrade() {
         SubjectEntity subject = dataHelper.createSubject();
         TeacherEntity teacher = dataHelper.createTeacher(Collections.singletonList(subject));
+        YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
         Headers headers = buildBasicHeaders(teacher.getEmail());
-        AddGradeRequest request = dataHelper.createAddGradeRequest(teacher, subject, null, null);
+        AddGradeRequest request = dataHelper.createAddGradeRequest(teacher, subject, student, null);
 
         given()
                 .headers(headers)

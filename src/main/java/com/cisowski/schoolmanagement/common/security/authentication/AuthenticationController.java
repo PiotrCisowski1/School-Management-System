@@ -1,16 +1,13 @@
-package com.cisowski.schoolmanagement.users.common;
+package com.cisowski.schoolmanagement.common.security.authentication;
 
-import com.cisowski.schoolmanagement.users.common.model.LoginResponse;
-import com.cisowski.schoolmanagement.users.common.service.AuthenticationService;
-import com.cisowski.schoolmanagement.users.common.service.JwtService;
-import com.cisowski.schoolmanagement.users.common.model.LoginUserRequest;
-import com.cisowski.schoolmanagement.users.common.model.UserEntity;
+import com.cisowski.schoolmanagement.users.common.model.*;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping()
 @RestController
@@ -41,5 +38,19 @@ public class AuthenticationController {
         DbLogger.info(message);
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/token/refresh")
+    public ResponseEntity<LoginResponse> refreshToken() {
+        LoginResponse response = authenticationService.refreshUsersToken();
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<UserSummaryResponse> getAuthenticatedUserId() {
+        UserSummaryResponse userId = authenticationService.getAuthenticatedUserId();
+        return ResponseEntity.ok(userId);
     }
 }

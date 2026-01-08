@@ -163,6 +163,19 @@ public class TestDataHelper {
         return scheduleVersionRepository.save(scheduleVersion);
     }
 
+    public ScheduleVersionEntity createScheduleVersion(YearbookEntity yearbook, boolean isActive) {
+        if(yearbook == null)
+            yearbook = createYearbook(Collections.emptyList(), null);
+        ScheduleVersionEntity scheduleVersion = Instancio.of(ScheduleVersionEntity.class)
+                .set(field(ScheduleVersionEntity::getId), null)
+                .set(field(ScheduleVersionEntity::getYearbook), yearbook)
+                .set(field(ScheduleVersionEntity::getSchedules), null)
+                .set(field(ScheduleVersionEntity::getStatus), ScheduleStatus.SCHEDULED)
+                .set(field(ScheduleVersionEntity::isActive), isActive)
+                .create();
+        return scheduleVersionRepository.save(scheduleVersion);
+    }
+
     public YearbookEntity createYearbook(List<SubjectEntity> subjects, TeacherEntity teacher) {
         YearbookEntity yearbook = Instancio.of(YearbookEntity.class)
                 .set(field(YearbookEntity::getHeadTeacher), teacher)
@@ -709,8 +722,6 @@ public class TestDataHelper {
             yearbook = createYearbook(null, null);
         return Instancio.of(StudentPatchRequest.class)
                 .set(field(StudentPatchRequest::getYearbookId), yearbook.getId())
-                .set(field(StudentPatchRequest::getParentIdsToAdd), null)
-                .set(field(StudentPatchRequest::getParentIdsToRemove), null)
                 .set(field(StudentPatchRequest::getAddress), null)
                 .set(field(StudentPatchRequest::getAuthority), null)
                 .generate(field(StudentPatchRequest::getEmail), gen -> gen.net().email())
