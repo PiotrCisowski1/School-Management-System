@@ -7,6 +7,7 @@ import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.AddScheduleVersionRequest;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.PatchScheduleVersionRequest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionDetailedResponse;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
@@ -647,5 +648,29 @@ public class ScheduleAuthTest extends BaseIntegrationTest {
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    void shouldAllowStudentToGetScheduleVersionByYearbook() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null, null);
+        StudentEntity student = dataHelper.createStudent(yearbook, null);
+        Headers headers = buildBasicHeaders(student.getEmail());
+        ScheduleVersionEntity activeScheduleVersion = dataHelper.createScheduleVersion(yearbook, true);
+        ScheduleVersionEntity inactiveScheduleVersion = dataHelper.createScheduleVersion(yearbook, false);
+
+        ScheduleVersionDetailedResponse response = given()
+                .headers(headers)
+        .when()
+                .get(String.format("schedules/version/yearbook/%s/active", yearbook.getId()))
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.OK.value())
+                .extract().as(ScheduleVersionDetailedResponse.class);
+
+        assertNotNull(response);
+        assertTrue(response.isActive());
+        assertEquals(yearbook.getId(), response.getYearbook().getId());
+        assertEquals(activeScheduleVersion.getId(), response.getId());
+        assertEquals(activeScheduleVersion.getName(), response.getName());
     }
 }
