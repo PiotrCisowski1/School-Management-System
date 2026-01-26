@@ -102,6 +102,8 @@ The pipeline includes:
 - Build - automated Maven lifecycle management to ensure compilation integrity
 - Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready PostgreSQL environment)
 
+[![School Management System CI pipeline](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml)
+
 
 ## Changelog 
 
