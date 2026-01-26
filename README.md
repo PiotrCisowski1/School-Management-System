@@ -101,7 +101,6 @@ The pipeline includes:
 
 - Build - automated Maven lifecycle management to ensure compilation integrity
 - Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready PostgreSQL environment)
-- Static Analysis - strict code style and consistency verification via Checkstyle to maintain high readability and clean code standards
 
 
 ## Changelog 

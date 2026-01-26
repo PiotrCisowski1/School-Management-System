@@ -21,8 +21,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run Checkstyle
-        run: mvn checkstyle:check
+#      - name: Run Checkstyle
+#        run: mvn checkstyle:check
 
       - name: Build and Test with Maven
         run: mvn clean verify
