@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add refresh JWT token endpoint - restricted to authenticated users
 - Add 'me' endpoint returning base User data
 - Add missing endpoint to retrieve active ScheduleVersion for Student's Yearbook
+- Add Github Actions pipeline: build code, check style, run unit and integration tests
 
 ### Fixed
 - Fix DB support for polish characters

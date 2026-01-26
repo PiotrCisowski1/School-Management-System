@@ -49,7 +49,7 @@ This project serves both as an educational journey and a professional showcase o
 
 | Layer         | Technology                                                     |
 |--------------|----------------------------------------------------------------|
-| Language      | Java 17                                                        |
+| Language      | Java 21                                                        |
 | Framework     | Spring Boot, Spring Security, Spring Data JPA                  |
 | Build Tool    | Maven                                                          |
 | Database      | Microsoft SQL Server as main, PostgreSQL for integration tests |
@@ -79,19 +79,29 @@ Access to endpoints is restricted based on authority levels
 ## Testing 
 Unit tests for core logic using:
 
--JUnit 5
+- JUnit 5
 
--Mockito
+- Mockito
 
--Instancio for test data generation
+- Instancio for test data generation
 
 Integration tests:
 
--Testcontainers
+- Testcontainers
 
--Rest Assured
+- Rest Assured
 
 🧠 JaCoCo integration for code coverage reports is planned.
+
+
+## Commitment to Code Quality
+To maintain the highest project quality and ensure the robustness of implemented features, I have integrated a CI pipeline leveraging GitHub Actions. This strategy focuses on continuous automated auditing and mitigating technical debt from the earliest stages of development.
+
+The pipeline includes:
+
+- Build - automated Maven lifecycle management to ensure compilation integrity
+- Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready PostgreSQL environment)
+- Static Analysis - strict code style and consistency verification via Checkstyle to maintain high readability and clean code standards
 
 
 ## Changelog 
