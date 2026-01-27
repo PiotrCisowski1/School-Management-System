@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-verify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -20,9 +23,26 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
-
-#      - name: Run Checkstyle
-#        run: mvn checkstyle:check
+      
+      #      - name: Run Checkstyle
+      #        run: mvn checkstyle:check
 
       - name: Build and Test with Maven
         run: mvn clean verify
+
+      - name: Add Coverage Comment
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-project: 80
+          min-coverage-type: line
+          title: "Code coverage report"
+
+      - name: Upload Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/

@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Add 'me' endpoint returning base User data
 - Add missing endpoint to retrieve active ScheduleVersion for Student's Yearbook
 - Add Github Actions pipeline: build code, check style, run unit and integration tests
+- Integrate with JaCoCo for minimal 80% coverage - with coverage check in CI pipeline and automatic PR comment with actual coverage 
 
 ### Fixed
 - Fix DB support for polish characters

@@ -91,7 +91,7 @@ Integration tests:
 
 - Rest Assured
 
-🧠 JaCoCo integration for code coverage reports is planned.
+**JaCoCo** for comprehensive code coverage analysis.
 
 
 ## Commitment to Code Quality
@@ -99,8 +99,10 @@ To maintain the highest project quality and ensure the robustness of implemented
 
 The pipeline includes:
 
-- Build - automated Maven lifecycle management to ensure compilation integrity
-- Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready PostgreSQL environment)
+- Build & Verification - automated Maven lifecycle management to ensure compilation integrity and dependency consistency
+- Automated Quality Gate - the pipeline is configured to fail the build if the code coverage (JaCoCo) falls below 80% threshold. This ensures that no untested logic is merged.
+- Continuous Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready database environment during CI process)
+- Automated Coverage Reporting - every Pull Request is automatically annotated with a detailed JaCoCo coverage report, providing feedback on how new changes affect overall stability
 
 [![School Management System CI pipeline](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml)
 
