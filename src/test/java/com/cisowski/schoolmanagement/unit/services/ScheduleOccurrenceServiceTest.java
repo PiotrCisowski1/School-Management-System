@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.appConfig.model.AppConfigKeys;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleRecurrenceType;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
@@ -170,8 +171,9 @@ public class ScheduleOccurrenceServiceTest {
                 .set(field(ScheduleEntity::getRecurrenceType), ScheduleRecurrenceType.NONE)
                 .set(field(ScheduleEntity::getStartTime), START_TIME)
                 .set(field(ScheduleEntity::getEndTime), END_TIME)
-                .set(field(ScheduleEntity::getEffectiveDate), CURRENT_DATE.plusDays(1))
-                .set(field(ScheduleEntity::getDayOfWeek), CURRENT_DATE.plusDays(1).getDayOfWeek())
+                .set(field(ScheduleEntity::getEffectiveDate), CURRENT_DATE.plusDays(3))
+                .set(field(ScheduleEntity::getExpirationDate), CURRENT_DATE.plusDays(4))
+                .set(field(ScheduleEntity::getDayOfWeek), CURRENT_DATE.plusDays(3).getDayOfWeek())
                 .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 

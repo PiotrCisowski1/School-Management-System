@@ -60,7 +60,7 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
         DbLogger.info(String.format("Initializing ScheduleOccurrences for Schedule with ID: %s, for next % days", schedule.getId(), minInitDays));
         LocalDate currentDate = LocalDate.now();
         LocalDate generationEndDate = currentDate.plusDays(minInitDays);
-        LocalDate effectiveStart = schedule.getEffectiveDate().isAfter(currentDate)
+        LocalDate effectiveStart = schedule.getEffectiveDate().isAfter(currentDate) || schedule.getEffectiveDate().isEqual(currentDate)
                 ? schedule.getEffectiveDate()
                 : currentDate;
         LocalDate effectiveEnd = generationEndDate;
@@ -78,7 +78,7 @@ public class ScheduleOccurrenceServiceImpl implements ScheduleOccurrenceService 
 
     private void handleRecurrenceTypeNoneInit(ScheduleEntity schedule, LocalDate effectiveStart, LocalDate effectiveEnd) {
         LocalDate occurrenceDate = schedule.getEffectiveDate();
-        if(occurrenceDate.isAfter(effectiveEnd) || occurrenceDate.isBefore(effectiveStart))
+        if(occurrenceDate.isAfter(effectiveEnd) || occurrenceDate.isBefore(effectiveStart) || !occurrenceDate.isEqual(effectiveStart))
             return;
         if(!occurrenceDate.getDayOfWeek().equals(schedule.getDayOfWeek()))
             throw new SpecificationBrokenException(String.format(

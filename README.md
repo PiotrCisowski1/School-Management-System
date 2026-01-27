@@ -65,6 +65,7 @@ Update database credentials in src/main/resources/application.properties as need
 🔧 Docker support will be added in an upcoming release.
 
 
+---
 ## Authentication & Authorization 
 
 Login via POST /login
@@ -76,6 +77,7 @@ Authorization is role-based (STUDENT, TEACHER, PARENT, ADMINISTRATOR)
 Access to endpoints is restricted based on authority levels
 
 
+---
 ## Testing 
 Unit tests for core logic using:
 
@@ -94,24 +96,27 @@ Integration tests:
 **JaCoCo** for comprehensive code coverage analysis.
 
 
+---
 ## Commitment to Code Quality
 To maintain the highest project quality and ensure the robustness of implemented features, I have integrated a CI pipeline leveraging GitHub Actions. This strategy focuses on continuous automated auditing and mitigating technical debt from the earliest stages of development.
 
 The pipeline includes:
 
-- Build & Verification - automated Maven lifecycle management to ensure compilation integrity and dependency consistency
-- Automated Quality Gate - the pipeline is configured to fail the build if the code coverage (JaCoCo) falls below 80% threshold. This ensures that no untested logic is merged.
-- Continuous Testing - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready database environment during CI process)
-- Automated Coverage Reporting - every Pull Request is automatically annotated with a detailed JaCoCo coverage report, providing feedback on how new changes affect overall stability
+- **Build & Verification** - automated Maven lifecycle management to ensure compilation integrity and dependency consistency
+- **Automated Quality Gate** - the pipeline is configured to fail the build if the code coverage (JaCoCo) falls below 80% threshold. This ensures that no untested logic is merged.
+- **Continuous Testing** - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready database environment during CI process)
+- **Automated Coverage Reporting** - every Pull Request is automatically annotated with a detailed JaCoCo coverage report, providing feedback on how new changes affect overall stability
 
 [![School Management System CI pipeline](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml)
 
 
+---
 ## Changelog 
 
 All changes and version history are documented in CHANGELOG.md.
 
 
+---
 ## License 
 
 This project is licensed under the MIT License.
@@ -119,6 +124,7 @@ This project is licensed under the MIT License.
 It is currently intended for educational and demonstration purposes.
 
 
+---
 ## Author 
 
 Created by  **Piotr Cisowski**
