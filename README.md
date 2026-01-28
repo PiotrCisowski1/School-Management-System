@@ -128,6 +128,9 @@ API is built with a Design-First mindset using the OpenAPI 3.0 standard.
 - [Open Interactive API Explorer (Live Preview)](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/PiotrCisowski1/School-Management-System/refs/heads/release/docs/sms-api-doc.yaml)
 - Static specification file: _/docs/sms-api-docs.yaml_
 
+### 3. Data Model and business rules
+Database schema with explanation and core business logic is described here **[--> Data Model](docs/DATA_MODEL.md)**
+
 
 ---
 ## Changelog 
