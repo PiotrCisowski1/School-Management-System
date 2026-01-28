@@ -3,7 +3,7 @@
 A modular and extensible backend system for managing a school's daily operations – built with Java 17 and Spring Boot.  
 This project serves both as an educational journey and a professional showcase of clean code, domain modeling and security in Java applications.
 
-> **Status:** Stable version `v1.3.3`  
+> **Status:** Stable version `v1.3.4`  
 > Project under active development. 
 
 ---
@@ -12,8 +12,10 @@ This project serves both as an educational journey and a professional showcase o
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Authentication & Authorization](#authentication-and-authorization)
+- [Authentication & Authorization](#authentication--authorization-)
 - [Testing](#testing)
+- [Commitment to Code Quality](#commitment-to-code-quality)
+- [System Architecture & API Design](#system-architecture--api-design)
 - [Changelog](#changelog)
 - [License](#license)
 - [Author](#author)
@@ -108,6 +110,23 @@ The pipeline includes:
 - **Automated Coverage Reporting** - every Pull Request is automatically annotated with a detailed JaCoCo coverage report, providing feedback on how new changes affect overall stability
 
 [![School Management System CI pipeline](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml)
+
+
+---
+## System Architecture & API Design
+### 1. Architectural Decisions
+- **Stateless Authentication (JWT):** system uses JSON Web Tokens to eliminate server-side session state. Authorization claims are embedded in the token for efficient permission checks.
+- **Layered Architecture:** follows a standard _Controller-Service-Repository_ pattern to ensure Separation of Concerns and high testability.
+- **Environment Parity (Testcontainers):** integration tests run on PostgreSQL instances via Docker, ensuring that the production environment behaviour is mirrored during CI/CD.
+
+### 2. API Design Philosophy
+API is built with a Design-First mindset using the OpenAPI 3.0 standard.
+- **Self-documenting:** every endpoint is enriched with business summaries, specific response mappings and possible HTTP outcomes
+- **Strict Contracts:** all data transfers are handled by dedicated DTOs with validation constraints ensuring data integrity.
+
+🧪 **Interactive API specification fully documents all system functionality.**
+- [Open Interactive API Explorer (Live Preview)](https://raw.githubusercontent.com/PiotrCisowski1/School-Management-System/release/docs/sms-api-doc.yaml)
+- Static specification file: _/docs/sms-api-docs.yaml_
 
 
 ---

@@ -1,0 +1,5092 @@
+openapi: 3.0.1
+info:
+  title: School Management System API
+  version: "1.3.3"
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+tags:
+- name: Parents
+  description: "Operations related to parental accounts, including student-parent\
+    \ linking and access to children's academic progress."
+- name: Schedules
+  description: "Core engine for school time management. Handles lesson occurrences,\
+    \ class cancellations etc."
+- name: Teachers
+  description: "Administration of teaching staff, including professional profiles,\
+    \ subject specializations, and departmental affiliations."
+- name: Schedule Occurrences
+  description: "Management of specific lesson instances. Handles individual session\
+    \ details, substitutions, and real-time schedule updates."
+- name: Grades
+  description: "Management of student academic performance, including grade assignment,\
+    \ grade types, and grading scales."
+- name: Subjects
+  description: "Management of the school curriculum, including subject definitions,\
+    \ department assignments, and subject-specific configurations."
+- name: Yearbooks
+  description: Administration of academic years (yearbooks). Defines the time-frame
+    and organizational structure for students.
+- name: App Config
+  description: Management of global application parameters and environment-specific
+    settings.
+- name: Attendance
+  description: Tracking and reporting student presence. Manages absence records and
+    attendance summaries. Attendance is linked to schedule occurrence and student.
+    Attendance is automatically initialized X minutes before occurrence starts - configured
+    in application configuration
+- name: Authentication
+  description: Secure entry point for users. Handles identity verification and issues
+    JWT Bearer tokens.
+- name: Students
+  description: "Comprehensive student data management, including enrollment details,\
+    \ class assignments, and personal profiles."
+- name: Classroom
+  description: Management of Classroom
+paths:
+  /schedules/{scheduleId}/CANCEL:
+    put:
+      tags:
+      - Schedules
+      summary: Cancel schedule
+      description: "Cancel booked schedule and all it's occurrences. Required authority\
+        \ level: Administrator"
+      operationId: cancelSchedule
+      parameters:
+      - name: scheduleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              maxLength: 200
+              minLength: 3
+              type: string
+        required: true
+      responses:
+        "404":
+          description: Schedule not found
+          content:
+            '*/*':
+              schema:
+                type: string
+        "204":
+          description: Canceled successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Cancellation not possible because of schedule's status
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /yearbooks:
+    get:
+      tags:
+      - Yearbooks
+      summary: Find all yearbooks
+      description: "Retrieves all existing yearbooks in the system. Required authority\
+        \ level: Administrator"
+      operationId: getYearbooks
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing yearbooks list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/YearbookSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Yearbooks
+      summary: Create yearbook
+      description: "Adds new yearbook with unique symbol. Required authority level:\
+        \ Administrator"
+      operationId: addYearbook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddYearbookRequest'
+        required: true
+      responses:
+        "406":
+          description: Subject not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "404":
+          description: Head teacher not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "409":
+          description: Already exists for symbol or head teacher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+      security:
+      - bearerAuth: []
+  /token/refresh:
+    post:
+      tags:
+      - Authentication
+      summary: Refresh token
+      description: Generate new token to authorize across the system. Requires already
+        authenticated user.
+      operationId: refreshToken
+      responses:
+        "403":
+          description: Access denied
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "200":
+          description: Returns newly generated token
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "401":
+          description: Full authentication is required to access this resource
+      security:
+      - bearerAuth: []
+  /teachers:
+    get:
+      tags:
+      - Teachers
+      summary: Find all teachers
+      description: "Retrieves all existing teachers in the system. Required authority\
+        \ level: Administrator"
+      operationId: getTeachers
+      responses:
+        "200":
+          description: Returns existing teachers list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Teachers
+      summary: Create teacher
+      description: "Adds new Teacher profile. Required authority level: Administrator"
+      operationId: addTeacher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherCreateRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddTeacherResponse'
+        "404":
+          description: Authority not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddTeacherResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "409":
+          description: User with given email already exists
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddTeacherResponse'
+      security:
+      - bearerAuth: []
+  /teachers/{teacherId}/teacher-availability:
+    get:
+      tags:
+      - Teachers
+      summary: Get all availabilities for Teacher
+      description: "Retrieves all existing availabilities for particular teacher.\
+        \ Required authority level: Administrator, Teacher"
+      operationId: getTeacherAvailabilityByTeacherId
+      parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns existing availabilities list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Teachers
+      summary: Create teacher's availability
+      description: "Adds teacher availability record which represents teacher's possibility\
+        \ to teach a lesson in particular time range. Required authority level: Administrator,\
+        \ Teacher"
+      operationId: addTeacherAvailability
+      parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherAvailabilityRequest'
+        required: true
+      responses:
+        "404":
+          description: Teacher not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "406":
+          description: Availability already booked for given teacher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /subjects:
+    get:
+      tags:
+      - Subjects
+      summary: Find all subjects
+      description: "Retrieves all existing subjects in the system. Required authority\
+        \ level: Administrator"
+      operationId: getAllSubjects
+      responses:
+        "200":
+          description: Returns object list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Subjects
+      summary: Create subject
+      description: "Adds new subject with unique subject code. Required authority\
+        \ level: Administrator"
+      operationId: addSubject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSubjectRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "409":
+          description: Object with given subject code already exists
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /subjects/subjectTypes:
+    get:
+      tags:
+      - Subjects
+      summary: Find all subject types
+      description: "Retrieves all existing subject types in the system. Required authority\
+        \ level: Administrator"
+      operationId: getAllSubjectType
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing objects (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectTypeResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Subjects
+      summary: Create subject type
+      description: "Adds new subject type with unique name. Required authority level:\
+        \ Administrator"
+      operationId: addSubjectType
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectTypeRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "409":
+          description: Object with given name already exists
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+      security:
+      - bearerAuth: []
+  /students:
+    get:
+      tags:
+      - Students
+      summary: Find all students
+      description: "Retrieves all existing students in the system. Required authority\
+        \ level: Administrator"
+      operationId: getStudents
+      responses:
+        "200":
+          description: Returns existing students list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Students
+      summary: Create student
+      description: "Adds new student profile to the system. Required authority level:\
+        \ Administrator"
+      operationId: addStudent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreateRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddStudentResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: Authority with given ID not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddStudentResponse'
+        "409":
+          description: User with given email already exists
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddStudentResponse'
+      security:
+      - bearerAuth: []
+  /schedules/version:
+    post:
+      tags:
+      - Schedules
+      summary: Create schedule version
+      description: "Adds new schedule version representing lesson plan for particular\
+        \ period of time associated with particular yearbook. Required authority level:\
+        \ Administrator"
+      operationId: createScheduleVersion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddScheduleVersionRequest'
+        required: true
+      responses:
+        "201":
+          description: Successfully created
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Yearbook not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/version/{scheduleVersionId}:
+    get:
+      tags:
+      - Schedules
+      summary: Get schedule version by ID
+      description: "Retrieves existing schedule version for given ID. Required authority\
+        \ level: Administrator, Teacher, Student"
+      operationId: getScheduleVersionsForId
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing schedule version
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "406":
+          description: Schedule version already marked as removed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Schedule version not found for given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Schedules
+      summary: Create new schedule
+      description: "Adds new schedule representing recurrent lesson unit applicable\
+        \ in a given time period. Required authority level: Administrator"
+      operationId: addSchedule
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddScheduleRequest'
+        required: true
+      responses:
+        "404":
+          description: Schedule version not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Teacher not available in a given time period
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Schedules
+      summary: Delete schedule version
+      description: "Remove existing schedule version with given ID, if not already\
+        \ marked as removed. Required authority level: Administrator"
+      operationId: deleteScheduleVersion
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Schedule version already marked as removed
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Schedules
+      summary: Update schedule version
+      description: "Modify existing schedule version. Required authority level: Administrator"
+      operationId: patchScheduleVersion
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchScheduleVersionRequest'
+        required: true
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Schedule version not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "200":
+          description: Modified successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/version/{scheduleVersionId}/clone:
+    post:
+      tags:
+      - Schedules
+      summary: Clone schedule version
+      description: "Creates new schedule version based on date in cloned version with\
+        \ all schedules, that is set to unactive by default. Required authority level:\
+        \ Administrator"
+      operationId: cloneScheduleVersion
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Schedule version to clone not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "201":
+          description: Successfully created
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: Schedule version to clone is already marked as removed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+      security:
+      - bearerAuth: []
+  /scheduleOccurrence/{scheduleOccurrenceId}/mark:
+    post:
+      tags:
+      - Attendance
+      summary: Set attendance status for students
+      description: "Mark attendance for given students with particular status. Required\
+        \ authority level: Administrator, Teacher"
+      operationId: setAttendanceAbsenceStatusForStudents
+      parameters:
+      - name: scheduleOccurrenceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkAttendanceRequest'
+        required: true
+      responses:
+        "200":
+          description: Marked successfully
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "404":
+          description: Student not found
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "406":
+          description: Marking attendance status for occurrence with invalid status
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /parents:
+    get:
+      tags:
+      - Parents
+      summary: Find all parents
+      description: "Retrieve all existing parents in the system. Required authority\
+        \ level: Administrator"
+      operationId: getParents
+      responses:
+        "200":
+          description: Returns existing objects list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParentSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Parents
+      summary: Create parent
+      description: "Adds new parent profile related with children. Response includes\
+        \ first generated password. Required authority level: Administrator"
+      operationId: addParent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentCreateRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddParentResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Children not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddParentResponse'
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: Authority with given ID not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddParentResponse'
+        "409":
+          description: User with given email already exists
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AddParentResponse'
+      security:
+      - bearerAuth: []
+  /login:
+    post:
+      tags:
+      - Authentication
+      summary: Login to the system
+      description: Authenticates user with given credentials and generates token to
+        authorize across the system.
+      operationId: authenticate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserRequest'
+        required: true
+      responses:
+        "404":
+          description: User with given email not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "200":
+          description: User authenticated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+  /grades:
+    post:
+      tags:
+      - Grades
+      summary: Create grade
+      description: "Adds new grade for Student by Teacher, related with Subject, with\
+        \ particular value and type. Required authority level: Administrator, Teacher"
+      operationId: addGrade
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGradeRequest'
+        required: true
+      responses:
+        "404":
+          description: Grade value not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "406":
+          description: Student not attending Subject
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /grades/types:
+    get:
+      tags:
+      - Grades
+      summary: Get all grade types
+      description: "Retrieves all existing grade types in the system. Required authority\
+        \ level: Administrator"
+      operationId: getGradeTypes
+      responses:
+        "200":
+          description: Returns found objects (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Grades
+      summary: Create grade type
+      description: "Adds new grade type to the system, describing scope and significance\
+        \ of grade. Required authority level: Administrator"
+      operationId: addGradeType
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGradeTypeRequest'
+        required: true
+      responses:
+        "406":
+          description: Grade type already exists by given grade scope
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "201":
+          description: Grade type created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+      security:
+      - bearerAuth: []
+  /grades/scales:
+    get:
+      tags:
+      - Grades
+      summary: Get all grade scales
+      description: "Retrieves list of existing grade scales. Required authority level:\
+        \ Administrator"
+      operationId: getAllGradeScales
+      responses:
+        "200":
+          description: Returns exiting grade scales (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeScaleSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Grades
+      summary: Create new grade scale
+      description: "Adds new grade scale, which represents possible grade values used\
+        \ by all Teachers. Required authority level: Administrator"
+      operationId: addGradeScale
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeScaleRequest'
+        required: true
+      responses:
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: "Given grade scale must be set to active, because there is\
+            \ no active scale at the moment"
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+      security:
+      - bearerAuth: []
+  /grades/scales/{gradeScaleId}/values:
+    post:
+      tags:
+      - Grades
+      summary: Create grade value
+      description: "Adds new grade value to grade scale. Required authority level:\
+        \ Administrator"
+      operationId: addGradeValue
+      parameters:
+      - name: gradeScaleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeValueDto'
+        required: true
+      responses:
+        "404":
+          description: Grade scale not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeValueResponse'
+        "201":
+          description: Created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeValueResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /classrooms:
+    get:
+      tags:
+      - Classroom
+      summary: Get all classrooms
+      description: "Retrieves all existing classrooms. Required authority level: Administrator"
+      operationId: getClassrooms
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns list of existing classrooms (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassroomSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Classroom
+      summary: Create classroom
+      description: "Adds new classroom to the system and returns created object. Required\
+        \ authority level: Administrator"
+      operationId: addClassroom
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassroomRequest'
+        required: true
+      responses:
+        "201":
+          description: Classroom created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ClassroomDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /classrooms/equipments:
+    get:
+      tags:
+      - Classroom
+      summary: Find all equipments
+      description: "Retrieves all equipment objects in the system. Required authority\
+        \ level: Administrator"
+      operationId: findAllEqs
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns all existing equipment (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EquipmentResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Classroom
+      summary: Create equipment
+      description: "Adds a new equipment object, used in classrooms. Required authority\
+        \ level: Administrator"
+      operationId: addEquipment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentRequest'
+        required: true
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "201":
+          description: Equipment created successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EquipmentResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /yearbooks/{yearbookId}:
+    get:
+      tags:
+      - Yearbooks
+      summary: Find yearbook with ID
+      description: "Retrieves existing yearbook with given ID. Required authority\
+        \ level: Administrator, Teacher, Student"
+      operationId: getYearbook
+      parameters:
+      - name: yearbookId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing yearbook
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Yearbooks
+      summary: Delete yearbook
+      description: "Remove yearbook from the system if not associated with students.\
+        \ Required authority level: Administrator"
+      operationId: deleteYearbook
+      parameters:
+      - name: yearbookId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "406":
+          description: Removal canceled due to existing yearbook association with
+            students
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Yearbook not found
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Yearbooks
+      summary: Update yearbook
+      description: "Modifies yearbook data and subject association. Required authority\
+        \ level: Administrator"
+      operationId: updateYearbook
+      parameters:
+      - name: yearbookId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchYearbookRequest'
+        required: true
+      responses:
+        "404":
+          description: Head teacher not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "200":
+          description: Modification successful
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/YearbookDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /teachers/{teacherId}:
+    get:
+      tags:
+      - Teachers
+      summary: Find teacher with ID
+      description: "Retrieves existing teacher with given ID. Required authority level:\
+        \ Administrator, Teacher, Student, Parent"
+      operationId: getTeacher
+      parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns existing teacher
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherDetailedResponse'
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Teachers
+      summary: Delete teacher
+      description: "Remove teacher profile from the system. Required authority level:\
+        \ Administrator"
+      operationId: deleteTeacher
+      parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "406":
+          description: Removal canceled due to teacher association with yearbook
+          content:
+            '*/*':
+              schema:
+                type: string
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Not found with given ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Teachers
+      summary: Update teacher
+      description: "Modifies teacher profile and subject association. Required authority\
+        \ level: Administrator"
+      operationId: updateTeacher
+      parameters:
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherPatchRequest'
+        required: true
+      responses:
+        "404":
+          description: Subject not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherDetailedResponse'
+        "200":
+          description: Modification successful
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /subjects/{subjectId}:
+    get:
+      tags:
+      - Subjects
+      summary: Find subject with ID
+      description: "Retrieves existing subject with given ID. Required authority level:\
+        \ Administrator, Teacher, Student, Parent"
+      operationId: getSubjectById
+      parameters:
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Object not found with given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Subjects
+      summary: Delete subject
+      description: "Remove existing subject from the system if not in use. Required\
+        \ authority level: Administrator"
+      operationId: deleteSubject
+      parameters:
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Object not found with given ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "406":
+          description: Removal canceled due to Subject relation with Teacher
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Subjects
+      summary: Update subject
+      description: "Modify existing subject. Required authority level: Administrator"
+      operationId: patchSubject
+      parameters:
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchSubjectRequest'
+        required: true
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Modified successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "404":
+          description: Subject not found with given code
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /subjects/subjectTypes/{subjectTypeId}:
+    get:
+      tags:
+      - Subjects
+      summary: Find subject type with ID
+      description: "Retrieves existing subject type with given ID. Required authority\
+        \ level: Administrator"
+      operationId: getSubjectType
+      parameters:
+      - name: subjectTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Object not found with given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Subjects
+      summary: Delete subject type from the system if not in use
+      description: "Remove subject type from the system if not in use. Required authority\
+        \ level: Administrator"
+      operationId: deleteSubjectType
+      parameters:
+      - name: subjectTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "404":
+          description: Not found with given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Subjects
+      summary: Update subject type
+      description: "Modify existing subject type with unique name. Required authority\
+        \ level: Administrator"
+      operationId: patchSubjectType
+      parameters:
+      - name: subjectTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectTypeRequest'
+        required: true
+      responses:
+        "404":
+          description: Object not found with given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Modified successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectTypeResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /students/{studentId}:
+    get:
+      tags:
+      - Students
+      summary: Find student with ID
+      description: "Retrieves existing student with given ID. Required authority level:\
+        \ Administrator, Teacher, Student, Parent"
+      operationId: getStudent
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StudentDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns existing student
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StudentDetailedResponse'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Students
+      summary: Delete student
+      description: "Removes student profile from the system. Required authority level:\
+        \ Administrator"
+      operationId: deleteStudent
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Students
+      summary: Update student
+      description: "Modify existing student profile. Required authority level: Administrator"
+      operationId: updateStudent
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentPatchRequest'
+        required: true
+      responses:
+        "200":
+          description: Modification successful
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StudentDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Modified yearbook not found not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/StudentDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/{scheduleId}:
+    delete:
+      tags:
+      - Schedules
+      summary: Delete schedule
+      description: "Remove existing schedule if has no ongoing occurrences, and cancels\
+        \ booked occurrences. Required authority level: Administrator"
+      operationId: deleteSchedule
+      parameters:
+      - name: scheduleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "406":
+          description: Active occurrences ongoing
+          content:
+            '*/*':
+              schema:
+                type: string
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Schedules
+      summary: Update schedule
+      description: "Modify existing schedule, if time period is applicable and already\
+        \ booked. Required authority level: Administrator"
+      operationId: patchSchedule
+      parameters:
+      - name: scheduleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchScheduleRequest'
+        required: true
+      responses:
+        "406":
+          description: Modification canceled because of actual schedule status
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "200":
+          description: Modification successful
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /parents/{parentId}:
+    get:
+      tags:
+      - Parents
+      summary: Find parent with ID
+      description: "Retrieves existing parent with given ID. Required authority level:\
+        \ Administrator, Teacher, Student, Parent"
+      operationId: getParent
+      parameters:
+      - name: parentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ParentDetailedResponse'
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ParentDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Parents
+      summary: Delete parent
+      description: "Remove parent with given ID and unlink children. Required authority\
+        \ level: Administrator"
+      operationId: deleteParent
+      parameters:
+      - name: parentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Parents
+      summary: Update parent
+      description: "Modify parent profile and relation with children. Required authority\
+        \ level: Administrator"
+      operationId: updateParent
+      parameters:
+      - name: parentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParentPatchRequest'
+        required: true
+      responses:
+        "404":
+          description: Parent not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ParentDetailedResponse'
+        "200":
+          description: Modification successfull
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ParentDetailedResponse'
+        "406":
+          description: Child association removal - child not linked with parent
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ParentDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /grades/{gradeId}:
+    get:
+      tags:
+      - Grades
+      summary: Find grade by ID
+      description: "Find specific grade by ID, if Teacher issuing grade, Student owning\
+        \ grade or Student's head Teacher. Required authority level: Administrator,\
+        \ Teacher, Student"
+      operationId: getGradeById
+      parameters:
+      - name: gradeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Returns found grade
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Grades
+      summary: Delete grade
+      description: "Remove grade by Administrator or Teacher issuing grade. Required\
+        \ authority level: Administrator, Teacher"
+      operationId: deleteGrade
+      parameters:
+      - name: gradeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Grade not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Grades
+      summary: Update grade
+      description: "Modify grade by Administrator or Teacher issuing grade. Required\
+        \ authority level: Administrator, Teacher"
+      operationId: patchGrade
+      parameters:
+      - name: gradeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchGradeRequest'
+        required: true
+      responses:
+        "404":
+          description: Grade not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "406":
+          description: Teacher not associated with Subject
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Modified successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /grades/types/{gradeTypeId}:
+    get:
+      tags:
+      - Grades
+      summary: Find grade type by ID
+      description: "Retrieve grade type by given ID. Required authority level: Administrator"
+      operationId: getGradeType
+      parameters:
+      - name: gradeTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Returns found object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Object not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Grades
+      summary: Delete grade type
+      description: "Remove grade type from the system if not used. Required authority\
+        \ level: Administrator"
+      operationId: deleteGradeType
+      parameters:
+      - name: gradeTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Grade type in use
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Grades
+      summary: Update grade type
+      description: "Modify existing grade type found by ID. Required authority level:\
+        \ Administrator"
+      operationId: patchGradeType
+      parameters:
+      - name: gradeTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchGradeTypeRequest'
+        required: true
+      responses:
+        "404":
+          description: Grade type not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Grade type updated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeTypeResponse'
+      security:
+      - bearerAuth: []
+  /grades/scales/{gradeScaleId}:
+    get:
+      tags:
+      - Grades
+      summary: Find grade scale by ID
+      description: "Retrieves existing grade scale found by ID. Required authority\
+        \ level: Administrator"
+      operationId: getGradeScaleById
+      parameters:
+      - name: gradeScaleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Object not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Grades
+      summary: Delete grade scale
+      description: "Remove grade scale from the system, possible if not the only one\
+        \ in the system. Required authority level: Administrator"
+      operationId: deleteGradeScale
+      parameters:
+      - name: gradeScaleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Cannot remove because it is only one active in the system
+          content:
+            '*/*':
+              schema:
+                type: string
+        "404":
+          description: Object not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Grades
+      summary: Update grade scale
+      description: "Modify existing grade scale, found by ID. Required authority level:\
+        \ Administrator"
+      operationId: patchGradeScale
+      parameters:
+      - name: gradeScaleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchGradeScaleRequest'
+        required: true
+      responses:
+        "200":
+          description: Modification successful
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Object not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: "Given grade scale must be set to active, because there is\
+            \ no active scale at the moment"
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+      security:
+      - bearerAuth: []
+  /config/{key}:
+    get:
+      tags:
+      - App Config
+      summary: Returns configuration by key
+      description: "Retrieves single Config data based on Config key. Required authority\
+        \ level: Administrator"
+      operationId: getConfigByKey
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: Config with given key not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AppConfigDetailedResponse'
+        "200":
+          description: Config value successfully fetched
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AppConfigDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - App Config
+      summary: Update configuration value
+      description: "Modifies one of global application parameters and settings. Required\
+        \ authority level: Administrator"
+      operationId: updateConfig
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppConfigUpdateRequest'
+        required: true
+      responses:
+        "200":
+          description: Config value successfully updated
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AppConfigDetailedResponse'
+        "404":
+          description: Config with given key not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AppConfigDetailedResponse'
+        "406":
+          description: Config is uneditable
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AppConfigDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /classrooms/{classroomId}:
+    get:
+      tags:
+      - Classroom
+      summary: Find classroom by ID
+      description: "Retrieves existing classroom by given ID. Required authority level:\
+        \ Administrator, Teacher, Student"
+      operationId: getClassroom
+      parameters:
+      - name: classroomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Classroom not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ClassroomDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns found classroom
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ClassroomDetailedResponse'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Classroom
+      summary: Delete classroom
+      description: "Removes classroom from the system if not in use. Required authority\
+        \ level: Administrator"
+      operationId: deleteClassroom
+      parameters:
+      - name: classroomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Classroom not found with given ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "406":
+          description: Cannot remove classroom because it is used by existing Schedule
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "204":
+          description: Classroom removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Classroom
+      summary: Update classroom
+      description: "Modify existing classroom, found by given ID. Required authority\
+        \ level: Administrator"
+      operationId: patchClassroom
+      parameters:
+      - name: classroomId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchClassroomRequest'
+        required: true
+      responses:
+        "200":
+          description: Classroom updated successfully
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ClassroomDetailedResponse'
+        "404":
+          description: Classroom not found by given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ClassroomDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /{attendanceId}:
+    get:
+      tags:
+      - Attendance
+      summary: Find attendance with ID
+      description: "Retrieves existing attendance with given ID. Required authority\
+        \ level: Administrator, Teacher"
+      operationId: getAttendanceById
+      parameters:
+      - name: attendanceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AttendanceDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing attendance
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AttendanceDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /teachers/{teacherId}/teacher-availability/{teacherAvailabilityId}:
+    get:
+      tags:
+      - Teachers
+      summary: Find availability with ID
+      description: "Retrieves existing teacher's availability with given ID. Required\
+        \ authority level: Administrator, Teacher"
+      operationId: getTeacherAvailabilityById
+      parameters:
+      - name: teacherAvailabilityId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns existing availablility
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "404":
+          description: Not found with ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Teachers
+      summary: Delete teacher's availability
+      description: "Remove availability of given teacher. Required authority level:\
+        \ Administrator, Teacher"
+      operationId: deleteTeacherAvailability
+      parameters:
+      - name: teacherAvailabilityId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: teacherId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Availability not found
+          content:
+            '*/*':
+              schema:
+                type: string
+      security:
+      - bearerAuth: []
+  /teachers/teacher-availability/day/{dayOfWeek}:
+    get:
+      tags:
+      - Teachers
+      summary: Find availabilities for day
+      description: "Retrieves all existing teacher availabilities for particular day\
+        \ of week. Required authority level: Administrator"
+      operationId: getTeacherAvailabilityByDayOfWeek
+      parameters:
+      - name: dayOfWeek
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns availabilities list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /teachers/subject/{subjectId}/teacher-availability:
+    get:
+      tags:
+      - Teachers
+      summary: Find availabilities for subject in time range
+      description: "Retrieves all existing availabilities for particular subject in\
+        \ given time range. Required authority level: Administrator"
+      operationId: getTeacherAvailabilityBySubjectAndTimeRange
+      parameters:
+      - name: timeRange
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/TimeRange'
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns availabilities list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherAvailabilityResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /subjects/type/{subjectType}:
+    get:
+      tags:
+      - Subjects
+      summary: Find all subjects with type
+      description: "Retrieves all existing subjects in the system with given subject's\
+        \ type. Required authority level: Administrator"
+      operationId: getSubjectsByType
+      parameters:
+      - name: subjectType
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns existing object list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubjectSummaryResponse'
+      security:
+      - bearerAuth: []
+  /subjects/code/{subjectCode}:
+    get:
+      tags:
+      - Subjects
+      summary: Find subject with code
+      description: "Retrieves existing subject with given code. Required authority\
+        \ level: Administrator, Teacher, Student, Parent"
+      operationId: getSubjectByCode
+      parameters:
+      - name: subjectCode
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Object not found with given code
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /student/{studentId}/summary:
+    get:
+      tags:
+      - Attendance
+      summary: Statistics of student's attendance
+      description: "Calculate overall attendance statistics for particular student.\
+        \ Required authority level: Administrator"
+      operationId: getSummaryStatsForStudent
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: startDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      - name: endDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+      responses:
+        "200":
+          description: Returns statistic
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AttendanceOverallSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Student not found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/AttendanceOverallSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /student/{studentId}/absence-by-schedule:
+    get:
+      tags:
+      - Attendance
+      summary: Absence statistics for student
+      description: "Calculate absence statistics of particular student. Required authority\
+        \ level: Administrator, Teacher, Student, Parent"
+      operationId: getAbsenceStatsByScheduleForStudent
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Student not found
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceAbsenceByScheduleResponse'
+        "200":
+          description: Returns statistics list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceAbsenceByScheduleResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/{scheduleVersionId}/{scheduleId}:
+    get:
+      tags:
+      - Schedules
+      summary: Find schedule by ID
+      description: "Find existing schedule with ID. Required authority level: Administrator,\
+        \ Teacher, Student"
+      operationId: getSchedule
+      parameters:
+      - name: scheduleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleDetailedResponse'
+      security:
+      - bearerAuth: []
+  /schedules/version/{scheduleVersionId}/day/{dayOfWeek}:
+    get:
+      tags:
+      - Schedules
+      summary: Get list of schedules for day of week
+      description: "Find all schedules booked on particular day of week for schedule\
+        \ version. Required authority level: Administrator, Teacher, Student"
+      operationId: getScheduleList
+      parameters:
+      - name: scheduleVersionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: dayOfWeek
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing objects (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/version/yearbook/{yearbookId}:
+    get:
+      tags:
+      - Schedules
+      summary: Get all schedule versions for yearbook
+      description: "Retrieves all schedule versions for Yearbook that are not marked\
+        \ as removed. Required authority level: Administrator"
+      operationId: getScheduleVersionsForYearbook
+      parameters:
+      - name: yearbookId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Returns list of objects (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleVersionSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /schedules/version/yearbook/{yearbookId}/active:
+    get:
+      tags:
+      - Schedules
+      summary: Get active schedule version for Yearbook
+      description: "Retrieves active schedule version for Yearbook. Required authority\
+        \ level: Administrator, Teacher, Student"
+      operationId: getActiveScheduleVersionsForYearbook
+      parameters:
+      - name: yearbookId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "406":
+          description: No active schedule version for given yearbook
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns existing active schedule version for given yearbook
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /scheduleOccurrence/{scheduleOccurrenceId}/complete:
+    get:
+      tags:
+      - Attendance
+      summary: Find completed attendances for schedule occurrence
+      description: "Retrieves existing, completed attendance for particular schedule\
+        \ occurrence. Required authority level: Administrator, Teacher"
+      operationId: getCompletedAttendanceForScheduleOccurrence
+      parameters:
+      - name: scheduleOccurrenceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "404":
+          description: Schedule occurrence not found
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "406":
+          description: Occurrence is not yet complete
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns completed attendances
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+      security:
+      - bearerAuth: []
+  /scheduleOccurrence/{scheduleOccurrenceId}/active:
+    get:
+      tags:
+      - Attendance
+      summary: Find attendances for schedule occurrence
+      description: "Retrieves list of attendance for particular schedule occurrence.\
+        \ Required authority level: Administrator, Teacher"
+      operationId: getActiveAttendanceForScheduleOccurrence
+      parameters:
+      - name: scheduleOccurrenceId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Returns attendances for ongoing occurrence
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "404":
+          description: Schedule occurrence not found
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "406":
+          description: Invalid status for schedule occurrence (not started yet)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /occurrences/{scheduleOccurrenceId}:
+    get:
+      tags:
+      - Schedule Occurrences
+      summary: Get occurrence with ID
+      description: "Retrieves existing schedule occurrence with given ID. Required\
+        \ authority level: Administrator"
+      operationId: getOccurrenceById
+      parameters:
+      - name: scheduleOccurrenceId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "404":
+          description: Not found with given ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        "200":
+          description: Returns existing object
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /occurrences/yearbook/{yearbookId}:
+    get:
+      tags:
+      - Schedule Occurrences
+      summary: Get schedule occurrences for yearbook
+      description: "Retrieves all schedule (active) occurrences planned for given\
+        \ Yearbook in particular time range. Time range is configured in app configuration\
+        \ value. Required authority level: Administrator, Teacher, Student, Parent"
+      operationId: getOccurrencesForYearbook
+      parameters:
+      - name: yearbookId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Required app config not found
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "406":
+          description: Cannot fetch occurrences because there is no active schedule
+            version
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns objects list (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+      security:
+      - bearerAuth: []
+  /me:
+    get:
+      tags:
+      - Authentication
+      summary: Get user's information
+      description: Retrieves actually authenticated user's data. Requires already
+        authenticated user.
+      operationId: getAuthenticatedUserId
+      responses:
+        "200":
+          description: Returns user's data
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/UserSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /grades/type/{gradeTypeId}:
+    get:
+      tags:
+      - Grades
+      summary: Get grades for grade type
+      description: "Find all grades for specific grade type. Required authority level:\
+        \ Administrator"
+      operationId: getGradeByGradeType
+      parameters:
+      - name: gradeTypeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "404":
+          description: Grade type not found by ID
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns list of grades (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+      security:
+      - bearerAuth: []
+  /grades/subject/{subjectId}:
+    get:
+      tags:
+      - Grades
+      summary: Get grades for subject
+      description: "Find all grades related with specific subject, by Administrator\
+        \ or Teacher associated with subject. Required authority level: Administrator,\
+        \ Teacher"
+      operationId: getGradeBySubjectId
+      parameters:
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Subject not found by ID
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns list of grades (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+      security:
+      - bearerAuth: []
+  /grades/student/{studentId}:
+    get:
+      tags:
+      - Grades
+      summary: Find grades by Student ID
+      description: "Find all grades for Student by Administrator, Student owning grade\
+        \ or Student's head Teacher. Required authority level: Administrator, Teacher,\
+        \ Student"
+      operationId: getGradeByStudentId
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Student not found by ID
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns list of grades (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+      security:
+      - bearerAuth: []
+  /grades/student/{studentId}/subject/{subjectId}:
+    get:
+      tags:
+      - Grades
+      summary: Find grades by Student and Subject
+      description: "Find all grades for Student, related to specific Subject, by Administrator,\
+        \ Student owning grade, head Teacher or Teacher associated with Subject. Required\
+        \ authority level: Administrator, Teacher, Student"
+      operationId: getGradeByStudentIdAndSubjectId
+      parameters:
+      - name: studentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "404":
+          description: Student not found by ID
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns list of grades (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GradeSummaryResponse'
+      security:
+      - bearerAuth: []
+  /grades/scales/active:
+    get:
+      tags:
+      - Grades
+      summary: Find active grade scale
+      description: "Retrieves actual active grade scale at the moment. Required authority\
+        \ level: Administrator"
+      operationId: getActiveGradeScale
+      responses:
+        "200":
+          description: Returns found grade scale
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "406":
+          description: No active grade scale found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/GradeScaleResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /config:
+    get:
+      tags:
+      - App Config
+      summary: List editable system configs
+      description: "Retrieves all global configuration data that is editable for the\
+        \ User. Required authority level: Administrator"
+      operationId: getAllEditableConfigs
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "200":
+          description: Returns config values (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppConfigSummaryResponse'
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /classrooms/equipments/{equipmentId}:
+    get:
+      tags:
+      - Classroom
+      summary: Find equipment by ID
+      description: "Retrieves equipment by ID. Required authority level: Administrator"
+      operationId: getEqById
+      parameters:
+      - name: equipmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Equipment not found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EquipmentResponse'
+        "403":
+          description: User lacks permission to access this resource
+        "200":
+          description: Returns equipment found by ID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/EquipmentResponse'
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Classroom
+      summary: Delete equipment
+      description: "Removes equipment object used across classrooms, found by ID.\
+        \ Required authority level: Administrator"
+      operationId: deleteEquipment
+      parameters:
+      - name: equipmentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "404":
+          description: Equipment not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "204":
+          description: Equipment successfully removed
+          content:
+            '*/*':
+              schema:
+                type: string
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+  /grades/scales/{gradeScaleId}/values/{gradeValueId}:
+    delete:
+      tags:
+      - Grades
+      summary: Delete grade value
+      description: "Remove grade value from grade scale. Required authority level:\
+        \ Administrator"
+      operationId: deleteGradeValue
+      parameters:
+      - name: gradeScaleId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: gradeValueId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "404":
+          description: Grade value not found by ID
+          content:
+            '*/*':
+              schema:
+                type: string
+        "204":
+          description: Removed successfully
+          content:
+            '*/*':
+              schema:
+                type: string
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    AddYearbookRequest:
+      required:
+      - headTeacherId
+      - mainCourseSubjectsIds
+      - startingYear
+      - symbol
+      type: object
+      properties:
+        headTeacherId:
+          type: integer
+          format: int32
+        symbol:
+          type: string
+        startingYear:
+          type: string
+          format: date-time
+        graduationYear:
+          type: string
+          format: date-time
+        mainCourseSubjectsIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    StudentSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        phoneNumber:
+          type: string
+    SubjectSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        subjectType:
+          type: string
+    TeacherSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        phoneNumber:
+          type: string
+    YearbookDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        headTeacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        symbol:
+          type: string
+        startingYear:
+          type: string
+          format: date-time
+        graduationYear:
+          type: string
+          format: date-time
+        studentsInYearbook:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSummaryResponse'
+        mainCourseSubjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectSummaryResponse'
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresIn:
+          type: integer
+          format: int64
+    AddressRequest:
+      type: object
+      properties:
+        city:
+          type: string
+        street:
+          type: string
+        buildingNumber:
+          type: string
+        voivodeship:
+          type: string
+        zipCode:
+          type: string
+    AuthorityEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        authority:
+          type: string
+    TeacherCreateRequest:
+      required:
+      - address
+      - authority
+      - birthDate
+      - email
+      - employmentStartDate
+      - firstName
+      - lastName
+      - teachingSubjectsIds
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfCreation:
+          type: string
+          format: date-time
+        employmentStartDate:
+          type: string
+          format: date-time
+        employmentEndDate:
+          type: string
+          format: date-time
+        teachingSubjectsIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    AddTeacherResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        leadingYearbook:
+          $ref: '#/components/schemas/YearbookSummaryResponse'
+        teachingSubjects:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectSummaryResponse'
+        password:
+          type: string
+    AddressResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        city:
+          type: string
+        street:
+          type: string
+        buildingNumber:
+          type: string
+        voivodeship:
+          type: string
+        zipCode:
+          type: string
+    YearbookSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        symbol:
+          type: string
+        headTeacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        startingYear:
+          type: string
+          format: date-time
+        graduationYear:
+          type: string
+          format: date-time
+    LocalTime:
+      type: object
+      properties:
+        hour:
+          type: integer
+          format: int32
+        minute:
+          type: integer
+          format: int32
+        second:
+          type: integer
+          format: int32
+        nano:
+          type: integer
+          format: int32
+    TeacherAvailabilityRequest:
+      required:
+      - endTime
+      - startTime
+      type: object
+      properties:
+        dayOfWeek:
+          maximum: 7
+          minimum: 1
+          type: integer
+          format: int32
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        notes:
+          maxLength: 200
+          minLength: 0
+          type: string
+        validTimeRange:
+          type: boolean
+        available:
+          type: boolean
+    TeacherAvailabilityResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        teacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        dayOfWeek:
+          type: string
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        notes:
+          type: string
+        available:
+          type: boolean
+    AddSubjectRequest:
+      required:
+      - code
+      - name
+      - subjectTypeId
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        subjectTypeId:
+          type: integer
+          format: int32
+    SubjectDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        code:
+          type: string
+        teachers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeacherSummaryResponse'
+        description:
+          type: string
+        yearbooksTakingSubject:
+          type: array
+          items:
+            $ref: '#/components/schemas/YearbookSummaryResponse'
+        subjectType:
+          type: string
+    SubjectTypeRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 20
+          minLength: 0
+          type: string
+    SubjectTypeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    StudentCreateRequest:
+      required:
+      - address
+      - authority
+      - birthDate
+      - email
+      - firstName
+      - lastName
+      - yearbookId
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfCreation:
+          type: string
+          format: date-time
+        yearbookId:
+          type: integer
+          format: int32
+        parentsIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    AddStudentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        yearbook:
+          $ref: '#/components/schemas/YearbookSummaryResponse'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParentSummaryResponse'
+        password:
+          type: string
+    ParentSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        phoneNumber:
+          type: string
+    AddScheduleVersionRequest:
+      required:
+      - yearbookId
+      type: object
+      properties:
+        yearbookId:
+          type: integer
+          format: int32
+        scheduleName:
+          type: string
+        active:
+          type: boolean
+    ClassroomSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        capacity:
+          type: integer
+          format: int32
+        equipmentCount:
+          type: integer
+          format: int32
+    ScheduleDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        subject:
+          $ref: '#/components/schemas/SubjectSummaryResponse'
+        teacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        classroom:
+          $ref: '#/components/schemas/ClassroomSummaryResponse'
+        dayOfWeek:
+          type: string
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        recurrenceType:
+          type: string
+          enum:
+          - NONE
+          - WEEKLY
+          - BIWEEKLY
+          - MONTHLY
+        scheduleVersion:
+          $ref: '#/components/schemas/ScheduleVersionSummaryResponse'
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - CANCELLED
+          - RESCHEDULED
+          - DELETED
+          - UPDATED
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+    ScheduleVersionDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        createDate:
+          type: string
+          format: date-time
+        yearbook:
+          $ref: '#/components/schemas/YearbookSummaryResponse'
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleDetailedResponse'
+        active:
+          type: boolean
+    ScheduleVersionSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        active:
+          type: boolean
+    AddScheduleRequest:
+      required:
+      - endTime
+      - recurrenceType
+      - startTime
+      type: object
+      properties:
+        subjectId:
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+          format: int32
+        teacherId:
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+          format: int32
+        classroomId:
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+          format: int32
+        dayOfWeek:
+          maximum: 7
+          minimum: 1
+          type: integer
+          format: int32
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        recurrenceType:
+          type: string
+          enum:
+          - NONE
+          - WEEKLY
+          - BIWEEKLY
+          - MONTHLY
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        validExpirationDate:
+          type: boolean
+        expirationDateIfRecurrenceNone:
+          type: boolean
+        effectiveDateNotNull:
+          type: boolean
+        effectiveDateBeforeExpirationDate:
+          type: boolean
+        validTimeRange:
+          type: boolean
+    MarkAttendanceRequest:
+      required:
+      - status
+      - studentIds
+      type: object
+      properties:
+        studentIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        status:
+          type: string
+          enum:
+          - PRESENT
+          - ABSENT
+          - UNMARKED
+    AttendanceSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        scheduleOccurrence:
+          $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        student:
+          $ref: '#/components/schemas/StudentSummaryResponse'
+        status:
+          type: string
+          enum:
+          - PRESENT
+          - ABSENT
+          - UNMARKED
+    ScheduleOccurrenceSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        schedule:
+          $ref: '#/components/schemas/ScheduleSummaryResponse'
+        occurrenceDateTime:
+          type: string
+          format: date-time
+        occurrenceEndTime:
+          $ref: '#/components/schemas/LocalTime'
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - ONGOING
+          - COMPLETED
+          - CANCELLED
+    ScheduleSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        dayOfWeek:
+          type: string
+          enum:
+          - MONDAY
+          - TUESDAY
+          - WEDNESDAY
+          - THURSDAY
+          - FRIDAY
+          - SATURDAY
+          - SUNDAY
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        classroomName:
+          type: string
+        teacherName:
+          type: string
+        subjectName:
+          type: string
+        scheduleVersionId:
+          type: integer
+          format: int32
+        status:
+          type: string
+          enum:
+          - SCHEDULED
+          - CANCELLED
+          - RESCHEDULED
+          - DELETED
+          - UPDATED
+    ParentCreateRequest:
+      required:
+      - address
+      - authority
+      - birthDate
+      - childrenIds
+      - email
+      - firstName
+      - lastName
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfCreation:
+          type: string
+          format: date-time
+        childrenIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    AddParentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSummaryResponse'
+        password:
+          type: string
+    LoginUserRequest:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    AddGradeRequest:
+      required:
+      - gradeTypeId
+      - gradeValueId
+      - studentId
+      - subjectId
+      - teacherId
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int32
+        teacherId:
+          type: integer
+          format: int32
+        subjectId:
+          type: integer
+          format: int32
+        gradeTypeId:
+          type: integer
+          format: int64
+        gradeValueId:
+          type: integer
+          format: int64
+        comments:
+          type: string
+    GradeDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        subject:
+          $ref: '#/components/schemas/SubjectSummaryResponse'
+        student:
+          $ref: '#/components/schemas/StudentSummaryResponse'
+        teacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        gradeType:
+          $ref: '#/components/schemas/GradeTypeResponse'
+        gradeValue:
+          $ref: '#/components/schemas/GradeValueResponse'
+        createdAt:
+          type: string
+          format: date
+        comments:
+          type: string
+    GradeTypeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        gradeScope:
+          type: string
+        weight:
+          type: number
+          format: double
+    GradeValueResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        displayValue:
+          type: string
+        numericValue:
+          type: integer
+          format: int32
+        description:
+          type: string
+        isPassingGrade:
+          type: boolean
+        isHide:
+          type: boolean
+    AddGradeTypeRequest:
+      required:
+      - gradeScope
+      - weight
+      type: object
+      properties:
+        gradeScope:
+          maxLength: 50
+          minLength: 1
+          type: string
+        weight:
+          type: number
+          format: double
+    GradeScaleRequest:
+      required:
+      - gradeValues
+      - isActive
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          type: string
+        description:
+          maxLength: 250
+          minLength: 0
+          type: string
+        isActive:
+          type: boolean
+        gradeValues:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeValueDto'
+    GradeValueDto:
+      required:
+      - displayValue
+      - isPassingGrade
+      - numericValue
+      type: object
+      properties:
+        displayValue:
+          maxLength: 50
+          minLength: 0
+          type: string
+        numericValue:
+          type: integer
+          format: int32
+        description:
+          maxLength: 200
+          minLength: 0
+          type: string
+        isPassingGrade:
+          type: boolean
+    GradeScaleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+        gradeValues:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeValueResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isHide:
+          type: boolean
+    ClassroomRequest:
+      required:
+      - capacity
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 50
+          minLength: 1
+          type: string
+        capacity:
+          minimum: 1
+          type: integer
+          format: int32
+        notes:
+          maxLength: 250
+          minLength: 0
+          type: string
+        equipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentQuantity'
+    EquipmentQuantity:
+      type: object
+      properties:
+        equipmentId:
+          type: integer
+          format: int32
+        quantity:
+          type: integer
+          format: int32
+    ClassroomDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        capacity:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        equipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassroomEquipment'
+    ClassroomEntity:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        capacity:
+          type: integer
+          format: int32
+        notes:
+          type: string
+        classroomEquipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClassroomEquipment'
+    ClassroomEquipment:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ClassroomEquipmentId'
+        classroom:
+          $ref: '#/components/schemas/ClassroomEntity'
+        equipment:
+          $ref: '#/components/schemas/Equipment'
+        quantity:
+          type: integer
+          format: int32
+    ClassroomEquipmentId:
+      type: object
+      properties:
+        classroomId:
+          type: integer
+          format: int32
+        equipmentId:
+          type: integer
+          format: int32
+    Equipment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    EquipmentRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 50
+          minLength: 1
+          type: string
+    EquipmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    PatchYearbookRequest:
+      type: object
+      properties:
+        headTeacherId:
+          type: integer
+          format: int32
+        symbol:
+          type: string
+        startingYear:
+          type: string
+          format: date-time
+        targetGraduationYear:
+          type: string
+          format: date-time
+        mainCourseSubjectsIdsToAdd:
+          type: array
+          items:
+            type: integer
+            format: int32
+        mainCourseSubjectsIdsToRemove:
+          type: array
+          items:
+            type: integer
+            format: int32
+    TeacherPatchRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfUpdate:
+          type: string
+          format: date-time
+        employmentStartDate:
+          type: string
+          format: date-time
+        employmentEndDate:
+          type: string
+          format: date-time
+        teachingSubjectsIdsToAdd:
+          type: array
+          items:
+            type: integer
+            format: int32
+        teachingSubjectsIdsToRemove:
+          type: array
+          items:
+            type: integer
+            format: int32
+    TeacherDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        leadingYearbook:
+          $ref: '#/components/schemas/YearbookSummaryResponse'
+        teachingSubjects:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectSummaryResponse'
+    PatchSubjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        subjectTypeId:
+          type: integer
+          format: int32
+    StudentPatchRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfUpdate:
+          type: string
+          format: date-time
+        yearbookId:
+          type: integer
+          format: int32
+    StudentDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        yearbook:
+          $ref: '#/components/schemas/YearbookSummaryResponse'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParentSummaryResponse'
+    PatchScheduleRequest:
+      type: object
+      properties:
+        subjectId:
+          type: integer
+          format: int32
+        teacherId:
+          type: integer
+          format: int32
+        classroomId:
+          type: integer
+          format: int32
+        yearbookId:
+          type: integer
+          format: int32
+        dayOfWeek:
+          maximum: 7
+          minimum: 1
+          type: integer
+          format: int32
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+        recurrenceType:
+          type: string
+          enum:
+          - NONE
+          - WEEKLY
+          - BIWEEKLY
+          - MONTHLY
+        updateReason:
+          type: string
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        validExpirationDate:
+          type: boolean
+        validEffectiveDate:
+          type: boolean
+        effectiveDateBeforeExpirationDate:
+          type: boolean
+    PatchScheduleVersionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        yearbookId:
+          type: integer
+          format: int32
+        active:
+          type: boolean
+    ParentPatchRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        firstName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        lastName:
+          maxLength: 50
+          minLength: 1
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        dateOfUpdate:
+          type: string
+          format: date-time
+        childrenIdsToAdd:
+          type: array
+          items:
+            type: integer
+            format: int32
+        childrenIdsToRemove:
+          type: array
+          items:
+            type: integer
+            format: int32
+    ParentDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        authority:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        address:
+          $ref: '#/components/schemas/AddressResponse'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentSummaryResponse'
+    PatchGradeRequest:
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int32
+        subjectId:
+          type: integer
+          format: int32
+        gradeTypeId:
+          type: integer
+          format: int64
+        gradeValueId:
+          type: integer
+          format: int64
+        comments:
+          type: string
+    PatchGradeTypeRequest:
+      type: object
+      properties:
+        gradeScope:
+          type: string
+        weight:
+          type: number
+          format: double
+    PatchGradeScaleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+    AppConfigUpdateRequest:
+      type: object
+      properties:
+        value:
+          maxLength: 150
+          minLength: 0
+          type: string
+        description:
+          maxLength: 200
+          minLength: 0
+          type: string
+        authoritiesToAddAsEditableBy:
+          type: array
+          items:
+            type: integer
+            format: int32
+        authoritiesToRemoveAsEditableBy:
+          type: array
+          items:
+            type: integer
+            format: int32
+        minValue:
+          maxLength: 30
+          minLength: 0
+          type: string
+        maxValue:
+          maxLength: 30
+          minLength: 0
+          type: string
+    AppConfigDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          type: string
+        value:
+          type: string
+        valueType:
+          type: string
+          enum:
+          - INTEGER
+          - TEXT
+          - BOOLEAN
+        description:
+          type: string
+        editableBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        minValue:
+          type: string
+        maxValue:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        modifiedByUserId:
+          type: integer
+          format: int32
+        modifiedAt:
+          type: string
+          format: date-time
+        editable:
+          type: boolean
+    PatchClassroomRequest:
+      type: object
+      properties:
+        name:
+          maxLength: 50
+          minLength: 0
+          type: string
+        capacity:
+          type: integer
+          format: int32
+        notes:
+          maxLength: 250
+          minLength: 0
+          type: string
+        equipmentIdsToAdd:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentQuantity'
+        equipmentIdsToRemove:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentQuantity'
+    AttendanceDetailedResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        student:
+          $ref: '#/components/schemas/StudentSummaryResponse'
+        status:
+          type: string
+          enum:
+          - PRESENT
+          - ABSENT
+          - UNMARKED
+        createdAt:
+          type: string
+          format: date-time
+        lastModifiedAt:
+          type: string
+          format: date-time
+        lastModifiedBy:
+          $ref: '#/components/schemas/UserSummaryResponse'
+        occurrence:
+          $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+    UserSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date-time
+        gender:
+          type: string
+          enum:
+          - MALE
+          - FEMALE
+        phoneNumber:
+          type: string
+    TimeRange:
+      required:
+      - endTime
+      - startTime
+      type: object
+      properties:
+        dayOfWeek:
+          maximum: 7
+          minimum: 1
+          type: integer
+          format: int32
+        startTime:
+          $ref: '#/components/schemas/LocalTime'
+        endTime:
+          $ref: '#/components/schemas/LocalTime'
+    AttendanceOverallSummaryResponse:
+      type: object
+      properties:
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        totalAttendanceCount:
+          type: integer
+          format: int32
+        totalAbsence:
+          type: integer
+          format: int32
+        totalUnmarked:
+          type: integer
+          format: int32
+        presentPercentage:
+          type: number
+          format: double
+    AttendanceAbsenceByScheduleResponse:
+      type: object
+      properties:
+        scheduleId:
+          type: integer
+          format: int32
+        scheduleName:
+          type: string
+        totalAbsenceCount:
+          type: integer
+          format: int32
+        unmarkedAbsenceCount:
+          type: integer
+          format: int32
+    GradeSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        student:
+          $ref: '#/components/schemas/StudentSummaryResponse'
+        teacher:
+          $ref: '#/components/schemas/TeacherSummaryResponse'
+        subject:
+          $ref: '#/components/schemas/SubjectSummaryResponse'
+        gradeType:
+          $ref: '#/components/schemas/GradeTypeResponse'
+        gradeValue:
+          $ref: '#/components/schemas/GradeValueResponse'
+        createdAt:
+          type: string
+          format: date
+        comments:
+          type: string
+    GradeScaleSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        isHide:
+          type: boolean
+    AppConfigSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          type: string
+        value:
+          type: string
+        editableBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorityEntity'
+        description:
+          type: string
+        editable:
+          type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      name: bearerAuth
+      scheme: bearer
+      bearerFormat: JWT

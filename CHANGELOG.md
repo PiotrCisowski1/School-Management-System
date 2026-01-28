@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.4] - 2026-01-28
+RELEASE VERSION
+### New
+- Integrate with Springdoc OpenApi and annotate every controller for automatic endpoint documentation
+
 ## [1.3.3] - 2026-01-04
 ### New
 - Add refresh JWT token endpoint - restricted to authenticated users
