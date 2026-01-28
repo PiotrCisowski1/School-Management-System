@@ -50,6 +50,7 @@ public class ClassroomController {
             description = "Removes equipment object used across classrooms, found by ID. Required authority level: Administrator")
     @ApiResponse(responseCode = "204", description = "Equipment successfully removed")
     @ApiResponse(responseCode = "404", description = "Equipment not found by ID")
+    @ApiResponse(responseCode = "406", description = "Equipment still in use")
     public ResponseEntity deleteEquipment(@PathVariable Integer equipmentId){
         DbLogger.info("Received DELETE Equipment request for ID: " + equipmentId);
         equipmentService.deleteEquipment(equipmentId);

@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.3.5-SNAPSHOT] - 2026-01-28
+### Fixed
+- Fix bug when deleting equipment that is still in use
+
 ## [1.3.4] - 2026-01-28
 RELEASE VERSION
 ### New

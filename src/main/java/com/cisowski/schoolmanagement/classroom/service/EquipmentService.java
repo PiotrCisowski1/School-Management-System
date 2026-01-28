@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.classroom.model.Equipment;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentQuantity;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentRequest;
 import com.cisowski.schoolmanagement.classroom.model.EquipmentResponse;
+import com.cisowski.schoolmanagement.classroom.repository.ClassroomRepository;
 import com.cisowski.schoolmanagement.classroom.repository.EquipmentRepository;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class EquipmentService {
     private final EquipmentRepository equipmentRepository;
     private final EquipmentMapper equipmentMapper;
+    private final ClassroomRepository classroomRepository;
 
     @Transactional
     public EquipmentResponse addEquipment(EquipmentRequest request){
@@ -38,8 +40,17 @@ public class EquipmentService {
         Optional<Equipment> existingEquipment = equipmentRepository.findById(equipmentId);
         if(existingEquipment.isEmpty())
             throw new EntityNotFoundException(Equipment.class, "ID", equipmentId.toString());
+        checkIfEquipmentIsInUse(existingEquipment.get());
         equipmentRepository.delete(existingEquipment.get());
         DbLogger.info(String.format("Equipment with ID %s was removed successfully", equipmentId));
+    }
+
+    private void checkIfEquipmentIsInUse(Equipment equipment) {
+        if(equipment == null)
+            return;
+        DbLogger.info(String.format("Checking if Equipment with ID %s is used in system", equipment.getId()));
+        if(classroomRepository.existsByClassroomEquipmentsIdEquipmentId(equipment.getId()))
+            throw new SpecificationBrokenException(String.format("Equipment with ID '%d' is still in use in the system", equipment.getId()));
     }
 
     public Collection<EquipmentResponse> getAll() {
