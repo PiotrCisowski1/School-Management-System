@@ -125,7 +125,7 @@ API is built with a Design-First mindset using the OpenAPI 3.0 standard.
 - **Strict Contracts:** all data transfers are handled by dedicated DTOs with validation constraints ensuring data integrity.
 
 🧪 **Interactive API specification fully documents all system functionality.**
-- [Open Interactive API Explorer (Live Preview)](https://raw.githubusercontent.com/PiotrCisowski1/School-Management-System/release/docs/sms-api-doc.yaml)
+- [Open Interactive API Explorer (Live Preview)](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/PiotrCisowski1/School-Management-System/refs/heads/release/docs/sms-api-doc.yaml)
 - Static specification file: _/docs/sms-api-docs.yaml_
 
 
