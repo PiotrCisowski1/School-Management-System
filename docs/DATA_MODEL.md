@@ -104,13 +104,13 @@ erDiagram
     }
     
     EMPLOYEES {
-        int user_id FK_PK
+        int user_id "FK, PK"
         date employment_start_date
         date employment_end_date
     }
     
     TEACHERS_DETAILS {
-        int user_id FK_PK
+        int user_id "FK, PK"
     }
     
     TEACHERS_SUBJECTS {
@@ -129,13 +129,13 @@ erDiagram
     }
     
     STUDENTS_DETAILS {
-        int user_id FK_PK
+        int user_id "FK, PK"
         int yearbook_id FK
         date date_of_graduation
     }
     
     PARENTS_DETAILS {
-        int user_id FK_PK
+        int user_id "FK, PK"
     }
     
     STUDENTS_PARENTS {
@@ -322,13 +322,13 @@ erDiagram
     }
     
     LOGGING_EVENT_EXCEPTION {
-        decimal event_id FK_PK
+        decimal event_id "FK, PK"
         smallint i PK
         varchar trace_line
     }
     
     LOGGING_EVENT_PROPERTY {
-        decimal event_id FK_PK
+        decimal event_id "FK, PK"
         varchar mapped_key PK
         varchar mapped_value
     }
