@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.integration.test.auth;
 
 import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleVersion.ScheduleVersionEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -218,6 +219,7 @@ public class ClassroomAuthorizationTest extends BaseIntegrationTest {
         YearbookEntity yearbook = dataHelper.createYearbook(Collections.singletonList(subject), null);
         ScheduleVersionEntity scheduleVersion = dataHelper.createScheduleVersion(yearbook);
         ClassroomEntity classroom = dataHelper.createClassroom(scheduleVersion, teacher, subject);
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(scheduleVersion, teacher, subject, classroom);
         testGetClassroomForUser(headers, classroom);
     }
 

@@ -5,7 +5,7 @@ import com.cisowski.schoolmanagement.classroom.model.*;
 import java.util.Collection;
 
 public interface ClassroomService {
-    public ClassroomDetailedResponse addClassroom(ClassroomRequest request);
+    ClassroomDetailedResponse addClassroom(ClassroomRequest request);
 
     void deleteClassroom(Integer classroomId);
 

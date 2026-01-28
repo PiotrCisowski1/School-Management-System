@@ -453,6 +453,7 @@ public class TestDataHelper {
                 .set(field(ScheduleEntity::getEffectiveDate), effectiveDate)
                 .set(field(ScheduleEntity::getExpirationDate), expirationDate)
                 .generate(field(ScheduleEntity::getRecurrenceType), gen -> gen.oneOf(ScheduleRecurrenceType.getProperRecurrenceTypes()))
+                .set(field(ScheduleEntity::getStatus), ScheduleStatus.SCHEDULED)
                 .create();
 
         return scheduleRepository.save(schedule);

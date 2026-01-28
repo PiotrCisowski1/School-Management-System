@@ -3,7 +3,7 @@
 A modular and extensible backend system for managing a school's daily operations – built with Java 17 and Spring Boot.  
 This project serves both as an educational journey and a professional showcase of clean code, domain modeling and security in Java applications.
 
-> **Status:** Stable version `v1.3.3`  
+> **Status:** Stable version `v1.3.4`  
 > Project under active development. 
 
 ---
@@ -12,8 +12,10 @@ This project serves both as an educational journey and a professional showcase o
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Authentication & Authorization](#authentication-and-authorization)
+- [Authentication & Authorization](#authentication--authorization-)
 - [Testing](#testing)
+- [Commitment to Code Quality](#commitment-to-code-quality)
+- [System Architecture & API Design](#system-architecture--api-design)
 - [Changelog](#changelog)
 - [License](#license)
 - [Author](#author)
@@ -49,7 +51,7 @@ This project serves both as an educational journey and a professional showcase o
 
 | Layer         | Technology                                                     |
 |--------------|----------------------------------------------------------------|
-| Language      | Java 17                                                        |
+| Language      | Java 21                                                        |
 | Framework     | Spring Boot, Spring Security, Spring Data JPA                  |
 | Build Tool    | Maven                                                          |
 | Database      | Microsoft SQL Server as main, PostgreSQL for integration tests |
@@ -65,6 +67,7 @@ Update database credentials in src/main/resources/application.properties as need
 🔧 Docker support will be added in an upcoming release.
 
 
+---
 ## Authentication & Authorization 
 
 Login via POST /login
@@ -76,29 +79,63 @@ Authorization is role-based (STUDENT, TEACHER, PARENT, ADMINISTRATOR)
 Access to endpoints is restricted based on authority levels
 
 
+---
 ## Testing 
 Unit tests for core logic using:
 
--JUnit 5
+- JUnit 5
 
--Mockito
+- Mockito
 
--Instancio for test data generation
+- Instancio for test data generation
 
 Integration tests:
 
--Testcontainers
+- Testcontainers
 
--Rest Assured
+- Rest Assured
 
-🧠 JaCoCo integration for code coverage reports is planned.
+**JaCoCo** for comprehensive code coverage analysis.
 
 
+---
+## Commitment to Code Quality
+To maintain the highest project quality and ensure the robustness of implemented features, I have integrated a CI pipeline leveraging GitHub Actions. This strategy focuses on continuous automated auditing and mitigating technical debt from the earliest stages of development.
+
+The pipeline includes:
+
+- **Build & Verification** - automated Maven lifecycle management to ensure compilation integrity and dependency consistency
+- **Automated Quality Gate** - the pipeline is configured to fail the build if the code coverage (JaCoCo) falls below 80% threshold. This ensures that no untested logic is merged.
+- **Continuous Testing** - execution of Unit and Integration tests (utilizing Testcontainers to provide a production-ready database environment during CI process)
+- **Automated Coverage Reporting** - every Pull Request is automatically annotated with a detailed JaCoCo coverage report, providing feedback on how new changes affect overall stability
+
+[![School Management System CI pipeline](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/PiotrCisowski1/School-Management-System/actions/workflows/ci-pipeline.yml)
+
+
+---
+## System Architecture & API Design
+### 1. Architectural Decisions
+- **Stateless Authentication (JWT):** system uses JSON Web Tokens to eliminate server-side session state. Authorization claims are embedded in the token for efficient permission checks.
+- **Layered Architecture:** follows a standard _Controller-Service-Repository_ pattern to ensure Separation of Concerns and high testability.
+- **Environment Parity (Testcontainers):** integration tests run on PostgreSQL instances via Docker, ensuring that the production environment behaviour is mirrored during CI/CD.
+
+### 2. API Design Philosophy
+API is built with a Design-First mindset using the OpenAPI 3.0 standard.
+- **Self-documenting:** every endpoint is enriched with business summaries, specific response mappings and possible HTTP outcomes
+- **Strict Contracts:** all data transfers are handled by dedicated DTOs with validation constraints ensuring data integrity.
+
+🧪 **Interactive API specification fully documents all system functionality.**
+- [Open Interactive API Explorer (Live Preview)](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/PiotrCisowski1/School-Management-System/refs/heads/release/docs/sms-api-doc.yaml)
+- Static specification file: _/docs/sms-api-docs.yaml_
+
+
+---
 ## Changelog 
 
 All changes and version history are documented in CHANGELOG.md.
 
 
+---
 ## License 
 
 This project is licensed under the MIT License.
@@ -106,6 +143,7 @@ This project is licensed under the MIT License.
 It is currently intended for educational and demonstration purposes.
 
 
+---
 ## Author 
 
 Created by  **Piotr Cisowski**
