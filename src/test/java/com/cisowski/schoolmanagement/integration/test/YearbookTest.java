@@ -126,4 +126,36 @@ public class YearbookTest extends BaseIntegrationTest implements BasicCrudHappyP
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
     }
+
+    @Test
+    void shouldThrowExOnUpdate_whenSymbolNotUnique() {
+        AddYearbookRequest postRequest = dataHelper.createAddYearbookRequest(null, null);
+        Integer yearbookId = postEntity(fullAdminHeaders, "yearbooks", postRequest);
+        PatchYearbookRequest patchRequest = new PatchYearbookRequest();
+        patchRequest.setSymbol(postRequest.getSymbol());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(patchRequest)
+        .when()
+                .patch("yearbooks/" + yearbookId)
+        .then()
+                .statusCode(HttpStatus.CONFLICT.value());
+    }
+
+    @Test
+    void shouldThrowExOnUpdate_whenHeadTeacherNotUnique() {
+        AddYearbookRequest postRequest = dataHelper.createAddYearbookRequest(null, null);
+        Integer yearbookId = postEntity(fullAdminHeaders, "yearbooks", postRequest);
+        PatchYearbookRequest patchRequest = new PatchYearbookRequest();
+        patchRequest.setHeadTeacherId(postRequest.getHeadTeacherId());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(patchRequest)
+        .when()
+                .patch("yearbooks/" + yearbookId)
+        .then()
+                .statusCode(HttpStatus.CONFLICT.value());
+    }
 }

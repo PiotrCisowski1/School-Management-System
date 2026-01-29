@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.5-SNAPSHOT] - 2026-01-28
 ### Fixed
 - Fix bug when deleting equipment that is still in use
+- Fix bug when updating yearbook with already used symbol or head teacher (teacher must not have more than 1 yearbook as supervisor)
 
 ## [1.3.4] - 2026-01-28
 RELEASE VERSION

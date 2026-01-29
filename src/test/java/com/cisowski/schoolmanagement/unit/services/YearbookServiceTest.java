@@ -92,8 +92,10 @@ public class YearbookServiceTest {
     @Test
     @DisplayName("addYearbook for existing entity - should throw EntityAlreadyExistsException")
     public void addYearbook_existingYearbook() {
-        AddYearbookRequest request = new AddYearbookRequest();
         YearbookEntity entity = new YearbookEntity();
+        entity.setSymbol("test");
+        AddYearbookRequest request = new AddYearbookRequest();
+        request.setSymbol(entity.getSymbol());
 
         when(yearbookRepository.findYearbookBySymbolOrHeadTeacher(any(), any())).thenReturn(Optional.of(entity));
 
