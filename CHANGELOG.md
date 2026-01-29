@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fix bug when deleting equipment that is still in use
 - Fix bug when updating yearbook with already used symbol or head teacher (teacher must not have more than 1 yearbook as supervisor)
+- Fix bug where it was possible to patch grade type with already used grade scope (must be unique)
 
 ## [1.3.4] - 2026-01-28
 RELEASE VERSION

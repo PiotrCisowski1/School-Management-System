@@ -55,6 +55,8 @@ public class YearbookController {
     @ApiResponse(responseCode = "200", description = "Modification successful")
     @ApiResponse(responseCode = "404", description = "Head teacher not found")
     @ApiResponse(responseCode = "404", description = "Subject not found")
+    @ApiResponse(responseCode = "406", description = "Symbol is not unique")
+    @ApiResponse(responseCode = "406", description = "Head teacher is already a supervisor of another yearbook")
     public ResponseEntity<YearbookDetailedResponse> updateYearbook(@Valid @RequestBody PatchYearbookRequest request, @PathVariable Integer yearbookId){
         DbLogger.info("Received Yearbook PATCH request: " + request.toString());
         YearbookDetailedResponse response = yearbookService.updateYearbook(request, yearbookId);

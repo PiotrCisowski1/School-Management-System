@@ -58,6 +58,7 @@ public class GradeController {
             description = "Modify existing grade type found by ID. Required authority level: Administrator")
     @ApiResponse(responseCode = "200", description = "Grade type updated successfully")
     @ApiResponse(responseCode = "404", description = "Grade type not found by ID")
+    @ApiResponse(responseCode = "406", description = "Grade type already exists by given grade scope")
     public ResponseEntity<GradeTypeResponse> patchGradeType(
             @Valid @RequestBody PatchGradeTypeRequest request,
             @PathVariable Long gradeTypeId){
