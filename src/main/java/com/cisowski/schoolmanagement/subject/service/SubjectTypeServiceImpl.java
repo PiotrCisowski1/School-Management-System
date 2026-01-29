@@ -13,6 +13,7 @@ import com.cisowski.schoolmanagement.subject.repository.SubjectRepository;
 import com.cisowski.schoolmanagement.subject.repository.SubjectTypeRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -30,9 +31,7 @@ public class SubjectTypeServiceImpl implements SubjectTypeService {
     @Transactional
     public SubjectTypeResponse addSubjectType(SubjectTypeRequest request) {
         DbLogger.info("Add SubjectType for request: " + request.toString());
-        Optional<SubjectTypeEntity> existingSubjectType = subjectTypeRepository.findByName(request.getName());
-        if(existingSubjectType.isPresent())
-            throw new EntityAlreadyExistsException(SubjectTypeEntity.class, existingSubjectType.get().getId().toString());
+        checkNameUnique(request.getName());
         SubjectTypeEntity requestEntity = subjectTypeMapper.toSubjectTypeEntity(request);
         SubjectTypeEntity savedSubject = subjectTypeRepository.save(requestEntity);
         DbLogger.info("SubjectType saved successfully: " + savedSubject.toString());
@@ -46,12 +45,20 @@ public class SubjectTypeServiceImpl implements SubjectTypeService {
         Optional<SubjectTypeEntity> existingEntity = subjectTypeRepository.findById(subjectTypeId);
         if(existingEntity.isEmpty())
             throw new EntityNotFoundException(SubjectTypeEntity.class, "ID", subjectTypeId.toString());
+        checkNameUnique(request.getName());
         SubjectTypeEntity requestEntity = subjectTypeMapper.toSubjectTypeEntity(request);
         subjectTypeMapper.patchSubjectType(existingEntity.get(), requestEntity);
         SubjectTypeEntity savedEntity = subjectTypeRepository.save(existingEntity.get());
         DbLogger.info(String.format("SubjectType with ID %s has been patched successfully: %s",subjectTypeId, savedEntity.toString()));
-        SubjectTypeResponse response = subjectTypeMapper.toSubjectTypeResponse(savedEntity);
-        return response;
+        return subjectTypeMapper.toSubjectTypeResponse(savedEntity);
+    }
+
+    private void checkNameUnique(String name) {
+        if(StringUtils.isEmpty(name))
+            return;
+        Optional<SubjectTypeEntity> existingSubjectType = subjectTypeRepository.findByName(name);
+        if(existingSubjectType.isPresent())
+            throw new EntityAlreadyExistsException(SubjectTypeEntity.class, existingSubjectType.get().getId().toString());
     }
 
     @Override
