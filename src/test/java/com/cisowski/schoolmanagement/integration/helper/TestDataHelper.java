@@ -120,6 +120,7 @@ public class TestDataHelper {
                 .set(field(TeacherEntity::getLeadingYearbook), null)
                 .set(field(TeacherEntity::getAddress), createRandomAddressEntity())
                 .set(field(TeacherEntity::getIsEnabled), true)
+                .set(field(TeacherEntity::isHide), false)
                 .create();
         return teacherRepository.save(teacher);
     }
@@ -267,8 +268,9 @@ public class TestDataHelper {
         ParentEntity parent = Instancio.of(ParentEntity.class)
                 .set(field(ParentEntity::getId), null)
                 .set(field(ParentEntity::getChildren), Collections.emptyList())
-                .set(field(StudentEntity::getAuthority), Collections.singletonList(authority))
-                .set(field(StudentEntity::getAddress), createRandomAddressEntity())
+                .set(field(ParentEntity::getAuthority), Collections.singletonList(authority))
+                .set(field(ParentEntity::getAddress), createRandomAddressEntity())
+                .set(field(ParentEntity::isHide), false)
                 .create();
         return parentRepository.save(parent);
     }

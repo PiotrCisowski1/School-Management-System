@@ -226,7 +226,7 @@ public class TeacherAvailabilityServiceTest {
 
 
         when(subjectService.fetchSubject(subject.getId())).thenReturn(subject);
-        when(teacherRepository.findByTeachingSubjects(subject)).thenReturn(teachersBySubjects);
+        when(teacherRepository.findByTeachingSubjectsAndIsHideFalse(subject)).thenReturn(teachersBySubjects);
         when(teacherAvailabilityRepository.findByTeachersAndTimeRange(
                 teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime())).thenReturn(availabilities);
         when(teacherAvailabilityMapper.toResponseList(availabilities)).thenReturn(availabilityResponses);
@@ -237,7 +237,7 @@ public class TeacherAvailabilityServiceTest {
         assertNotNull(result);
         assertIterableEquals(availabilityResponses, result);
         verify(subjectService).fetchSubject(subject.getId());
-        verify(teacherRepository).findByTeachingSubjects(subject);
+        verify(teacherRepository).findByTeachingSubjectsAndIsHideFalse(subject);
         verify(teacherAvailabilityRepository).findByTeachersAndTimeRange(teachersBySubjects, day, timeRange.getStartTime(),timeRange.getEndTime());
     }
 }

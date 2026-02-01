@@ -3,6 +3,7 @@ package com.cisowski.schoolmanagement.timetable.schedule.repository;
 import com.cisowski.schoolmanagement.classroom.model.ClassroomEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleStatus;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -61,4 +62,6 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Intege
             @Param("generationStartDate") LocalDate generationStartDate,
             @Param("generationEndDate") LocalDate generationEndDate
     );
+
+    boolean existsByTeacher(TeacherEntity teacher);
 }

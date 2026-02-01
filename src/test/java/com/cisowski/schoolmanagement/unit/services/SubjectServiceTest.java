@@ -222,13 +222,13 @@ public class SubjectServiceTest {
     public void testDeleteSubject_Success() {
         when(subjectRepository.findById(anyInt())).thenReturn(Optional.of(subjectEntity));
         when(yearbookRepository.existsByMainCourseSubjects(subjectEntity)).thenReturn(false);
-        when(teacherRepository.existsByTeachingSubjects(subjectEntity)).thenReturn(false);
+        when(teacherRepository.existsByTeachingSubjectsAndIsHideFalse(subjectEntity)).thenReturn(false);
 
         subjectService.deleteSubject(subjectEntity.getId());
 
         verify(subjectRepository).findById(subjectEntity.getId());
         verify(yearbookRepository).existsByMainCourseSubjects(subjectEntity);
-        verify(teacherRepository).existsByTeachingSubjects(subjectEntity);
+        verify(teacherRepository).existsByTeachingSubjectsAndIsHideFalse(subjectEntity);
         verify(subjectRepository).delete(subjectEntity);
     }
 

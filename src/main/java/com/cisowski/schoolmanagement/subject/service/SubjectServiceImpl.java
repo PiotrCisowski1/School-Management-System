@@ -110,7 +110,7 @@ public class SubjectServiceImpl implements SubjectService {
     private void checkRelations(SubjectEntity subject) {
         if(yearbookRepository.existsByMainCourseSubjects(subject))
             throw new SpecificationBrokenException(String.format("Cannot remove Subject with ID %s, because there is atleast one Yearbook associated", subject.getId()));
-        if(teacherRepository.existsByTeachingSubjects(subject))
+        if(teacherRepository.existsByTeachingSubjectsAndIsHideFalse(subject))
             throw new SpecificationBrokenException(String.format("Cannot remove Subject with ID %s, because there is atleast one Teacher associated", subject.getId()));
     }
 
