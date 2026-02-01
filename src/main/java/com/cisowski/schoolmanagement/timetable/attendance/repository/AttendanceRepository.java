@@ -15,4 +15,5 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Lo
     List<AttendanceEntity> findAllByOccurrence(ScheduleOccurrenceEntity occurrence);
     List<AttendanceEntity> findAllByStudent(StudentEntity student);
     List<AttendanceEntity> findAllByStudentAndCreatedAtBetween(StudentEntity student, LocalDateTime periodStart, LocalDateTime periodEnd);
+    boolean existsByStudent(StudentEntity student);
 }

@@ -65,6 +65,8 @@ public class UserEntity {
     @JoinColumn(name = "address_id", referencedColumnName = "id", nullable = false)
     AddressEntity address;
 
+    private boolean isHide;
+
 
     @Override
     public String toString() {

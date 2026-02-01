@@ -1,5 +1,7 @@
 package com.cisowski.schoolmanagement.users.student.service;
 
+import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
+import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceRepository;
 import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.service.ParentService;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
@@ -7,7 +9,6 @@ import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsExc
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
 import com.cisowski.schoolmanagement.users.student.mapper.StudentMapper;
-import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentPatchRequest;
 import com.cisowski.schoolmanagement.users.student.model.AddStudentResponse;
 import com.cisowski.schoolmanagement.users.student.model.StudentCreateRequest;
@@ -28,6 +29,8 @@ import java.util.*;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository repository;
+    private final AttendanceRepository attendanceRepository;
+    private final GradeRepository gradeRepository;
     private final StudentMapper studentMapper;
     private final ParentService parentService;
     private final YearbookService yearbookService;
@@ -84,18 +87,6 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toStudentResponse(updatedStudent);
     }
 
-    private void removeParentRelation(StudentEntity student, Collection<Integer> parentIds){
-        Collection<ParentEntity> parents = parentService.fetchParentEntities(parentIds);
-        parents.forEach(parent -> {
-            if(!student.getParents().contains(parent))
-                throw new SpecificationBrokenException(String.format(
-                        "Parent with ID: %s, not associated with Student with ID: %s",
-                        parent.getId(),
-                        student.getId()));
-            student.getParents().remove(parent);
-        });
-    }
-
     @Override
     @Transactional
     public void deleteUser(Integer studentId) {
@@ -103,11 +94,22 @@ public class StudentServiceImpl implements StudentService {
         DbLogger.info(message);
 
         StudentEntity existingStudent = fetchStudent(studentId);
-
-        repository.delete(existingStudent);
+        deleteStudent(existingStudent);
 
         message = String.format("Student with ID %s, was successfully removed", studentId);
         DbLogger.info(message);
+    }
+
+    private void deleteStudent(StudentEntity student) {
+        if(student == null)
+            return;
+        if(attendanceRepository.existsByStudent(student) || gradeRepository.existsByStudent(student)){
+            DbLogger.info(String.format("Student with ID '%s' is referenced with existing Grade or Attendance records. Implementing soft delete.", student.getId()));
+            student.setHide(true);
+            repository.save(student);
+            return;
+        }
+        repository.delete(student);
     }
 
     @Override
@@ -115,7 +117,7 @@ public class StudentServiceImpl implements StudentService {
         String message = "Searching for all Student entities";
         DbLogger.info(message);
 
-        Collection<StudentEntity> students = repository.findAll();
+        Collection<StudentEntity> students = repository.findAllByIsHideFalse();
 
         return studentMapper.toStudentsResponse(students);
     }
@@ -133,7 +135,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public StudentEntity fetchStudent(Integer studentId) {
         DbLogger.info("Searching for Student with ID: " + studentId);
-        Optional<StudentEntity> existingStudent = repository.findById(studentId);
+        Optional<StudentEntity> existingStudent = repository.findByIdAndIsHideFalse(studentId);
         if (existingStudent.isEmpty())
             throw new EntityNotFoundException(StudentEntity.class, "ID", String.valueOf(studentId));
         return existingStudent.get();
@@ -142,7 +144,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public List<StudentEntity> fetchStudents(List<Integer> studentIds) {
         DbLogger.info("Searching for Students with IDs: " + studentIds);
-        List<StudentEntity> students = repository.findAllById(studentIds);
+        List<StudentEntity> students = repository.findAllByIdInAndIsHideFalse(studentIds);
         if(!CollectionUtils.isEmpty(studentIds) && students.size() != studentIds.stream().distinct().toList().size()) {
             List<Integer> notFoundIds = students.stream()
                     .distinct()

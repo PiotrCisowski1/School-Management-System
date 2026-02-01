@@ -1,5 +1,7 @@
 package com.cisowski.schoolmanagement.unit.services;
 
+import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
+import com.cisowski.schoolmanagement.timetable.attendance.repository.AttendanceRepository;
 import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.parent.model.ParentEntity;
 import com.cisowski.schoolmanagement.users.parent.service.ParentService;
@@ -65,6 +67,10 @@ public class StudentServiceTests {
     private final String generatedPassword = PasswordGenerator.generatePassword();
     @Mock
     private AuthorityService authorityService;
+    @Mock
+    private AttendanceRepository attendanceRepository;
+    @Mock
+    private GradeRepository gradeRepository;
 
     @BeforeEach
     public void setUp(){
@@ -153,7 +159,7 @@ public class StudentServiceTests {
         StudentDetailedResponse studentResponse = studentMapper.toStudentResponse(student);
         studentResponse.setParents(Collections.singletonList(parentMapper.toSummaryResponse(parentToAdd)));
 
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+        when(studentRepository.findByIdAndIsHideFalse(studentId)).thenReturn(Optional.of(student));
         when(mockedStudentMapper.toStudentEntity(studentDto)).thenReturn(student);
         when(studentRepository.save(any())).thenReturn(student);
         when(mockedStudentMapper.toStudentResponse(any())).thenReturn(studentResponse);
@@ -172,7 +178,7 @@ public class StudentServiceTests {
         assertIterableEquals(studentResponse.getAuthority(), result.getAuthority());
         assertIterableEquals(studentResponse.getParents(), result.getParents());
         assertEquals(studentResponse.getYearbook().getId(), result.getYearbook().getId());
-        verify(studentRepository, times(1)).findById(studentId);
+        verify(studentRepository, times(1)).findByIdAndIsHideFalse(studentId);
         verify(mockedStudentMapper, times(1)).toStudentEntity(studentDto);
         verify(mockedStudentMapper, times(1)).patchStudent(any(), any());
         verify(studentRepository, times(1)).save(any());
@@ -184,7 +190,7 @@ public class StudentServiceTests {
     public void updateStudent_throwsEntityNotFoundEx() {
         StudentPatchRequest studentDto = Instancio.create(StudentPatchRequest.class);
 
-        when(studentRepository.findById(any())).thenReturn(Optional.empty());
+        when(studentRepository.findByIdAndIsHideFalse(any())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.updateStudent(studentDto, 1));
@@ -197,11 +203,13 @@ public class StudentServiceTests {
         StudentEntity student = new StudentEntity();
         student.setId(studentId);
 
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+        when(studentRepository.findByIdAndIsHideFalse(studentId)).thenReturn(Optional.of(student));
+        when(attendanceRepository.existsByStudent(student)).thenReturn(false);
+        when(gradeRepository.existsByStudent(student)).thenReturn(false);
 
         studentService.deleteUser(studentId);
 
-        verify(studentRepository, times(1)).findById(studentId);
+        verify(studentRepository, times(1)).findByIdAndIsHideFalse(studentId);
         verify(studentRepository).delete(student);
     }
 
@@ -210,7 +218,7 @@ public class StudentServiceTests {
     public void deleteStudent_throwsEntityNotFoundEx() {
         Integer studentId = 1;
 
-        when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
+        when(studentRepository.findByIdAndIsHideFalse(studentId)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.deleteUser(studentId));
@@ -222,12 +230,12 @@ public class StudentServiceTests {
         List<StudentEntity> students = Instancio.createList(StudentEntity.class);
         List<StudentSummaryResponse> responses = studentMapper.toStudentsResponse(students);
 
-        when(studentRepository.findAll()).thenReturn(students);
+        when(studentRepository.findAllByIsHideFalse()).thenReturn(students);
         when(mockedStudentMapper.toStudentsResponse(any())).thenReturn(responses);
 
         List<StudentSummaryResponse> result = studentService.findAll();
 
-        verify(studentRepository, times(1)).findAll();
+        verify(studentRepository, times(1)).findAllByIsHideFalse();
         verify(mockedStudentMapper, times(1)).toStudentsResponse(students);
         assertNotNull(result);
         assertIterableEquals(responses, result);
@@ -240,12 +248,12 @@ public class StudentServiceTests {
         StudentEntity existingStudent = Instancio.create(StudentEntity.class);
         StudentDetailedResponse studentResponse = studentMapper.toStudentResponse(existingStudent);
 
-        when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
+        when(studentRepository.findByIdAndIsHideFalse(studentId)).thenReturn(Optional.of(existingStudent));
         when(mockedStudentMapper.toStudentResponse(existingStudent)).thenReturn(studentResponse);
 
         StudentDetailedResponse result = studentService.findById(studentId);
 
-        verify(studentRepository, times(1)).findById(studentId);
+        verify(studentRepository, times(1)).findByIdAndIsHideFalse(studentId);
         verify(mockedStudentMapper, times(1)).toStudentResponse(existingStudent);
         assertNotNull(result);
         assertEquals(studentResponse, result);
@@ -254,7 +262,7 @@ public class StudentServiceTests {
     @Test
     @DisplayName("findById - should throw EntityNotFoundEx")
     public void findById_throwsEntityNotFound() {
-        when(studentRepository.findById(any())).thenReturn(Optional.empty());
+        when(studentRepository.findByIdAndIsHideFalse(any())).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () ->
                 studentService.findById(1));
@@ -269,7 +277,7 @@ public class StudentServiceTests {
                         .create())
                 .toList();
 
-        when(studentRepository.findAllById(ids)).thenReturn(foundStudents);
+        when(studentRepository.findAllByIdInAndIsHideFalse(ids)).thenReturn(foundStudents);
 
         List<StudentEntity> result = studentService.fetchStudents(ids);
 
@@ -280,10 +288,13 @@ public class StudentServiceTests {
     void fetchStudents_ShouldThrowException_WhenSizeMismatch() {
         List<Integer> ids = List.of(1, 2, 3);
         List<StudentEntity> incompleteStudents = List.of(
-                Instancio.of(StudentEntity.class).set(field(StudentEntity::getId), 1).create()
+                Instancio.of(StudentEntity.class)
+                        .set(field(StudentEntity::getId), 1)
+                        .set(field(StudentEntity::isHide), false)
+                        .create()
         );
 
-        when(studentRepository.findAllById(ids)).thenReturn(incompleteStudents);
+        when(studentRepository.findAllByIdInAndIsHideFalse(ids)).thenReturn(incompleteStudents);
 
         assertThatThrownBy(() -> studentService.fetchStudents(ids))
                 .isInstanceOf(SpecificationBrokenException.class)
@@ -298,10 +309,11 @@ public class StudentServiceTests {
         List<StudentEntity> foundStudents = distinctIds.stream()
                 .map(id -> Instancio.of(StudentEntity.class)
                         .set(field(StudentEntity::getId), id)
+                        .set(field(StudentEntity::isHide), false)
                         .create())
                 .toList();
 
-        when(studentRepository.findAllById(idsWithDuplicates)).thenReturn(foundStudents);
+        when(studentRepository.findAllByIdInAndIsHideFalse(idsWithDuplicates)).thenReturn(foundStudents);
 
         List<StudentEntity> result = studentService.fetchStudents(idsWithDuplicates);
 
@@ -311,11 +323,11 @@ public class StudentServiceTests {
     @Test
     void fetchStudents_ShouldReturnEmptyList_WhenInputIsEmpty() {
         List<Integer> emptyIds = Collections.emptyList();
-        when(studentRepository.findAllById(emptyIds)).thenReturn(Collections.emptyList());
+        when(studentRepository.findAllByIdInAndIsHideFalse(emptyIds)).thenReturn(Collections.emptyList());
 
         List<StudentEntity> result = studentService.fetchStudents(emptyIds);
 
         assertThat(result).isEmpty();
-        verify(studentRepository).findAllById(emptyIds);
+        verify(studentRepository).findAllByIdInAndIsHideFalse(emptyIds);
     }
 }

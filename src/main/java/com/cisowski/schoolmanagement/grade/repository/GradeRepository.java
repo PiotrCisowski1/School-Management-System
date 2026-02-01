@@ -24,4 +24,6 @@ public interface GradeRepository extends JpaRepository<GradeEntity, Long> {
 
     @Query("SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END FROM GradeEntity g WHERE g.id = :gradeId AND g.teacher.id = :teacherId")
     boolean existsByIdAndTeacherId(@Param("gradeId") Long id, @Param("teacherId") Integer teacherId);
+
+    boolean existsByStudent(StudentEntity student);
 }

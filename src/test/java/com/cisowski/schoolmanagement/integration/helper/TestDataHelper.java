@@ -222,6 +222,7 @@ public class TestDataHelper {
                 .set(field(StudentEntity::getAuthority), Collections.singletonList(authority))
                 .set(field(StudentEntity::getAddress), createRandomAddressEntity())
                 .set(field(StudentEntity::getYearbook), yearbook)
+                .set(field(StudentEntity::isHide), false)
                 .create();
         return studentRepository.save(student);
     }

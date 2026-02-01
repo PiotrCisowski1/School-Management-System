@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Fix bug when updating yearbook with already used symbol or head teacher (teacher must not have more than 1 yearbook as supervisor)
 - Fix bug where it was possible to patch grade type with already used grade scope (must be unique)
 - Fix bug where it was possible to patch subject type with already used name (must be unique)
+- Fix bug with Student deletion when there are still existing records (grade and attendance) - implement soft delete
 
 ## [1.3.4] - 2026-01-28
 RELEASE VERSION
