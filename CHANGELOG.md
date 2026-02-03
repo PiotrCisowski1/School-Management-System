@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ## [1.4.0-SNAPSHOT] - 2026-02-02
 ### New
 - Add new classroom endpoint to list all available classrooms in given time period with possibility to filter only classrooms that fit all yearbook's students
+- Add new rule in schedule create and update, to check if classroom can accommodate all students from yearbook
 ### Fixed
 - Removed invalid responses for 4xx statuses in Swagger documentation
 
