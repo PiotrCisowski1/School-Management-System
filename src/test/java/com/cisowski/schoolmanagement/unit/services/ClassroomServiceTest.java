@@ -7,6 +7,9 @@ import com.cisowski.schoolmanagement.classroom.service.EquipmentService;
 import com.cisowski.schoolmanagement.classroom.service.impl.ClassroomServiceImpl;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +37,8 @@ public class ClassroomServiceTest {
     private EquipmentService equipmentService;
     @Mock
     private ScheduleRepository scheduleRepository;
+    @Mock
+    private YearbookService yearbookService;
     @InjectMocks
     private ClassroomServiceImpl classroomService;
     private ClassroomRequest validRequest;
@@ -40,6 +47,9 @@ public class ClassroomServiceTest {
     private ClassroomSummaryResponse summaryResponse;
     private ClassroomEntity existingEntity;
     private Integer classroomId;
+    private GetClassroomAtRequest getClassroomAtRequest;
+    private ClassroomEntity roomSmall;
+    private ClassroomEntity roomLarge;
 
     @BeforeEach
     void setUp() {
@@ -70,6 +80,23 @@ public class ClassroomServiceTest {
         existingEntity.setName("Original Name");
         existingEntity.setCapacity(30);
         existingEntity.setNotes("Original Notes");
+
+        TimeRange range = new TimeRange();
+        range.setDayOfWeek(1);
+        range.setStartTime(LocalTime.of(10, 0));
+        range.setEndTime(LocalTime.of(12, 0));
+        getClassroomAtRequest = new GetClassroomAtRequest();
+        getClassroomAtRequest.setTimeRange(range);
+        getClassroomAtRequest.setStartDate(LocalDate.now());
+        getClassroomAtRequest.setEndDate(LocalDate.now().plusDays(1));
+
+        roomSmall = new ClassroomEntity();
+        roomSmall.setId(1);
+        roomSmall.setCapacity(10);
+
+        roomLarge = new ClassroomEntity();
+        roomLarge.setId(2);
+        roomLarge.setCapacity(30);
     }
 
     @Test
@@ -314,5 +341,72 @@ public class ClassroomServiceTest {
         assertTrue(result.getMessage().contains("ID"));
         assertTrue(result.getMessage().contains("1"));
         assertTrue(result.getMessage().contains("ClassroomEntity"));
+    }
+
+
+
+    @Test
+    void shouldReturnFilteredClassroomsBasedOnYearbookCapacity() {
+        Integer yearbookId = 100;
+        int studentCount = 25;
+        List<ClassroomEntity> allAvailable = List.of(roomSmall, roomLarge);
+
+        YearbookEntity yearbook = mock(YearbookEntity.class);
+        Collection students = mock(Collection.class);
+
+        when(classroomRepository.findAllClassroomsWithinTimePeriod(any(), any(), any(), any(), any()))
+                .thenReturn(allAvailable);
+        when(yearbookService.fetchYearbookEntity(yearbookId)).thenReturn(yearbook);
+        when(yearbook.getStudentsInYearbook()).thenReturn(students);
+        when(students.size()).thenReturn(studentCount);
+        when(students.isEmpty()).thenReturn(false);
+        when(classroomMapper.toSummaryResponseList(anyList())).thenReturn(List.of(new ClassroomSummaryResponse()));
+
+        Collection<ClassroomSummaryResponse> result = classroomService.getAvailableClassrooms(getClassroomAtRequest, yearbookId);
+
+        assertNotNull(result);
+        verify(classroomMapper).toSummaryResponseList(argThat(list -> list.size() == 1 && list.contains(roomLarge)));
+    }
+
+    @Test
+    void shouldReturnAllRoomsWhenYearbookIdIsNull() {
+        List<ClassroomEntity> allAvailable = List.of(roomSmall, roomLarge);
+        when(classroomRepository.findAllClassroomsWithinTimePeriod(any(), any(), any(), any(), any()))
+                .thenReturn(allAvailable);
+        when(classroomMapper.toSummaryResponseList(allAvailable)).thenReturn(List.of(new ClassroomSummaryResponse(), new ClassroomSummaryResponse()));
+
+        Collection<ClassroomSummaryResponse> result = classroomService.getAvailableClassrooms(getClassroomAtRequest, null);
+
+        assertEquals(2, result.size());
+        verifyNoInteractions(yearbookService);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenNoRoomsAvailableInRepo() {
+        when(classroomRepository.findAllClassroomsWithinTimePeriod(any(), any(), any(), any(), any()))
+                .thenReturn(Collections.emptyList());
+        when(classroomMapper.toSummaryResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
+
+        Collection<ClassroomSummaryResponse> result = classroomService.getAvailableClassrooms(getClassroomAtRequest, 1);
+
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(yearbookService);
+    }
+
+    @Test
+    void shouldReturnAllRoomsIfYearbookHasNoStudents() {
+        Integer yearbookId = 1;
+        List<ClassroomEntity> allAvailable = List.of(roomSmall);
+        YearbookEntity yearbook = mock(YearbookEntity.class);
+
+        when(classroomRepository.findAllClassroomsWithinTimePeriod(any(), any(), any(), any(), any()))
+                .thenReturn(allAvailable);
+        when(yearbookService.fetchYearbookEntity(yearbookId)).thenReturn(yearbook);
+        when(yearbook.getStudentsInYearbook()).thenReturn(Collections.emptyList());
+        when(classroomMapper.toSummaryResponseList(allAvailable)).thenReturn(List.of(new ClassroomSummaryResponse()));
+
+        Collection<ClassroomSummaryResponse> result = classroomService.getAvailableClassrooms(getClassroomAtRequest, yearbookId);
+
+        assertFalse(result.isEmpty());
     }
 }

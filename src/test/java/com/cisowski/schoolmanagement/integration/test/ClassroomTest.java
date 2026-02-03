@@ -3,6 +3,12 @@ package com.cisowski.schoolmanagement.integration.test;
 import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
+import com.cisowski.schoolmanagement.timetable.attendance.model.AttendanceAbsenceByScheduleResponse;
+import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
+import com.cisowski.schoolmanagement.timetable.schedule.model.scheduleChangelog.ScheduleChangeLogEntity;
+import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -136,5 +142,77 @@ public class ClassroomTest extends BaseIntegrationTest implements BasicCrudHappy
                 .get("classrooms/" + classroomId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldGetAvailableClassrooms() {
+        ClassroomEntity availableClassroom1 = dataHelper.createClassroom();
+        ClassroomEntity availableClassroom2 = dataHelper.createClassroom();
+        ClassroomEntity unavailableClassroom = dataHelper.createClassroom();
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null, null, unavailableClassroom);
+
+        GetClassroomAtRequest getClassroomAtRequest = new GetClassroomAtRequest();
+        TimeRange timeRange = new TimeRange();
+        timeRange.setStartTime(schedule.getStartTime());
+        timeRange.setEndTime(schedule.getEndTime());
+        timeRange.setDayOfWeek(schedule.getDayOfWeek().getValue());
+        getClassroomAtRequest.setTimeRange(timeRange);
+        getClassroomAtRequest.setStartDate(schedule.getEffectiveDate());
+        getClassroomAtRequest.setEndDate(schedule.getExpirationDate());
+
+        List<ClassroomSummaryResponse> response = given()
+                .headers(fullAdminHeaders)
+                .body(getClassroomAtRequest)
+        .when()
+                .get("/classrooms/available")
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.OK.value())
+                .extract().jsonPath().getList("", ClassroomSummaryResponse.class);
+
+        List<Integer> classroomIds = response.stream()
+                .map(ClassroomSummaryResponse::getId)
+                .toList();
+        assertTrue(classroomIds.containsAll(List.of(availableClassroom1.getId(), availableClassroom2.getId())));
+    }
+
+    @Test
+    void shouldGetOnlyAvailableClassroomForGivenYearbook() {
+        YearbookEntity yearbook = dataHelper.createYearbook(null, null);
+        int capacity = 15;
+        for (int i = 0; i < capacity; i++){
+            dataHelper.createStudent(yearbook, null);
+        }
+        ClassroomRequest availableClassroomRequest = dataHelper.createClassroomRequest(null, 15);
+        ClassroomRequest unavailableClassroomRequest = dataHelper.createClassroomRequest(null, 10);
+        ClassroomRequest unavailableClassroomRequest2 = dataHelper.createClassroomRequest(null, 12);
+        Integer availableClassroomId = postEntity(fullAdminHeaders, "/classrooms", availableClassroomRequest);
+        Integer unavailableClassroomId1 = postEntity(fullAdminHeaders, "/classrooms", unavailableClassroomRequest);
+        Integer unavailableClassroomId2 = postEntity(fullAdminHeaders, "/classrooms", unavailableClassroomRequest2);
+
+        ClassroomEntity classroom = dataHelper.fetchClassroom(unavailableClassroomId1);
+        ScheduleEntity schedule = dataHelper.createScheduleEntity(null, null, null, classroom);
+
+        GetClassroomAtRequest getClassroomAtRequest = new GetClassroomAtRequest();
+        TimeRange timeRange = new TimeRange();
+        timeRange.setStartTime(schedule.getStartTime());
+        timeRange.setEndTime(schedule.getEndTime());
+        timeRange.setDayOfWeek(schedule.getDayOfWeek().getValue());
+        getClassroomAtRequest.setTimeRange(timeRange);
+        getClassroomAtRequest.setStartDate(schedule.getEffectiveDate());
+        getClassroomAtRequest.setEndDate(schedule.getExpirationDate());
+
+        List<ClassroomSummaryResponse> response = given()
+                .headers(fullAdminHeaders)
+                .body(getClassroomAtRequest)
+        .when()
+                .get("/classrooms/available?yearbookId=" + yearbook.getId())
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.OK.value())
+                .extract().jsonPath().getList("", ClassroomSummaryResponse.class);
+
+        assertEquals(availableClassroomId, response.get(0).getId());
+        assertEquals(1, response.size());
     }
 }

@@ -584,6 +584,13 @@ public class TestDataHelper {
                 .create();
     }
 
+    public ClassroomRequest createClassroomRequest(List<EquipmentQuantity> eqs, Integer capacity) {
+        return Instancio.of(ClassroomRequest.class)
+                .set(field(ClassroomRequest::getEquipments), eqs)
+                .set(field(ClassroomRequest::getCapacity), capacity)
+                .create();
+    }
+
     public PatchGradeRequest createPatchGradeRequest(SubjectEntity subject) {
         StudentEntity student = createStudent(null, null);
         if(subject == null)
@@ -834,5 +841,14 @@ public class TestDataHelper {
                 .set(field(AttendanceEntity::getCreatedAt), LocalDateTime.now())
                 .create();
         return attendanceRepository.save(attendance);
+    }
+
+    public ClassroomEntity fetchClassroom(Integer id) {
+        if(id == null)
+            return new ClassroomEntity();
+        Optional<ClassroomEntity> classroom = classroomRepository.findById(id);
+        if(classroom.isEmpty())
+            return new ClassroomEntity();
+        return classroom.get();
     }
 }

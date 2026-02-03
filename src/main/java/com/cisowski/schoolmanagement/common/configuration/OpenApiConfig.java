@@ -30,6 +30,11 @@ public class OpenApiConfig {
                             responses.addApiResponse("403", new ApiResponse()
                                     .description("You do not have permission to access this resource"));
                         }
+                        responses.forEach((statusCode, response) -> {
+                            if (!statusCode.startsWith("2")) {
+                                response.setContent(null);
+                            }
+                        });
                     });
                 }
             });

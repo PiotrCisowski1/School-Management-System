@@ -35,24 +35,6 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Intege
     @Query("SELECT s from ScheduleEntity s JOIN s.classroom c WHERE c.id = :classroomId")
     List<ScheduleEntity> findByClassroomId(Integer classroomId);
 
-//    @Query(value = "SELECT * FROM schedules WHERE status IN :statuses " +
-//            "AND ( " +
-//            "   (:timeNow <= :threshold AND start_time >= :timeNow AND start_time <= :threshold) " +
-//            "   OR " +
-//            "   (:timeNow > :threshold AND (start_time >= :timeNow OR start_time <= :threshold)) " +
-//            ") " +
-//            "AND effective_date <= :dateNow " +
-//            "AND (expiration_date IS NULL OR expiration_date > :dateNow) " +
-//            "AND day_of_week = :day",
-//            nativeQuery = true)
-//    List<ScheduleEntity> findUninitializedSchedules(
-//            @Param("statuses") List<String> statuses,
-//            @Param("threshold") String threshold,
-//            @Param("dateNow") LocalDate dateNow,
-//            @Param("day") DayOfWeek day,
-//            @Param("timeNow") String timeNow
-//    );
-
     @Query(value = "SELECT s FROM ScheduleEntity s " +
             "WHERE s.status IN :statuses " +
             "AND s.effectiveDate <= :generationEndDate " +

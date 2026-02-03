@@ -16,4 +16,6 @@ public interface ClassroomService {
     ClassroomDetailedResponse updateClassroom(PatchClassroomRequest request, Integer classroomId);
 
     ClassroomEntity fetchClassroom(Integer classroomId);
+
+    Collection<ClassroomSummaryResponse> getAvailableClassrooms(GetClassroomAtRequest request, Integer yearbookId);
 }

@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.4.0-SNAPSHOT] - 2026-02-02
+### New
+- Add new classroom endpoint to list all available classrooms in given time period with possibility to filter only classrooms that fit all yearbook's students
+### Fixed
+- Removed invalid responses for 4xx statuses in Swagger documentation
+
+
 ## [1.3.5-SNAPSHOT] - 2026-01-28
 ### Fixed
 - Fix bug when deleting equipment that is still in use
