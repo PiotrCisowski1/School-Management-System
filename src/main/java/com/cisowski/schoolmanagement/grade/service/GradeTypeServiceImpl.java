@@ -12,6 +12,7 @@ import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
 import com.cisowski.schoolmanagement.grade.repository.GradeTypeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -31,12 +32,7 @@ public class GradeTypeServiceImpl implements GradeTypeService {
     @Transactional
     public GradeTypeResponse addGradeType(AddGradeTypeRequest request) {
         DbLogger.info("Creating GradeType for request: " + request.toString());
-        Optional<GradeTypeEntity> gradeType = repository.findByGradeScope(request.getGradeScope());
-        if(gradeType.isPresent())
-            throw new SpecificationBrokenException(String.format(
-                    "GradeType with name %s, already exists with ID: %s",
-                    request.getGradeScope(),
-                    gradeType.get().getId()));
+        checkGradeScopeUnique(request.getGradeScope());
         GradeTypeEntity entity = mapper.toEntity(request);
         GradeTypeEntity saved = repository.save(entity);
         DbLogger.info("GradeType was successfuly saved: " + saved.toString());
@@ -47,12 +43,24 @@ public class GradeTypeServiceImpl implements GradeTypeService {
     @Transactional
     public GradeTypeResponse patchGradeType(PatchGradeTypeRequest request, Long gradeTypeId) {
         DbLogger.info(String.format("Updating GradeType with ID %s for request: %s", gradeTypeId, request.toString()));
+        checkGradeScopeUnique(request.getGradeScope());
         GradeTypeEntity existingEntity = fetchGradeType(gradeTypeId);
         GradeTypeEntity patchingEntity = mapper.toEntity(request);
         mapper.patchEntity(patchingEntity, existingEntity);
         GradeTypeEntity updatedEntity = repository.save(existingEntity);
         DbLogger.info(String.format("GradeType with ID %s, was successfully updated: %s", gradeTypeId, updatedEntity.toString()));
         return mapper.toResponse(updatedEntity);
+    }
+
+    private void checkGradeScopeUnique(String gradeScope) {
+        if(StringUtils.isEmpty(gradeScope))
+            return;
+        Optional<GradeTypeEntity> gradeType = repository.findByGradeScope(gradeScope);
+        if(gradeType.isPresent())
+            throw new SpecificationBrokenException(String.format(
+                    "GradeType with name %s, already exists with ID: %s",
+                    gradeScope,
+                    gradeType.get().getId()));
     }
 
     @Override

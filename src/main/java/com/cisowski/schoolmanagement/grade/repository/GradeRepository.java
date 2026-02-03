@@ -5,6 +5,7 @@ import com.cisowski.schoolmanagement.grade.model.gradeScale.GradeValueEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.users.student.model.StudentEntity;
+import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,4 +25,8 @@ public interface GradeRepository extends JpaRepository<GradeEntity, Long> {
 
     @Query("SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END FROM GradeEntity g WHERE g.id = :gradeId AND g.teacher.id = :teacherId")
     boolean existsByIdAndTeacherId(@Param("gradeId") Long id, @Param("teacherId") Integer teacherId);
+
+    boolean existsByStudent(StudentEntity student);
+
+    boolean existsByTeacher(TeacherEntity teacher);
 }

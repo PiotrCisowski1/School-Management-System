@@ -25,12 +25,17 @@ public class DatabaseHelper {
         jdbcTemplate.execute("GRANT ALL ON SCHEMA public TO public");
     }
 
-    public void clearData() {
+    public synchronized void clearData() {
         List<String> tables = jdbcTemplate.queryForList(
                 "SELECT tablename FROM pg_tables WHERE schemaname = 'public'", String.class
         );
+        tables.removeIf(tableName -> tableName.startsWith("flyway"));
 
-        jdbcTemplate.execute("TRUNCATE TABLE " + String.join(",", tables) + " RESTART IDENTITY CASCADE");
+        String truncateQuery = "TRUNCATE TABLE " + String.join(",", tables) + " RESTART IDENTITY";
+
+        jdbcTemplate.execute("SET session_replication_role = 'replica'");
+        jdbcTemplate.execute(truncateQuery);
+        jdbcTemplate.execute("SET session_replication_role = 'origin'");
     }
 
     public void fillBasicAuthorities() {

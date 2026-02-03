@@ -2,6 +2,7 @@ package com.cisowski.schoolmanagement.integration.test;
 
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
+import com.cisowski.schoolmanagement.subject.model.SubjectTypeEntity;
 import com.cisowski.schoolmanagement.subject.model.SubjectTypeRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -99,5 +100,22 @@ public class SubjectTypeTest extends BaseIntegrationTest implements BasicCrudHap
                 .get("/subjects/subjectTypes/" + subjectTypeId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldThrowEx_whenNameNotUnique_onUpdate() {
+        SubjectTypeEntity existingType = dataHelper.createSubjectType();
+        SubjectTypeEntity updatedType = dataHelper.createSubjectType();
+
+        SubjectTypeRequest patchRequest = new SubjectTypeRequest();
+        patchRequest.setName(existingType.getName());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(patchRequest)
+        .when()
+                .patch("/subjects/subjectTypes/" + updatedType.getId())
+        .then()
+                .statusCode(HttpStatus.CONFLICT.value());
     }
 }

@@ -190,6 +190,7 @@ public class SubjectController {
             description = "Remove subject type from the system if not in use. Required authority level: Administrator")
     @ApiResponse(responseCode = "204", description = "Removed successfully")
     @ApiResponse(responseCode = "404", description = "Not found with given ID")
+    @ApiResponse(responseCode = "409", description = "Object with given name already exists")
     public ResponseEntity<SubjectTypeResponse> deleteSubjectType(@PathVariable Integer subjectTypeId){
         DbLogger.info("Received DELETE SubjectType with ID: " + subjectTypeId.toString());
         subjectTypeService.deleteSubjectType(subjectTypeId);

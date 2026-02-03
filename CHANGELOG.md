@@ -6,6 +6,26 @@ All notable changes to this project will be documented in this file.
 
 
 ---
+## [1.4.0] - 2026-02-03
+RELEASE VERSION
+
+## [1.4.0-SNAPSHOT] - 2026-02-02
+### New
+- Add new classroom endpoint to list all available classrooms in given time period with possibility to filter only classrooms that fit all yearbook's students
+- Add new rule in schedule create and update, to check if classroom can accommodate all students from yearbook
+### Fixed
+- Removed invalid responses for 4xx statuses in Swagger documentation
+
+
+## [1.3.5-SNAPSHOT] - 2026-01-28
+### Fixed
+- Fix bug when deleting equipment that is still in use
+- Fix bug when updating yearbook with already used symbol or head teacher (teacher must not have more than 1 yearbook as supervisor)
+- Fix bug where it was possible to patch grade type with already used grade scope (must be unique)
+- Fix bug where it was possible to patch subject type with already used name (must be unique)
+- Fix bug with Student deletion when there are still existing records (grade and attendance) - implement soft delete
+- Fix bug with Teacher deletion where user is still referenced with existing grades and schedules - implement soft delete
+
 ## [1.3.4] - 2026-01-28
 RELEASE VERSION
 ### New

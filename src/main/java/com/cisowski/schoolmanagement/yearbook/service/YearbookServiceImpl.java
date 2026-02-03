@@ -34,9 +34,7 @@ public class YearbookServiceImpl implements YearbookService {
     public YearbookDetailedResponse addYearbook(AddYearbookRequest request) {
         DbLogger.info(String.format("Add Yearbook for request: %s", request.toString()));
 
-        Optional<YearbookEntity> existingYearbook = yearbookRepository.findYearbookBySymbolOrHeadTeacher(request.getSymbol(), request.getHeadTeacherId());
-        if(existingYearbook.isPresent())
-            throw new EntityAlreadyExistsException(YearbookEntity.class, existingYearbook.get().getSymbol());
+        checkYearbookUnique(request.getSymbol(), request.getHeadTeacherId());
 
         YearbookEntity requestEntity = mapper.toYearbookEntity(request);
         requestEntity.setHeadTeacher(teacherService.fetchTeacher(request.getHeadTeacherId()));
@@ -56,6 +54,7 @@ public class YearbookServiceImpl implements YearbookService {
         Optional<YearbookEntity> existingYearbook = yearbookRepository.findById(yearbookId);
         if(existingYearbook.isEmpty())
             throw new EntityNotFoundException(YearbookEntity.class, "ID", yearbookId.toString());
+        checkYearbookUnique(request.getSymbol(), request.getHeadTeacherId());
         YearbookEntity existingYearbookEntity = existingYearbook.get();
         YearbookEntity requestYearbook = mapper.toYearbookEntity(request);
         if(request.getHeadTeacherId() != null)
@@ -67,6 +66,16 @@ public class YearbookServiceImpl implements YearbookService {
         DbLogger.info(String.format("Yearbook updated successfully: %s", updatedYearbook.toString()));
 
         return mapper.toDetailedResponse(updatedYearbook);
+    }
+
+    private void checkYearbookUnique(String symbol, Integer headTeacherId) {
+        Optional<YearbookEntity> existingYearbook = yearbookRepository.findYearbookBySymbolOrHeadTeacher(symbol, headTeacherId);
+        if(existingYearbook.isPresent()) {
+            if(existingYearbook.get().getSymbol().equals(symbol))
+                throw new EntityAlreadyExistsException(YearbookEntity.class, existingYearbook.get().getSymbol());
+            else
+                throw new EntityAlreadyExistsException(YearbookEntity.class, existingYearbook.get().getHeadTeacher().getId().toString());
+        }
     }
 
     private void updateSubjects(Collection<Integer> subjectsToAdd, Collection<Integer> subjectsToRemove, YearbookEntity yearbookEntity){

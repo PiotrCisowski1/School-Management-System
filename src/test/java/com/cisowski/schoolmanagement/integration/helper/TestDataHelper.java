@@ -120,6 +120,7 @@ public class TestDataHelper {
                 .set(field(TeacherEntity::getLeadingYearbook), null)
                 .set(field(TeacherEntity::getAddress), createRandomAddressEntity())
                 .set(field(TeacherEntity::getIsEnabled), true)
+                .set(field(TeacherEntity::isHide), false)
                 .create();
         return teacherRepository.save(teacher);
     }
@@ -222,6 +223,7 @@ public class TestDataHelper {
                 .set(field(StudentEntity::getAuthority), Collections.singletonList(authority))
                 .set(field(StudentEntity::getAddress), createRandomAddressEntity())
                 .set(field(StudentEntity::getYearbook), yearbook)
+                .set(field(StudentEntity::isHide), false)
                 .create();
         return studentRepository.save(student);
     }
@@ -266,8 +268,9 @@ public class TestDataHelper {
         ParentEntity parent = Instancio.of(ParentEntity.class)
                 .set(field(ParentEntity::getId), null)
                 .set(field(ParentEntity::getChildren), Collections.emptyList())
-                .set(field(StudentEntity::getAuthority), Collections.singletonList(authority))
-                .set(field(StudentEntity::getAddress), createRandomAddressEntity())
+                .set(field(ParentEntity::getAuthority), Collections.singletonList(authority))
+                .set(field(ParentEntity::getAddress), createRandomAddressEntity())
+                .set(field(ParentEntity::isHide), false)
                 .create();
         return parentRepository.save(parent);
     }
@@ -581,6 +584,13 @@ public class TestDataHelper {
                 .create();
     }
 
+    public ClassroomRequest createClassroomRequest(List<EquipmentQuantity> eqs, Integer capacity) {
+        return Instancio.of(ClassroomRequest.class)
+                .set(field(ClassroomRequest::getEquipments), eqs)
+                .set(field(ClassroomRequest::getCapacity), capacity)
+                .create();
+    }
+
     public PatchGradeRequest createPatchGradeRequest(SubjectEntity subject) {
         StudentEntity student = createStudent(null, null);
         if(subject == null)
@@ -831,5 +841,14 @@ public class TestDataHelper {
                 .set(field(AttendanceEntity::getCreatedAt), LocalDateTime.now())
                 .create();
         return attendanceRepository.save(attendance);
+    }
+
+    public ClassroomEntity fetchClassroom(Integer id) {
+        if(id == null)
+            return new ClassroomEntity();
+        Optional<ClassroomEntity> classroom = classroomRepository.findById(id);
+        if(classroom.isEmpty())
+            return new ClassroomEntity();
+        return classroom.get();
     }
 }

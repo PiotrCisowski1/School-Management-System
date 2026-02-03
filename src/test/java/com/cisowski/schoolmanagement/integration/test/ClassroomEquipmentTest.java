@@ -1,6 +1,6 @@
 package com.cisowski.schoolmanagement.integration.test;
 
-import com.cisowski.schoolmanagement.classroom.model.EquipmentRequest;
+import com.cisowski.schoolmanagement.classroom.model.*;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
 import org.instancio.Instancio;
@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -94,5 +95,28 @@ public class ClassroomEquipmentTest extends BaseIntegrationTest implements Basic
         .then()
                 .assertThat()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    public void shouldNotDeleteEqWhenStillInUse() {
+        EquipmentRequest request = Instancio.create(EquipmentRequest.class);
+
+        String postEqPath = "classrooms/equipments";
+        Integer eqId = postEntity(fullAdminHeaders, postEqPath, request);
+
+        EquipmentQuantity equipmentQuantity = new EquipmentQuantity();
+        equipmentQuantity.setEquipmentId(eqId);
+        equipmentQuantity.setQuantity(3);
+        ClassroomRequest classroomRequest = dataHelper.createClassroomRequest(Collections.singletonList(equipmentQuantity));
+        String postClassroomPath = "classrooms";
+        Integer classroomId = postEntity(fullAdminHeaders, postClassroomPath, classroomRequest);
+
+        given()
+                .headers(fullAdminHeaders)
+        .when()
+                .delete("/classrooms/equipments/" + eqId)
+        .then()
+                .assertThat()
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
     }
 }

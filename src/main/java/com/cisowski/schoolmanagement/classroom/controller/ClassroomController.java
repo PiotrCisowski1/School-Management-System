@@ -8,7 +8,9 @@ import com.cisowski.schoolmanagement.common.security.authorization.annotation.Re
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceActionType;
 import com.cisowski.schoolmanagement.common.security.authorization.model.ResourceType;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
+import com.cisowski.schoolmanagement.users.teacher.model.availability.TimeRange;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Collection;
 
 @RestController
@@ -50,6 +53,7 @@ public class ClassroomController {
             description = "Removes equipment object used across classrooms, found by ID. Required authority level: Administrator")
     @ApiResponse(responseCode = "204", description = "Equipment successfully removed")
     @ApiResponse(responseCode = "404", description = "Equipment not found by ID")
+    @ApiResponse(responseCode = "406", description = "Equipment still in use")
     public ResponseEntity deleteEquipment(@PathVariable Integer equipmentId){
         DbLogger.info("Received DELETE Equipment request for ID: " + equipmentId);
         equipmentService.deleteEquipment(equipmentId);
@@ -150,5 +154,23 @@ public class ClassroomController {
         DbLogger.info("Received Classroom PATCH request: " + request.toString());
         ClassroomDetailedResponse response = classroomService.updateClassroom(request, classroomId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasAuthority('ADMINISTRATOR')")
+    @GetMapping("/available")
+    @SecurityResponses
+    @Operation(
+            summary = "Get available classrooms",
+            description = "Find all not booked classrooms within a given time period. If given yearbookId as param, system returns only classrooms that fits all yearbook's students. Required authority level: Administrator")
+    @ApiResponse(responseCode = "200", description = "Returns list of classrooms (empty result as well)")
+    @ApiResponse(responseCode = "406", description = "Yearbook with given ID does not exist")
+    public ResponseEntity<Collection<ClassroomSummaryResponse>> getClassroomsAvailableAt(
+            @RequestBody @Valid GetClassroomAtRequest request,
+            @Parameter(description = "Optional ID of existing yearbook to filter classrooms that fit all of yearbook's students",
+                    example = "1")
+            @RequestParam(required = false) Integer yearbookId) {
+        DbLogger.info("Received GET available classrooms request: " + request.toString());
+        Collection<ClassroomSummaryResponse> response = classroomService.getAvailableClassrooms(request, yearbookId);
+        return ResponseEntity.ok(response);
     }
 }

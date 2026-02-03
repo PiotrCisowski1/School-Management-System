@@ -111,7 +111,7 @@ public class TeacherAvailabilityServiceImpl implements TeacherAvailabilityServic
                 day.toString(),
                 subjectId));
         SubjectEntity subject = subjectService.fetchSubject(subjectId);
-        List<TeacherEntity> teachersBySubject = teacherRepository.findByTeachingSubjects(subject);
+        List<TeacherEntity> teachersBySubject = teacherRepository.findByTeachingSubjectsAndIsHideFalse(subject);
         List<TeacherAvailabilityEntity> entities = teacherAvailabilityRepository.findByTeachersAndTimeRange(
                 teachersBySubject,
                 day,

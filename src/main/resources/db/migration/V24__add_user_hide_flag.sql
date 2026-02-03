@@ -1,0 +1,3 @@
+ALTER TABLE users
+ADD is_hide bit NOT NULL
+DEFAULT 0;

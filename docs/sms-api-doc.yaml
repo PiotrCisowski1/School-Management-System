@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
-  title: School Management System API
-  version: "1.3.4"
+  title: School Management API
+  version: "1.0"
 servers:
 - url: http://localhost:8080
   description: Generated server url
@@ -70,10 +70,6 @@ paths:
       responses:
         "404":
           description: Schedule not found
-          content:
-            '*/*':
-              schema:
-                type: string
         "204":
           description: Canceled successfully
           content:
@@ -82,14 +78,10 @@ paths:
                 type: string
         "401":
           description: Full authentication is required to access this resource
-        "406":
-          description: Cancellation not possible because of schedule's status
-          content:
-            '*/*':
-              schema:
-                type: string
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Cancellation not possible because of schedule's status
       security:
       - bearerAuth: []
   /yearbooks:
@@ -103,6 +95,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing yearbooks list (empty result as well)
           content:
@@ -111,8 +105,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/YearbookSummaryResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     post:
@@ -131,10 +123,6 @@ paths:
       responses:
         "406":
           description: Subject not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/YearbookDetailedResponse'
         "201":
           description: Created successfully
           content:
@@ -143,20 +131,12 @@ paths:
                 $ref: '#/components/schemas/YearbookDetailedResponse'
         "404":
           description: Head teacher not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/YearbookDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
         "409":
           description: Already exists for symbol or head teacher
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/YearbookDetailedResponse'
       security:
       - bearerAuth: []
   /token/refresh:
@@ -170,10 +150,6 @@ paths:
       responses:
         "403":
           description: Access denied
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
         "200":
           description: Returns newly generated token
           content:
@@ -228,20 +204,12 @@ paths:
                 $ref: '#/components/schemas/AddTeacherResponse'
         "404":
           description: Authority not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddTeacherResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
         "409":
           description: User with given email already exists
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddTeacherResponse'
       security:
       - bearerAuth: []
   /teachers/{teacherId}/teacher-availability:
@@ -298,16 +266,8 @@ paths:
       responses:
         "404":
           description: Teacher not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/TeacherAvailabilityResponse'
         "406":
           description: Availability already booked for given teacher
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/TeacherAvailabilityResponse'
         "201":
           description: Created successfully
           content:
@@ -365,14 +325,10 @@ paths:
                 $ref: '#/components/schemas/SubjectDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
-        "409":
-          description: Object with given subject code already exists
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectDetailedResponse'
         "403":
           description: User lacks permission to access this resource
+        "409":
+          description: Object with given subject code already exists
       security:
       - bearerAuth: []
   /subjects/subjectTypes:
@@ -386,6 +342,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing objects (empty result as well)
           content:
@@ -394,8 +352,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SubjectTypeResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     post:
@@ -424,10 +380,6 @@ paths:
           description: User lacks permission to access this resource
         "409":
           description: Object with given name already exists
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectTypeResponse'
       security:
       - bearerAuth: []
   /students:
@@ -479,16 +431,8 @@ paths:
           description: User lacks permission to access this resource
         "406":
           description: Authority with given ID not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddStudentResponse'
         "409":
           description: User with given email already exists
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddStudentResponse'
       security:
       - bearerAuth: []
   /schedules/version:
@@ -507,22 +451,18 @@ paths:
               $ref: '#/components/schemas/AddScheduleVersionRequest'
         required: true
       responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "201":
           description: Successfully created
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
         "404":
           description: Yearbook not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /schedules/version/{scheduleVersionId}:
@@ -543,6 +483,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing schedule version
           content:
@@ -551,18 +493,8 @@ paths:
                 $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
         "406":
           description: Schedule version already marked as removed
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
         "404":
           description: Schedule version not found for given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
       security:
       - bearerAuth: []
     post:
@@ -588,10 +520,6 @@ paths:
       responses:
         "404":
           description: Schedule version not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleDetailedResponse'
         "201":
           description: Created successfully
           content:
@@ -600,14 +528,10 @@ paths:
                 $ref: '#/components/schemas/ScheduleDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
-        "406":
-          description: Teacher not available in a given time period
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleDetailedResponse'
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Teacher not available in a given time period
       security:
       - bearerAuth: []
     delete:
@@ -633,20 +557,12 @@ paths:
                 type: string
         "401":
           description: Full authentication is required to access this resource
-        "406":
-          description: Schedule version already marked as removed
-          content:
-            '*/*':
-              schema:
-                type: string
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Schedule version already marked as removed
         "404":
           description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
       security:
       - bearerAuth: []
     patch:
@@ -671,20 +587,16 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "404":
           description: Schedule version not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
         "200":
           description: Modified successfully
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /schedules/version/{scheduleVersionId}/clone:
@@ -706,26 +618,18 @@ paths:
       responses:
         "404":
           description: Schedule version to clone not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "201":
           description: Successfully created
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
         "406":
           description: Schedule version to clone is already marked as removed
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
       security:
       - bearerAuth: []
   /scheduleOccurrence/{scheduleOccurrenceId}/mark:
@@ -760,20 +664,8 @@ paths:
                   $ref: '#/components/schemas/AttendanceSummaryResponse'
         "404":
           description: Student not found
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
         "406":
           description: Marking attendance status for occurrence with invalid status
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -825,26 +717,14 @@ paths:
                 $ref: '#/components/schemas/AddParentResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Children not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddParentResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Children not found
         "406":
           description: Authority with given ID not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddParentResponse'
         "409":
           description: User with given email already exists
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AddParentResponse'
       security:
       - bearerAuth: []
   /login:
@@ -891,26 +771,18 @@ paths:
       responses:
         "404":
           description: Grade value not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeDetailedResponse'
-        "406":
-          description: Student not attending Subject
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "406":
+          description: Student not attending Subject
         "200":
           description: Created successfully
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/GradeDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /grades/types:
@@ -952,10 +824,6 @@ paths:
       responses:
         "406":
           description: Grade type already exists by given grade scope
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeTypeResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1018,10 +886,6 @@ paths:
         "406":
           description: "Given grade scale must be set to active, because there is\
             \ no active scale at the moment"
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeScaleResponse'
       security:
       - bearerAuth: []
   /grades/scales/{gradeScaleId}/values:
@@ -1048,10 +912,6 @@ paths:
       responses:
         "404":
           description: Grade scale not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeValueResponse'
         "201":
           description: Created successfully
           content:
@@ -1074,6 +934,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns list of existing classrooms (empty result as well)
           content:
@@ -1082,8 +944,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ClassroomSummaryResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     post:
@@ -1123,6 +983,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns all existing equipment (empty result as well)
           content:
@@ -1131,8 +993,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/EquipmentResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     post:
@@ -1151,14 +1011,14 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "201":
           description: Equipment created successfully
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/EquipmentResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /yearbooks/{yearbookId}:
@@ -1179,20 +1039,16 @@ paths:
       responses:
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/YearbookDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing yearbook
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/YearbookDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     delete:
@@ -1219,20 +1075,12 @@ paths:
         "406":
           description: Removal canceled due to existing yearbook association with
             students
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Yearbook not found
-          content:
-            '*/*':
-              schema:
-                type: string
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Yearbook not found
       security:
       - bearerAuth: []
     patch:
@@ -1256,12 +1104,10 @@ paths:
               $ref: '#/components/schemas/PatchYearbookRequest'
         required: true
       responses:
+        "406":
+          description: Symbol is not unique
         "404":
           description: Head teacher not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/YearbookDetailedResponse'
         "200":
           description: Modification successful
           content:
@@ -1298,10 +1144,6 @@ paths:
                 $ref: '#/components/schemas/TeacherDetailedResponse'
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/TeacherDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1325,10 +1167,6 @@ paths:
       responses:
         "406":
           description: Removal canceled due to teacher association with yearbook
-          content:
-            '*/*':
-              schema:
-                type: string
         "204":
           description: Removed successfully
           content:
@@ -1337,10 +1175,6 @@ paths:
                 type: string
         "404":
           description: Not found with given ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1370,10 +1204,6 @@ paths:
       responses:
         "404":
           description: Subject not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/TeacherDetailedResponse'
         "200":
           description: Modification successful
           content:
@@ -1404,20 +1234,16 @@ paths:
       responses:
         "404":
           description: Object not found with given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SubjectDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     delete:
@@ -1443,20 +1269,12 @@ paths:
                 type: string
         "404":
           description: Object not found with given ID
-          content:
-            '*/*':
-              schema:
-                type: string
-        "406":
-          description: Removal canceled due to Subject relation with Teacher
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Removal canceled due to Subject relation with Teacher
       security:
       - bearerAuth: []
     patch:
@@ -1481,6 +1299,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Modified successfully
           content:
@@ -1489,12 +1309,6 @@ paths:
                 $ref: '#/components/schemas/SubjectDetailedResponse'
         "404":
           description: Subject not found with given code
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /subjects/subjectTypes/{subjectTypeId}:
@@ -1515,20 +1329,16 @@ paths:
       responses:
         "404":
           description: Object not found with given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectTypeResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SubjectTypeResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     delete:
@@ -1554,14 +1364,12 @@ paths:
                 $ref: '#/components/schemas/SubjectTypeResponse'
         "404":
           description: Not found with given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectTypeResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "409":
+          description: Object with given name already exists
       security:
       - bearerAuth: []
     patch:
@@ -1587,20 +1395,16 @@ paths:
       responses:
         "404":
           description: Object not found with given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectTypeResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Modified successfully
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SubjectTypeResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /students/{studentId}:
@@ -1621,10 +1425,6 @@ paths:
       responses:
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/StudentDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1660,10 +1460,6 @@ paths:
                 type: string
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1698,14 +1494,10 @@ paths:
                 $ref: '#/components/schemas/StudentDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Modified yearbook not found not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/StudentDetailedResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Modified yearbook not found not found
       security:
       - bearerAuth: []
   /schedules/{scheduleId}:
@@ -1726,10 +1518,6 @@ paths:
       responses:
         "406":
           description: Active occurrences ongoing
-          content:
-            '*/*':
-              schema:
-                type: string
         "204":
           description: Removed successfully
           content:
@@ -1742,10 +1530,6 @@ paths:
           description: User lacks permission to access this resource
         "404":
           description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
       security:
       - bearerAuth: []
     patch:
@@ -1771,10 +1555,6 @@ paths:
       responses:
         "406":
           description: Modification canceled because of actual schedule status
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleDetailedResponse'
         "200":
           description: Modification successful
           content:
@@ -1783,14 +1563,10 @@ paths:
                 $ref: '#/components/schemas/ScheduleDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleDetailedResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Not found by ID
       security:
       - bearerAuth: []
   /parents/{parentId}:
@@ -1811,20 +1587,16 @@ paths:
       responses:
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ParentDetailedResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ParentDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     delete:
@@ -1850,10 +1622,6 @@ paths:
                 type: string
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1883,10 +1651,6 @@ paths:
       responses:
         "404":
           description: Parent not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ParentDetailedResponse'
         "200":
           description: Modification successfull
           content:
@@ -1895,10 +1659,6 @@ paths:
                 $ref: '#/components/schemas/ParentDetailedResponse'
         "406":
           description: Child association removal - child not linked with parent
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ParentDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -1934,10 +1694,6 @@ paths:
           description: User lacks permission to access this resource
         "404":
           description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeDetailedResponse'
       security:
       - bearerAuth: []
     delete:
@@ -1961,16 +1717,12 @@ paths:
             '*/*':
               schema:
                 type: string
-        "404":
-          description: Grade not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Grade not found by ID
       security:
       - bearerAuth: []
     patch:
@@ -1994,28 +1746,20 @@ paths:
               $ref: '#/components/schemas/PatchGradeRequest'
         required: true
       responses:
-        "404":
-          description: Grade not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeDetailedResponse'
-        "406":
-          description: Teacher not associated with Subject
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
+        "404":
+          description: Grade not found by ID
+        "406":
+          description: Teacher not associated with Subject
         "200":
           description: Modified successfully
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/GradeDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /grades/types/{gradeTypeId}:
@@ -2041,14 +1785,10 @@ paths:
                 $ref: '#/components/schemas/GradeTypeResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Object not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeTypeResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Object not found by ID
       security:
       - bearerAuth: []
     delete:
@@ -2074,20 +1814,12 @@ paths:
                 type: string
         "401":
           description: Full authentication is required to access this resource
-        "406":
-          description: Grade type in use
-          content:
-            '*/*':
-              schema:
-                type: string
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Grade type in use
         "404":
           description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
       security:
       - bearerAuth: []
     patch:
@@ -2113,10 +1845,8 @@ paths:
       responses:
         "404":
           description: Grade type not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeTypeResponse'
+        "406":
+          description: Grade type already exists by given grade scope
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2145,22 +1875,18 @@ paths:
           type: integer
           format: int64
       responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/GradeScaleResponse'
-        "401":
-          description: Full authentication is required to access this resource
         "404":
           description: Object not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeScaleResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
     delete:
@@ -2186,20 +1912,12 @@ paths:
                 type: string
         "401":
           description: Full authentication is required to access this resource
-        "406":
-          description: Cannot remove because it is only one active in the system
-          content:
-            '*/*':
-              schema:
-                type: string
-        "404":
-          description: Object not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Cannot remove because it is only one active in the system
+        "404":
+          description: Object not found by ID
       security:
       - bearerAuth: []
     patch:
@@ -2231,21 +1949,13 @@ paths:
                 $ref: '#/components/schemas/GradeScaleResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Object not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeScaleResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Object not found by ID
         "406":
           description: "Given grade scale must be set to active, because there is\
             \ no active scale at the moment"
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeScaleResponse'
       security:
       - bearerAuth: []
   /config/{key}:
@@ -2265,10 +1975,6 @@ paths:
       responses:
         "404":
           description: Config with given key not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AppConfigDetailedResponse'
         "200":
           description: Config value successfully fetched
           content:
@@ -2309,16 +2015,8 @@ paths:
                 $ref: '#/components/schemas/AppConfigDetailedResponse'
         "404":
           description: Config with given key not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AppConfigDetailedResponse'
         "406":
           description: Config is uneditable
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AppConfigDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2343,10 +2041,6 @@ paths:
       responses:
         "404":
           description: Classroom not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ClassroomDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2376,20 +2070,12 @@ paths:
       responses:
         "404":
           description: Classroom not found with given ID
-          content:
-            '*/*':
-              schema:
-                type: string
-        "406":
-          description: Cannot remove classroom because it is used by existing Schedule
-          content:
-            '*/*':
-              schema:
-                type: string
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Cannot remove classroom because it is used by existing Schedule
         "204":
           description: Classroom removed successfully
           content:
@@ -2427,10 +2113,6 @@ paths:
                 $ref: '#/components/schemas/ClassroomDetailedResponse'
         "404":
           description: Classroom not found by given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ClassroomDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2455,20 +2137,16 @@ paths:
       responses:
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AttendanceDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing attendance
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/AttendanceDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /teachers/{teacherId}/teacher-availability/{teacherAvailabilityId}:
@@ -2501,10 +2179,6 @@ paths:
                 $ref: '#/components/schemas/TeacherAvailabilityResponse'
         "404":
           description: Not found with ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/TeacherAvailabilityResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2544,10 +2218,6 @@ paths:
           description: User lacks permission to access this resource
         "404":
           description: Availability not found
-          content:
-            '*/*':
-              schema:
-                type: string
       security:
       - bearerAuth: []
   /teachers/teacher-availability/day/{dayOfWeek}:
@@ -2659,22 +2329,18 @@ paths:
         schema:
           type: string
       responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/SubjectDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
         "404":
           description: Object not found with given code
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/SubjectDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /student/{studentId}/summary:
@@ -2713,14 +2379,10 @@ paths:
                 $ref: '#/components/schemas/AttendanceOverallSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Student not found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/AttendanceOverallSummaryResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Student not found
       security:
       - bearerAuth: []
   /student/{studentId}/absence-by-schedule:
@@ -2741,14 +2403,10 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "404":
           description: Student not found
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceAbsenceByScheduleResponse'
         "200":
           description: Returns statistics list (empty result as well)
           content:
@@ -2757,8 +2415,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AttendanceAbsenceByScheduleResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /schedules/{scheduleVersionId}/{scheduleId}:
@@ -2783,22 +2439,18 @@ paths:
           type: integer
           format: int32
       responses:
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleDetailedResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
         "404":
           description: Not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleDetailedResponse'
       security:
       - bearerAuth: []
   /schedules/version/{scheduleVersionId}/day/{dayOfWeek}:
@@ -2825,6 +2477,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing objects (empty result as well)
           content:
@@ -2833,8 +2487,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ScheduleSummaryResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /schedules/version/yearbook/{yearbookId}:
@@ -2885,20 +2537,16 @@ paths:
       responses:
         "406":
           description: No active schedule version for given yearbook
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing active schedule version for given yearbook
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleVersionDetailedResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /scheduleOccurrence/{scheduleOccurrenceId}/complete:
@@ -2919,20 +2567,8 @@ paths:
       responses:
         "404":
           description: Schedule occurrence not found
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
         "406":
           description: Occurrence is not yet complete
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -2973,24 +2609,12 @@ paths:
                   $ref: '#/components/schemas/AttendanceSummaryResponse'
         "404":
           description: Schedule occurrence not found
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
-        "406":
-          description: Invalid status for schedule occurrence (not started yet)
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AttendanceSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "406":
+          description: Invalid status for schedule occurrence (not started yet)
       security:
       - bearerAuth: []
   /occurrences/{scheduleOccurrenceId}:
@@ -3011,20 +2635,16 @@ paths:
       responses:
         "404":
           description: Not found with given ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
+        "401":
+          description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns existing object
           content:
             '*/*':
               schema:
                 $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
-        "401":
-          description: Full authentication is required to access this resource
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /occurrences/yearbook/{yearbookId}:
@@ -3046,25 +2666,13 @@ paths:
       responses:
         "404":
           description: Required app config not found
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "406":
           description: Cannot fetch occurrences because there is no active schedule
             version
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ScheduleOccurrenceSummaryResponse'
-        "403":
-          description: User lacks permission to access this resource
         "200":
           description: Returns objects list (empty result as well)
           content:
@@ -3114,12 +2722,6 @@ paths:
       responses:
         "404":
           description: Grade type not found by ID
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GradeSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -3153,12 +2755,6 @@ paths:
       responses:
         "404":
           description: Subject not found by ID
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GradeSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -3192,12 +2788,6 @@ paths:
       responses:
         "404":
           description: Student not found by ID
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GradeSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -3237,12 +2827,6 @@ paths:
       responses:
         "404":
           description: Student not found by ID
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GradeSummaryResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -3274,10 +2858,6 @@ paths:
                 $ref: '#/components/schemas/GradeScaleResponse'
         "406":
           description: No active grade scale found
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/GradeScaleResponse'
         "401":
           description: Full authentication is required to access this resource
         "403":
@@ -3295,6 +2875,8 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "200":
           description: Returns config values (empty result as well)
           content:
@@ -3303,8 +2885,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AppConfigSummaryResponse'
-        "403":
-          description: User lacks permission to access this resource
       security:
       - bearerAuth: []
   /classrooms/equipments/{equipmentId}:
@@ -3324,14 +2904,10 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
-        "404":
-          description: Equipment not found by ID
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/EquipmentResponse'
         "403":
           description: User lacks permission to access this resource
+        "404":
+          description: Equipment not found by ID
         "200":
           description: Returns equipment found by ID
           content:
@@ -3357,20 +2933,59 @@ paths:
       responses:
         "401":
           description: Full authentication is required to access this resource
+        "403":
+          description: User lacks permission to access this resource
         "404":
           description: Equipment not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "204":
           description: Equipment successfully removed
           content:
             '*/*':
               schema:
                 type: string
+        "406":
+          description: Equipment still in use
+      security:
+      - bearerAuth: []
+  /classrooms/available:
+    get:
+      tags:
+      - Classroom
+      summary: Get available classrooms
+      description: "Find all not booked classrooms within a given time period. If\
+        \ given yearbookId as param, system returns only classrooms that fits all\
+        \ yearbook's students. Required authority level: Administrator"
+      operationId: getClassroomsAvailableAt
+      parameters:
+      - name: request
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/GetClassroomAtRequest'
+      - name: yearbookId
+        in: query
+        description: Optional ID of existing yearbook to filter classrooms that fit
+          all of yearbook's students
+        required: false
+        schema:
+          type: integer
+          format: int32
+        example: 1
+      responses:
+        "401":
+          description: Full authentication is required to access this resource
         "403":
           description: User lacks permission to access this resource
+        "200":
+          description: Returns list of classrooms (empty result as well)
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassroomSummaryResponse'
+        "406":
+          description: Yearbook with given ID does not exist
       security:
       - bearerAuth: []
   /grades/scales/{gradeScaleId}/values/{gradeValueId}:
@@ -3397,10 +3012,6 @@ paths:
       responses:
         "404":
           description: Grade value not found by ID
-          content:
-            '*/*':
-              schema:
-                type: string
         "204":
           description: Removed successfully
           content:
@@ -4046,11 +3657,11 @@ components:
           format: date
         validExpirationDate:
           type: boolean
+        effectiveDateBeforeExpirationDate:
+          type: boolean
         expirationDateIfRecurrenceNone:
           type: boolean
         effectiveDateNotNull:
-          type: boolean
-        effectiveDateBeforeExpirationDate:
           type: boolean
         validTimeRange:
           type: boolean
@@ -5084,6 +4695,20 @@ components:
           type: string
         editable:
           type: boolean
+    GetClassroomAtRequest:
+      required:
+      - endDate
+      - startDate
+      type: object
+      properties:
+        timeRange:
+          $ref: '#/components/schemas/TimeRange'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
   securitySchemes:
     bearerAuth:
       type: http

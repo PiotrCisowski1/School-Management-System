@@ -21,6 +21,7 @@ import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.users.teacher.model.availability.TeacherAvailabilityEntity;
 import com.cisowski.schoolmanagement.users.teacher.service.TeacherService;
 import com.cisowski.schoolmanagement.users.teacher.utils.TeacherAvailabilityUtils;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
 import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         checkTeacherAvailability(teacher, schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime());
         ClassroomEntity classroom = classroomService.fetchClassroom(request.getClassroomId());
         checkClassroomAvailability(classroom, schedule.getDayOfWeek(), schedule.getStartTime(), schedule.getEndTime());
+        checkClassroomCapacityForYearbook(classroom, scheduleVersion.getYearbook());
         schedule.setSubject(subject);
         schedule.setTeacher(teacher);
         schedule.setClassroom(classroom);
@@ -128,6 +130,15 @@ public class ScheduleServiceImpl implements ScheduleService {
                     ));
     }
 
+    private void checkClassroomCapacityForYearbook(ClassroomEntity classroom, YearbookEntity yearbook) {
+        if(classroom == null || yearbook == null)
+            return;
+        DbLogger.info(String.format("Checking if Classroom with ID '%s' can accommodate all students for Yearbook with ID '%s'", classroom.getId(), yearbook.getId()));
+        Integer studentsCount = yearbook.getStudentsInYearbook().size();
+        if(classroom.getCapacity() < studentsCount)
+            throw new SpecificationBrokenException(String.format("Classroom with ID '%s' cannot accommodate yearbook with ID '%s'", classroom.getId(), yearbook.getId()));
+    }
+
     @Override
     @Transactional
     public void deleteSchedule(Integer scheduleId) {
@@ -169,8 +180,10 @@ public class ScheduleServiceImpl implements ScheduleService {
             checkTeacherAvailability(teacher, requestSchedule.getDayOfWeek(), requestSchedule.getStartTime(), requestSchedule.getEndTime());
         requestSchedule.setTeacher(teacher);
         ClassroomEntity classroom = fetchClassroom(request.getClassroomId());
-        if(classroom != null)
+        if(classroom != null) {
             checkClassroomAvailability(classroom, requestSchedule.getDayOfWeek(), requestSchedule.getStartTime(), requestSchedule.getEndTime());
+            checkClassroomCapacityForYearbook(classroom, schedule.get().getScheduleVersion().getYearbook());
+        }
         requestSchedule.setClassroom(classroom);
 
         ScheduleEntity existingSchedule = schedule.get();

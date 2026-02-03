@@ -1,8 +1,10 @@
 package com.cisowski.schoolmanagement.users.teacher.service;
 
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.grade.repository.GradeRepository;
 import com.cisowski.schoolmanagement.subject.model.SubjectEntity;
 import com.cisowski.schoolmanagement.subject.service.SubjectService;
+import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
 import com.cisowski.schoolmanagement.users.common.service.AuthorityService;
 import com.cisowski.schoolmanagement.users.teacher.model.TeacherEntity;
 import com.cisowski.schoolmanagement.common.exception.type.EmailAlreadyExistsException;
@@ -32,6 +34,8 @@ public class TeacherServiceImpl implements TeacherService {
     private final SubjectService subjectService;
     private final YearbookRepository yearbookRepository;
     private final AuthorityService authorityService;
+    private final ScheduleRepository scheduleRepository;
+    private final GradeRepository gradeRepository;
 
     @Transactional
     @Override
@@ -68,14 +72,12 @@ public class TeacherServiceImpl implements TeacherService {
         String message = String.format("Update Teacher with ID %s for request: %s", teacherId, dto.toString());
         DbLogger.info(message);
 
-        Optional<TeacherEntity> existingTeacher = repository.findById(teacherId);
-        if (existingTeacher.isEmpty())
-            throw new EntityNotFoundException(TeacherEntity.class, "ID", teacherId.toString());
+        TeacherEntity teacher = fetchTeacher(teacherId);
         TeacherEntity requestTeacher = mapper.toTeacherEntity(dto);
 
         updateSubjects(requestTeacher, dto.getTeachingSubjectsIdsToAdd(), dto.getTeachingSubjectsIdsToRemove());
-        mapper.patchTeacher(existingTeacher.get(), requestTeacher);
-        TeacherEntity updatedTeacher = repository.save(existingTeacher.get());
+        mapper.patchTeacher(teacher, requestTeacher);
+        TeacherEntity updatedTeacher = repository.save(teacher);
 
         message = "Teacher updated successfully: " + updatedTeacher.toString();
         DbLogger.info(message);
@@ -109,7 +111,7 @@ public class TeacherServiceImpl implements TeacherService {
         String message = "Searching for all Teacher entities";
         DbLogger.info(message);
 
-        Collection<TeacherEntity> teachers = repository.findAll();
+        Collection<TeacherEntity> teachers = repository.findAllByIsHideFalse();
 
         return mapper.toTeachersResponse(teachers);
     }
@@ -119,14 +121,12 @@ public class TeacherServiceImpl implements TeacherService {
         String message = String.format("Searching for Teacher with ID %s", teacherId);
         DbLogger.info(message);
 
-        Optional<TeacherEntity> existingTeacher = repository.findById(teacherId);
-        if (existingTeacher.isEmpty())
-            throw new EntityNotFoundException(TeacherEntity.class, "ID", teacherId.toString());
+        TeacherEntity teacher = fetchTeacher(teacherId);
 
         message = String.format("Found Teacher with ID %s", teacherId);
         DbLogger.info(message);
 
-        return mapper.toTeacherResponse(existingTeacher.get());
+        return mapper.toTeacherResponse(teacher);
     }
 
     @Transactional
@@ -135,26 +135,33 @@ public class TeacherServiceImpl implements TeacherService {
         String message = String.format("Deleting Teacher with ID %s", userId);
         DbLogger.info(message);
 
-        Optional<TeacherEntity> existingTeacher = repository.findById(userId);
-        if (existingTeacher.isEmpty())
-            throw new EntityNotFoundException(TeacherEntity.class, "ID", userId.toString());
-        checkIfTeacherAssociatedWithYearbook(existingTeacher.get());
+        TeacherEntity teacher = fetchTeacher(userId);
 
-        existingTeacher.ifPresent(repository::delete);
+        checkTeacherReferences(teacher);
 
         message = String.format("Teacher with ID %s, was successfully removed", userId);
         DbLogger.info(message);
     }
 
-    private void checkIfTeacherAssociatedWithYearbook(TeacherEntity teacher){
+    private void checkTeacherReferences(TeacherEntity teacher){
         DbLogger.info(String.format("Checking if Teacher with ID %s is still associated with any Yearbook before deleting", teacher.getId()));
-        if(yearbookRepository.existsByHeadTeacher(teacher))
+
+        if(yearbookRepository.existsByHeadTeacher(teacher) )
             throw new SpecificationBrokenException(String.format("Cannot delete Teacher with ID %s, who is still head Teacher of Yearbook", teacher.getId()));
+
+        if(scheduleRepository.existsByTeacher(teacher) || gradeRepository.existsByTeacher(teacher)) {
+            DbLogger.info(String.format("Teacher with ID '%s' is still referenced with grade or schedule, implementing soft delete", teacher.getId()));
+            teacher.setHide(true);
+            repository.save(teacher);
+            return;
+        }
+
+        repository.delete(teacher);
     }
 
     @Override
     public TeacherEntity fetchTeacher(Integer teacherId){
-        Optional<TeacherEntity> teacher = repository.findById(teacherId);
+        Optional<TeacherEntity> teacher = repository.findByIdAndIsHideFalse(teacherId);
         if(teacher.isEmpty())
             throw new EntityNotFoundException(TeacherEntity.class, "ID", teacherId.toString());
         return teacher.get();
@@ -163,7 +170,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public List<SubjectEntity> fetchTeacherSubjects(Integer teacherId) {
         DbLogger.info("Searching for Subjects of Teacher with ID: " + teacherId);
-        List<SubjectEntity> subjects = repository.findByTeacherId(teacherId);
+        List<SubjectEntity> subjects = repository.findByTeacherIdAndIsHideFalse(teacherId);
         DbLogger.info(String.format("Found %s Subjects for Teacher with ID %s", subjects.size(), teacherId));
         return subjects;
     }

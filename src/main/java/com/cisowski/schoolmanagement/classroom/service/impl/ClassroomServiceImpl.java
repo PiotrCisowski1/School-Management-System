@@ -10,14 +10,18 @@ import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenEx
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.timetable.schedule.model.ScheduleEntity;
 import com.cisowski.schoolmanagement.timetable.schedule.repository.ScheduleRepository;
+import com.cisowski.schoolmanagement.yearbook.model.YearbookEntity;
+import com.cisowski.schoolmanagement.yearbook.service.YearbookService;
 import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.DayOfWeek;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -27,6 +31,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     private final ClassroomMapper classroomMapper;
     private final EquipmentService equipmentService;
     private final ScheduleRepository scheduleRepository;
+    private final YearbookService yearbookService;
 
     @Override
     @Transactional
@@ -132,5 +137,34 @@ public class ClassroomServiceImpl implements ClassroomService {
                     classroom.getId(),
                     scheduleIds));
         }
+    }
+
+    @Override
+    public Collection<ClassroomSummaryResponse> getAvailableClassrooms(GetClassroomAtRequest request, Integer yearbookId) {
+        DbLogger.info("Searching for available classrooms: " + request.toString());
+        List<ClassroomEntity> availableClassrooms = classroomRepository.findAllClassroomsWithinTimePeriod(
+                DayOfWeek.of(request.getTimeRange().getDayOfWeek()),
+                request.getTimeRange().getStartTime(),
+                request.getTimeRange().getEndTime(),
+                request.getStartDate(),
+                request.getEndDate());
+        List<ClassroomEntity> filteredResults = filterClassroomsByCapacity(availableClassrooms, yearbookId);
+        return classroomMapper.toSummaryResponseList(filteredResults);
+    }
+
+    public List<ClassroomEntity> filterClassroomsByCapacity(List<ClassroomEntity> classrooms, Integer yearbookId) {
+        if(yearbookId == null || CollectionUtils.isEmpty(classrooms))
+            return classrooms;
+        YearbookEntity yearbook = yearbookService.fetchYearbookEntity(yearbookId);
+        Integer studentsCount;
+        if(!CollectionUtils.isEmpty(yearbook.getStudentsInYearbook()))
+            studentsCount = yearbook.getStudentsInYearbook().size();
+        else
+            return classrooms;
+
+        return classrooms.stream()
+                .filter(Objects::nonNull)
+                .filter(classroom -> classroom.getCapacity() >= studentsCount)
+                .toList();
     }
 }

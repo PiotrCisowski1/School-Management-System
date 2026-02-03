@@ -1,6 +1,7 @@
 package com.cisowski.schoolmanagement.integration.test;
 
 import com.cisowski.schoolmanagement.grade.model.gradeType.AddGradeTypeRequest;
+import com.cisowski.schoolmanagement.grade.model.gradeType.GradeTypeEntity;
 import com.cisowski.schoolmanagement.grade.model.gradeType.PatchGradeTypeRequest;
 import com.cisowski.schoolmanagement.integration.BaseIntegrationTest;
 import com.cisowski.schoolmanagement.integration.BasicCrudHappyPathTests;
@@ -105,5 +106,22 @@ public class GradeTypeTest extends BaseIntegrationTest implements BasicCrudHappy
                 .get("grades/types/" + gradeTypeId)
         .then()
                 .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    void shouldThrowEx_whenGradeScopeNotUnique_onUpdate() {
+        GradeTypeEntity existingGradeType = dataHelper.createGradeType();
+        GradeTypeEntity updatedGradeType = dataHelper.createGradeType();
+
+        PatchGradeTypeRequest patchRequest = new PatchGradeTypeRequest();
+        patchRequest.setGradeScope(existingGradeType.getGradeScope());
+
+        given()
+                .headers(fullAdminHeaders)
+                .body(patchRequest)
+        .when()
+                .patch("grades/types/" + updatedGradeType.getId())
+        .then()
+                .statusCode(HttpStatus.NOT_ACCEPTABLE.value());
     }
 }
