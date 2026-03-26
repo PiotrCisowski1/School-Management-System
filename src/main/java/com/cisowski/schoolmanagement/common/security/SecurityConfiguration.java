@@ -88,6 +88,7 @@ public class SecurityConfiguration {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers("/actuator/**").hasAuthority("SYS_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .build();
