@@ -17,6 +17,7 @@ This project serves both as an educational journey and a professional showcase o
 - [Commitment to Code Quality](#commitment-to-code-quality)
 - [System Architecture & API Design](#system-architecture--api-design)
 - [Changelog](#changelog)
+- [Known issues](#known-issues)
 - [License](#license)
 - [Author](#author)
 
@@ -137,6 +138,9 @@ Database schema with explanation and core business logic is described here **[--
 
 All changes and version history are documented in CHANGELOG.md.
 
+---
+## Known issues
+- For demonstration purposes, pagination was implemented in AppConfig module as reference pattern. In a production-grade environment this approach would be standardized across all collection-resource endpoints.
 
 ---
 ## License 
