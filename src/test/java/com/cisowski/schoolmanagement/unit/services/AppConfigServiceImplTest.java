@@ -1,11 +1,13 @@
 package com.cisowski.schoolmanagement.unit.services;
 
+import com.cisowski.schoolmanagement.AbstractBaseTest;
 import com.cisowski.schoolmanagement.appConfig.mapper.AppConfigMapper;
 import com.cisowski.schoolmanagement.appConfig.model.*;
 import com.cisowski.schoolmanagement.appConfig.repository.AppConfigRepository;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigServiceImpl;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.common.model.PagedResponse;
 import com.cisowski.schoolmanagement.users.common.model.AuthorityEntity;
 import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
 import com.cisowski.schoolmanagement.users.common.model.UserEntity;
@@ -18,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,10 +31,11 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.instancio.Select.field;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AppConfigServiceImplTest {
+public class AppConfigServiceImplTest extends AbstractBaseTest {
 
     @Mock
     private AppConfigRepository configRepository;
@@ -58,35 +63,45 @@ public class AppConfigServiceImplTest {
 
     @Test
     void getAllConfigValues_shouldReturnListOfEditableConfigs() {
-        List<AppConfigEntity> editableConfigs = Instancio.ofList(AppConfigEntity.class)
-                .size(3)
-                .generate(field(AppConfigEntity::isEditable), gen -> gen.booleans().probability(1.0))
+        AppConfigEntity configEntity1 = Instancio.of(AppConfigEntity.class)
+                .set(field(AppConfigEntity::isEditable), true)
                 .create();
-
-        List<AppConfigSummaryResponse> expectedResponses = Instancio.ofList(AppConfigSummaryResponse.class)
-                .size(3)
+        AppConfigEntity configEntity2 = Instancio.of(AppConfigEntity.class)
+                .set(field(AppConfigEntity::isEditable), true)
                 .create();
+        AppConfigEntity configEntity3 = Instancio.of(AppConfigEntity.class)
+                .set(field(AppConfigEntity::isEditable), true)
+                .create();
+        List<AppConfigEntity> editableConfigs = List.of(configEntity1, configEntity2, configEntity3);
+        Page<AppConfigEntity> pagedEditableConfigs = toPageOnlyContent(editableConfigs);
 
-        when(configRepository.findAllByIsEditable(true)).thenReturn(editableConfigs);
-        when(configMapper.toSummaryResponseList(editableConfigs)).thenReturn(expectedResponses);
+        when(configRepository.findAllByIsEditable(eq(true), any())).thenReturn(pagedEditableConfigs);
+        when(configMapper.toSummaryResponse(configEntity1))
+                .thenReturn(new AppConfigSummaryResponse());
+        when(configMapper.toSummaryResponse(configEntity2))
+                .thenReturn(new AppConfigSummaryResponse());
+        when(configMapper.toSummaryResponse(configEntity3))
+                .thenReturn(new AppConfigSummaryResponse());
 
-        List<AppConfigSummaryResponse> result = appConfigService.getAllConfigValues();
+        Pageable pageable = Pageable.unpaged();
+        PagedResponse<AppConfigSummaryResponse> result = appConfigService.getAllConfigValues(pageable);
 
-        assertThat(result).isEqualTo(expectedResponses);
-        verify(configRepository).findAllByIsEditable(true);
-        verify(configMapper).toSummaryResponseList(editableConfigs);
+        assertEquals(editableConfigs.size(), result.getContent().size());
+        verify(configRepository).findAllByIsEditable(true, pageable);
+        verify(configMapper).toSummaryResponse(configEntity1);
+        verify(configMapper).toSummaryResponse(configEntity2);
+        verify(configMapper).toSummaryResponse(configEntity3);
     }
 
     @Test
     void getAllConfigValues_whenNoEditableConfigsFound_shouldReturnEmptyList() {
-        when(configRepository.findAllByIsEditable(true)).thenReturn(Collections.emptyList());
-        when(configMapper.toSummaryResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
+        Pageable pageable = Pageable.unpaged();
+        when(configRepository.findAllByIsEditable(true, pageable)).thenReturn(Page.empty());
 
-        List<AppConfigSummaryResponse> result = appConfigService.getAllConfigValues();
+        PagedResponse<AppConfigSummaryResponse> result = appConfigService.getAllConfigValues(pageable);
 
-        assertThat(result).isEmpty();
-        verify(configRepository).findAllByIsEditable(true);
-        verify(configMapper).toSummaryResponseList(Collections.emptyList());
+        assertThat(result.getContent()).isEmpty();
+        verify(configRepository).findAllByIsEditable(true, pageable);
     }
 
     @Test

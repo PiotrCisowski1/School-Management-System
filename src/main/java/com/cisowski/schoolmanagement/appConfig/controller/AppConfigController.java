@@ -5,12 +5,16 @@ import com.cisowski.schoolmanagement.appConfig.model.AppConfigSummaryResponse;
 import com.cisowski.schoolmanagement.appConfig.model.AppConfigUpdateRequest;
 import com.cisowski.schoolmanagement.appConfig.service.AppConfigService;
 import com.cisowski.schoolmanagement.common.annotation.SecurityResponses;
+import com.cisowski.schoolmanagement.common.model.PagedResponse;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,9 +66,10 @@ public class AppConfigController {
             summary = "List editable system configs",
             description = "Retrieves all global configuration data that is editable for the User. Required authority level: Administrator")
     @ApiResponse(responseCode = "200", description = "Returns config values (empty result as well)")
-    ResponseEntity<List<AppConfigSummaryResponse>> getAllEditableConfigs() {
+    ResponseEntity<PagedResponse<AppConfigSummaryResponse>> getAllEditableConfigs(
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
         DbLogger.info("Received GET request for all editable AppConfigs");
-        List<AppConfigSummaryResponse> response = appConfigService.getAllConfigValues();
+        PagedResponse<AppConfigSummaryResponse> response = appConfigService.getAllConfigValues(pageable);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

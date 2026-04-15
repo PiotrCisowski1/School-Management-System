@@ -67,10 +67,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.instancio.Select.field;
@@ -850,5 +847,17 @@ public class TestDataHelper {
         if(classroom.isEmpty())
             return new ClassroomEntity();
         return classroom.get();
+    }
+
+    public void createAppConfigDummyData(int size) {
+        for(int i = 0; i <= size; i++) {
+            AppConfigEntity appConfig = new AppConfigEntity();
+            appConfig.setKey(UUID.randomUUID().toString());
+            appConfig.setValue("xyz");
+            appConfig.setValueType(AppConfigValueType.TEXT);
+            appConfig.setEditable(true);
+            appConfig.setModifiedAt(LocalDateTime.now());
+            configRepository.save(appConfig);
+        }
     }
 }

@@ -10,6 +10,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ public interface AppConfigMapper {
     @Mapping(target = "modifiedByUserId", source = "modifiedBy", qualifiedByName = "mapUserId")
     AppConfigDetailedResponse toDetailedResponse(AppConfigEntity entity);
 
-    List<AppConfigSummaryResponse> toSummaryResponseList(List<AppConfigEntity> configs);
+    List<AppConfigSummaryResponse> toSummaryResponseList(Page<AppConfigEntity> configs);
 
     AppConfigSummaryResponse toSummaryResponse(AppConfigEntity entity);
 

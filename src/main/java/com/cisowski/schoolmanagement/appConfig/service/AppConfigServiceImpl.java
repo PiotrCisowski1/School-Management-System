@@ -5,6 +5,8 @@ import com.cisowski.schoolmanagement.appConfig.model.*;
 import com.cisowski.schoolmanagement.appConfig.repository.AppConfigRepository;
 import com.cisowski.schoolmanagement.common.exception.type.EntityNotFoundException;
 import com.cisowski.schoolmanagement.common.exception.type.SpecificationBrokenException;
+import com.cisowski.schoolmanagement.common.mapper.PagedModelMapper;
+import com.cisowski.schoolmanagement.common.model.PagedResponse;
 import com.cisowski.schoolmanagement.common.utility.DbLogger;
 import com.cisowski.schoolmanagement.users.common.model.AuthorityEntity;
 import com.cisowski.schoolmanagement.users.common.model.UserDetailsEntity;
@@ -12,6 +14,8 @@ import com.cisowski.schoolmanagement.users.common.repository.AuthorityRepository
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -30,11 +34,11 @@ public class AppConfigServiceImpl implements AppConfigService {
     private final AppConfigMapper configMapper;
 
     @Override
-    public List<AppConfigSummaryResponse> getAllConfigValues() {
+    public PagedResponse<AppConfigSummaryResponse> getAllConfigValues(Pageable pageable) {
         DbLogger.info("Searching for all editable configuration values");
-        List<AppConfigEntity> configs = configRepository.findAllByIsEditable(true);
-        DbLogger.info(String.format("Found %s editable configs in db", configs.size()));
-        return configMapper.toSummaryResponseList(configs);
+        Page<AppConfigEntity> configs = configRepository.findAllByIsEditable(true, pageable);
+        DbLogger.info(String.format("Found %s editable configs in db", configs.getContent().size()));
+        return PagedModelMapper.mapToResponse(configs, configMapper::toSummaryResponse);
     }
 
     @Override

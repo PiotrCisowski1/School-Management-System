@@ -1,5 +1,6 @@
 package com.cisowski.schoolmanagement.unit.mappers;
 
+import com.cisowski.schoolmanagement.AbstractBaseTest;
 import com.cisowski.schoolmanagement.appConfig.mapper.AppConfigMapper;
 import com.cisowski.schoolmanagement.appConfig.model.*;
 import com.cisowski.schoolmanagement.users.common.model.AuthorityEntity;
@@ -7,6 +8,7 @@ import com.cisowski.schoolmanagement.users.common.model.UserEntity;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AppConfigMapperTest {
+public class AppConfigMapperTest extends AbstractBaseTest {
 
     private final AppConfigMapper mapper = Mappers.getMapper(AppConfigMapper.class);
 
@@ -52,8 +54,9 @@ public class AppConfigMapperTest {
     @Test
     void toSummaryResponseList_shouldMapEntityListToResponseList() {
         List<AppConfigEntity> entities = Instancio.ofList(AppConfigEntity.class).size(3).create();
+        Page<AppConfigEntity> pagedEntities = toPageOnlyContent(entities);
 
-        List<AppConfigSummaryResponse> responses = mapper.toSummaryResponseList(entities);
+        List<AppConfigSummaryResponse> responses = mapper.toSummaryResponseList(pagedEntities);
 
         assertThat(responses).hasSameSizeAs(entities);
     }

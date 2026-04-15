@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### New 
 - Add Spring Boot Actuator endpoints for application info - secured for SYS_ADMIN only. Enabled endpoints: health, heapdump, metrics, scheduledtasks
 - Add Aspect wrapping every scheduled task to measure task's execution time
+- Add pagination to GET all AppConfigs endpoint
 
 ## [1.4.0] - 2026-02-03
 RELEASE VERSION
